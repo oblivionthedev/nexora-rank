@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "@/lib/supabase/database.types";
 
 export function isSupabaseConfigured() {
   return Boolean(
@@ -15,5 +16,5 @@ export function createClient() {
     throw new Error("Supabase is not configured for this deployment.");
   }
 
-  return createBrowserClient(url, publishableKey);
+  return createBrowserClient<Database>(url, publishableKey);
 }

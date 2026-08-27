@@ -494,7 +494,10 @@ create policy "activity_quotas_manage_admin" on public.activity_quotas for all t
 create policy "application_forms_select_member" on public.application_forms for select to authenticated using (nexora_private.is_workspace_member(workspace_id) or status = 'open');
 create policy "application_forms_manage_admin" on public.application_forms for all to authenticated using (nexora_private.can_manage_workspace(workspace_id)) with check (nexora_private.can_manage_workspace(workspace_id));
 
-create policy "application_submissions_select_related" on public.application_submissions for select to authenticated using (applicant_id = (select auth.uid()) or nexora_private.is_workspace_member(workspace_id));
+create policy "application_submissions_select_related" on public.application_submissions for select to authenticated using (
+  applicant_id = (select auth.uid())
+  or nexora_private.workspace_role(workspace_id) in ('owner', 'admin', 'reviewer')
+);
 create policy "application_submissions_insert_self" on public.application_submissions for insert to authenticated with check (applicant_id = (select auth.uid()) and status = 'submitted');
 create policy "application_submissions_update_related" on public.application_submissions for update to authenticated using (applicant_id = (select auth.uid()) or nexora_private.workspace_role(workspace_id) in ('owner', 'admin', 'reviewer')) with check (
   (applicant_id = (select auth.uid()) and status = 'withdrawn')
@@ -522,6 +525,7 @@ grant select, insert, update on public.application_submissions to authenticated;
 grant select, insert, update, delete on public.automations to authenticated;
 grant select on public.automation_runs, public.audit_events, public.subscriptions to authenticated;
 
+revoke all on all functions in schema nexora_private from public, anon, authenticated;
 grant usage on schema nexora_private to authenticated;
 grant execute on function nexora_private.workspace_role(uuid) to authenticated;
 grant execute on function nexora_private.is_workspace_member(uuid) to authenticated;
