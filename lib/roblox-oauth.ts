@@ -1,0 +1,25 @@
+export const ROBLOX_OAUTH_AUTHORIZE_URL = "https://apis.roblox.com/oauth/v1/authorize";
+export const ROBLOX_OAUTH_TOKEN_URL = "https://apis.roblox.com/oauth/v1/token";
+export const ROBLOX_OAUTH_USERINFO_URL = "https://apis.roblox.com/oauth/v1/userinfo";
+
+export function hasRobloxOAuthCredentials() {
+  return Boolean(process.env.ROBLOX_CLIENT_ID && process.env.ROBLOX_CLIENT_SECRET);
+}
+
+export async function createCodeChallenge(verifier: string) {
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  return base64UrlEncode(new Uint8Array(hash));
+}
+
+export function base64UrlEncode(bytes: Uint8Array) {
+  let binary = "";
+  bytes.forEach((value) => {
+    binary += String.fromCharCode(value);
+  });
+
+  return btoa(binary).replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_");
+}
+
+export function randomState() {
+  return base64UrlEncode(crypto.getRandomValues(new Uint8Array(24)));
+}
