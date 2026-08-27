@@ -5,6 +5,7 @@ import {
   Sparkles, UsersRound, Zap,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const features = [
   { icon: GitBranch, eyebrow: "Rank operations", title: "Promote with guardrails.", description: "Role-aware promotion paths, approval steps, rank locks, cooldowns, and a permanent reason attached to every action.", tone: "violet" },
@@ -30,6 +31,7 @@ export default function Home() {
           <a href="#platform" className="nav-link">Platform</a><Link href="/bot" className="nav-link">Discord bot</Link><a href="#workflow" className="nav-link">How it works</a><Link href="/pricing" className="nav-link">Pricing</Link><Link href="/security" className="nav-link">Security</Link>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Link href="/login" className="hidden rounded-xl px-4 py-2 text-sm font-medium text-white/68 transition hover:text-white sm:block">Sign in</Link>
           <Link href="/dashboard" className="button-glow inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white">Open demo <ArrowRight className="size-3.5" /></Link>
         </div>
@@ -41,10 +43,10 @@ export default function Home() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="reveal-up inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/[0.07] px-3 py-1.5 text-xs font-medium text-violet-200">
               <span className="relative flex size-1.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-violet-300 opacity-60" /><span className="relative inline-flex size-1.5 rounded-full bg-violet-300" /></span>
-              <Link href="/bot" className="inline-flex items-center gap-2">Meet the Nexora Discord bot <ChevronRight className="size-3" /></Link>
+              <Link href="/bot" className="inline-flex items-center gap-2">Nexora Identity Network · Private beta <ChevronRight className="size-3" /></Link>
             </div>
             <h1 className="reveal-up delay-1 mt-7 text-balance text-[clamp(3rem,7vw,6.6rem)] font-semibold leading-[0.91] tracking-[-0.068em] text-white">Run your group.<br /><span className="gradient-text">Not the busywork.</span></h1>
-            <p className="reveal-up delay-2 mx-auto mt-7 max-w-2xl text-balance text-base leading-7 text-white/52 sm:text-lg sm:leading-8">Ranking, activity, applications, and automation in one calm control room—built for communities that have outgrown scattered bots.</p>
+            <p className="reveal-up delay-2 mx-auto mt-7 max-w-2xl text-balance text-base leading-7 text-white/52 sm:text-lg sm:leading-8">Connect Discord and Roblox identities, then run ranking, activity, applications, and automation from one calm, auditable control room.</p>
             <div className="reveal-up delay-3 mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/dashboard" className="button-glow inline-flex h-12 min-w-44 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white">Explore dashboard <ArrowRight className="size-4" /></Link>
               <Link href="/login" className="glass-button inline-flex h-12 min-w-40 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white/80"><Fingerprint className="size-4" /> Connect accounts</Link>

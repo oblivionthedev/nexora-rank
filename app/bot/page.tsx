@@ -26,6 +26,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "Discord Bot",
@@ -60,6 +61,7 @@ export default function BotPage() {
           <a href="#permissions" className="nav-link">Permissions</a>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Link href="/login" className="hidden rounded-xl px-4 py-2 text-sm font-medium text-white/68 transition hover:text-white sm:block">Sign in</Link>
           <Link href="/dashboard" className="bot-primary-button inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold">Open demo <ArrowRight className="size-3.5" /></Link>
         </div>
