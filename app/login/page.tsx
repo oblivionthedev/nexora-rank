@@ -1,12 +1,39 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Bot, Check, Gamepad2, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, Check, Gamepad2, LoaderCircle, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const [discordBusy, setDiscordBusy] = useState(false);
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
+
+  async function continueWithDiscord() {
+    setAuthMessage(null);
+
+    if (!isSupabaseConfigured()) {
+      setAuthMessage("The secure auth backend is prepared, but the dedicated Nexora Supabase project still needs to be connected.");
+      return;
+    }
+
+    setDiscordBusy(true);
+    const supabase = createClient();
+    const redirectTo = `${window.location.origin}/auth/callback?next=/dashboard`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: { redirectTo },
+    });
+
+    if (error) {
+      setDiscordBusy(false);
+      setAuthMessage("Discord sign-in could not start. Check the provider and callback settings in Supabase.");
+    }
+  }
+
   return (
     <main className="auth-page">
       <div className="auth-aurora" />
@@ -15,15 +42,22 @@ export default function LoginPage() {
         <div className="flex items-center justify-center gap-2.5"><BrandMark /><span className="text-base font-semibold text-white">Nexora Rank</span></div>
         <div className="mt-8 text-center"><div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-violet-400/15 bg-violet-400/10 text-violet-300"><LockKeyhole className="size-5" /></div><h1 className="mt-5 text-3xl font-semibold tracking-[-.045em] text-white">Connect your identity</h1><p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-white/40">One secure sign-in will connect your Discord identity to the Roblox account you choose.</p></div>
         <div className="mt-8 space-y-3">
-          <ComingSoonButton icon={Bot} name="Continue with Discord" tone="discord" />
+          <button className="oauth-button discord" onClick={continueWithDiscord} disabled={discordBusy}>
+            <span className="oauth-icon"><Bot className="size-5" /></span>
+            <span>{discordBusy ? "Opening Discord…" : "Continue with Discord"}</span>
+            <span className="ml-auto rounded-full border border-emerald-400/10 bg-emerald-400/[.06] px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-emerald-300/70">
+              {discordBusy ? <LoaderCircle className="size-3 animate-spin" /> : "Ready"}
+            </span>
+          </button>
           <ComingSoonButton icon={Gamepad2} name="Continue with Roblox" tone="roblox" />
         </div>
+        {authMessage && <div role="status" className="mt-3 rounded-xl border border-amber-300/10 bg-amber-300/[.045] p-3 text-xs leading-5 text-amber-100/60">{authMessage}</div>}
         <div className="my-7 flex items-center gap-3"><span className="h-px flex-1 bg-white/[.07]" /><span className="text-[10px] font-semibold uppercase tracking-[.15em] text-white/20">Preview access</span><span className="h-px flex-1 bg-white/[.07]" /></div>
         <Button asChild className="button-glow h-11 w-full rounded-xl"><Link href="/dashboard">Explore demo workspace <ArrowRight /></Link></Button>
         <div className="mt-8 grid grid-cols-3 gap-2">
           {["Official OAuth", "Scoped access", "No cookies"].map((item) => <div key={item} className="rounded-xl border border-white/[.06] bg-white/[.018] px-2 py-3 text-center"><Check className="mx-auto size-3.5 text-emerald-400" /><span className="mt-1.5 block text-[9px] text-white/32">{item}</span></div>)}
         </div>
-        <p className="mt-7 text-center text-[10px] leading-5 text-white/22">Authorization is intentionally disabled during this frontend preview. Nexora Rank will never ask for your Discord token or Roblox security cookie.</p>
+        <p className="mt-7 text-center text-[10px] leading-5 text-white/22">Discord OAuth is wired to the secure backend and activates when the dedicated Nexora project is attached. Nexora will never ask for a Discord token or Roblox security cookie.</p>
       </div>
     </main>
   );

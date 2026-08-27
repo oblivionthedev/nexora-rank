@@ -2,12 +2,14 @@
 
 Nexora Rank is a modern Roblox community operations platform for group ranking, staff activity, applications, automations, and Discord/Roblox account linking.
 
-This repository currently contains the high-fidelity frontend product foundation. External account authorization and live Roblox/Discord operations are intentionally labeled **Coming soon** until their secure server-side implementations are added.
+This repository contains the high-fidelity product foundation plus a production-oriented Supabase schema and Discord OAuth exchange. Live provider operations remain gated until the dedicated Nexora Supabase, Discord, and Roblox projects are attached.
 
 ## Included in this milestone
 
 - Responsive marketing site and product presentation
+- Dedicated Discord bot page, downloadable monochrome identity, command catalog, and permission model
 - Interactive operations dashboard
+- Guided launch center with backend and integration readiness
 - Member directory with search and readiness information
 - Policy-aware rank action preview
 - Activity analytics, sessions, leaderboards, and quotas
@@ -16,6 +18,8 @@ This repository currently contains the high-fidelity frontend product foundation
 - Discord, Roblox, API key, webhook, and SDK integration surfaces
 - Searchable audit log
 - Workspace, permissions, notification, and safety settings
+- Supabase SSR browser/server clients and Discord OAuth callback
+- Multi-workspace Postgres migration with RLS, indexes, idempotent webhooks, billing state, and an append-only audit surface
 - Accessible dialogs, tabs, dropdown menus, switches, mobile sidebar, and feedback states
 
 ## Development
@@ -27,20 +31,34 @@ npm run dev
 
 The app uses the Next.js App Router, React, TypeScript, Tailwind CSS, and the vendored shadcn component set.
 
+Copy `.env.example` to `.env.local`, then attach a dedicated Supabase project:
+
+```bash
+npx supabase link --project-ref YOUR_NEXORA_PROJECT_REF
+npx supabase db push
+```
+
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Never place a Supabase secret/service-role key, Discord client secret, Roblox secret, or Lemon Squeezy key in a `NEXT_PUBLIC_` variable.
+
+In Supabase Auth, enable Discord and add these callback URLs:
+
+- Local: `http://localhost:3000/auth/callback`
+- Production: `https://YOUR_DOMAIN/auth/callback`
+
 ## Vercel deployment
 
 The repository includes `vercel.json` so Vercel uses a standard Next.js build. Connect the GitHub repository in Vercel and deploy with the default Node.js runtime.
 
-## Planned backend milestones
+## Remaining backend milestones
 
-1. PostgreSQL workspace and audit data model
-2. Discord OAuth2 identity linking and bot installation
-3. Roblox OAuth/Open Cloud group authorization
-4. Signed job queue for rank operations and retries
-5. Activity SDK ingestion with anti-replay validation
-6. Application and automation persistence
-7. Lemon Squeezy subscription webhooks
-8. Rate limiting, incident controls, backups, and monitoring
+1. Apply the prepared migration to a dedicated Nexora Supabase project
+2. Configure the Discord app, provider credentials, commands, and bot installation
+3. Add Roblox OAuth/Open Cloud group authorization
+4. Add a signed job queue for rank operations and retries
+5. Add activity SDK ingestion with anti-replay validation
+6. Wire dashboard queries and mutations to the prepared tables
+7. Activate Lemon Squeezy with an eligible merchant owner and signed webhooks
+8. Add rate limiting, incident controls, backups, and monitoring
 
 ## Security rules
 
