@@ -58,6 +58,7 @@ export default function LoginPage() {
           {["Official OAuth", "Scoped access", "No cookies"].map((item) => <div key={item} className="rounded-xl border border-white/[.06] bg-white/[.018] px-2 py-3 text-center"><Check className="mx-auto size-3.5 text-emerald-400" /><span className="mt-1.5 block text-[9px] text-white/32">{item}</span></div>)}
         </div>
         <p className="mt-7 text-center text-[10px] leading-5 text-white/22">Discord OAuth is wired to the secure backend and activates when the dedicated Nexora project is attached. Nexora will never ask for a Discord token or Roblox security cookie.</p>
+        <p className="mt-4 text-center text-[10px] text-white/25">By continuing after launch, you agree to the <Link href="/legal/terms-of-service" className="underline hover:text-white/60">Terms</Link> and acknowledge the <Link href="/legal/privacy" className="underline hover:text-white/60">Privacy Policy</Link>.</p>
       </div>
     </main>
   );

@@ -187,7 +187,7 @@ export default function BotPage() {
       <footer className="border-t border-white/[.06] px-5 py-8 sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 sm:flex-row">
           <div className="flex items-center gap-2.5"><BrandMark compact /><span className="text-sm font-semibold text-white">Nexora Rank</span><span className="ml-2 text-xs text-white/24">Discord operations, linked.</span></div>
-          <div className="flex gap-5 text-xs text-white/32"><Link href="/">Home</Link><Link href="/dashboard">Demo</Link><span>© 2026 Nexora</span></div>
+          <div className="flex flex-wrap justify-center gap-5 text-xs text-white/32"><Link href="/">Home</Link><Link href="/dashboard">Demo</Link><Link href="/pricing">Pricing</Link><Link href="/legal/terms-of-service">Terms</Link><Link href="/legal/privacy">Privacy</Link><span>© 2026 Nexora</span></div>
         </div>
       </footer>
     </main>

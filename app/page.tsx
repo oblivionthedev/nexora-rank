@@ -27,7 +27,7 @@ export default function Home() {
           <BrandMark /><span className="text-[15px] font-semibold tracking-[-0.02em] text-white">Nexora Rank</span>
         </Link>
         <div className="hidden items-center gap-7 text-sm text-white/58 md:flex">
-          <a href="#platform" className="nav-link">Platform</a><Link href="/bot" className="nav-link">Discord bot</Link><a href="#workflow" className="nav-link">How it works</a><a href="#security" className="nav-link">Security</a>
+          <a href="#platform" className="nav-link">Platform</a><Link href="/bot" className="nav-link">Discord bot</Link><a href="#workflow" className="nav-link">How it works</a><Link href="/pricing" className="nav-link">Pricing</Link><Link href="/security" className="nav-link">Security</Link>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/login" className="hidden rounded-xl px-4 py-2 text-sm font-medium text-white/68 transition hover:text-white sm:block">Sign in</Link>
@@ -89,7 +89,7 @@ export default function Home() {
 
       <section className="px-5 pb-16 pt-8 sm:px-8"><div className="cta-panel mx-auto max-w-7xl text-center"><div className="relative z-10 mx-auto max-w-2xl"><BarChart3 className="mx-auto size-7 text-violet-300" /><h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-5xl">A better way to run the group.</h2><p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/48">Explore the interactive product preview now. Connect your real accounts when integrations launch.</p><Link href="/dashboard" className="button-glow mt-8 inline-flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-semibold text-white">Open Nexora Rank <ArrowRight className="size-4" /></Link></div></div></section>
 
-      <footer className="border-t border-white/[0.06] px-5 py-8 sm:px-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 sm:flex-row"><div className="flex items-center gap-2.5"><BrandMark compact /><span className="text-sm font-semibold text-white">Nexora Rank</span><span className="ml-2 text-xs text-white/24">Community operations, connected.</span></div><div className="flex gap-5 text-xs text-white/32"><a href="#security" className="hover:text-white">Security</a><a href="#pricing" className="hover:text-white">Plans</a><span>© 2026 Nexora</span></div></div></footer>
+      <footer className="border-t border-white/[0.06] px-5 py-8 sm:px-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 sm:flex-row"><div className="flex items-center gap-2.5"><BrandMark compact /><span className="text-sm font-semibold text-white">Nexora Rank</span><span className="ml-2 text-xs text-white/24">Community operations, connected.</span></div><div className="flex flex-wrap justify-center gap-5 text-xs text-white/32"><Link href="/security" className="hover:text-white">Security</Link><Link href="/pricing" className="hover:text-white">Pricing</Link><Link href="/legal/terms-of-service" className="hover:text-white">Terms</Link><Link href="/legal/privacy" className="hover:text-white">Privacy</Link><Link href="/legal" className="hover:text-white">Legal</Link><span>© 2026 Nexora</span></div></div></footer>
     </main>
   );
 }
