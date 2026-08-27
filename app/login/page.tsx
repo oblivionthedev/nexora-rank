@@ -6,7 +6,6 @@ import { ArrowLeft, Gamepad2, LoaderCircle, ShieldCheck, TriangleAlert } from "l
 import { BrandMark } from "@/components/brand-mark";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 /**
  * Human-readable copy for every failure reason /auth/callback can redirect
@@ -116,7 +115,10 @@ export default function LoginPage() {
       </section>
 
       <section className="signin-action">
-        <div className="signin-action-inner">
+        {/* Ambient field, bounded to this column, with the action card floating
+            on top of it as real glass — it samples the field behind it. */}
+        <div className="signin-field" aria-hidden="true" />
+        <div className="signin-action-inner glass-strong">
           <div className="signin-action-top">
             {/* The brand shows here on phones, where the editorial column is
                 reordered below the action; on desktop the editorial one is used. */}
@@ -126,7 +128,6 @@ export default function LoginPage() {
             <Link href="/" className="signin-back">
               <ArrowLeft className="size-4" aria-hidden="true" /> Back
             </Link>
-            <ThemeToggle />
           </div>
 
           <span className="signin-eyebrow">Sign in</span>
@@ -135,7 +136,7 @@ export default function LoginPage() {
             Discord will ask you to approve the access listed here, then send you straight back.
           </p>
 
-          <button className="discord-button" onClick={continueWithDiscord} disabled={discordBusy}>
+          <button className="discord-button pill" onClick={continueWithDiscord} disabled={discordBusy}>
             {discordBusy ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <DiscordMark />}
             {discordBusy ? "Opening Discord…" : "Continue with Discord"}
           </button>
@@ -164,7 +165,7 @@ function RobloxPending() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="roblox-pending">
+        <button className="roblox-pending pill">
           <Gamepad2 className="size-[18px]" aria-hidden="true" />
           <b>Continue with Roblox</b>
           <span className="soon">Soon</span>
