@@ -1,81 +1,172 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Bot, Check, Gamepad2, KeyRound, LoaderCircle, LockKeyhole, UserRound, UsersRound } from "lucide-react";
+import { ArrowLeft, LoaderCircle, ShieldCheck, TriangleAlert } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
-import { createClient } from "@/lib/supabase/client";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
-type LoginProvider = "discord" | "custom:roblox";
+/**
+ * Human-readable copy for every failure reason /auth/callback can redirect
+ * with. Without this the callback's error redirects were silent: the member
+ * landed back on a pristine login page with no idea what went wrong.
+ */
+const authErrors: Record<string, string> = {
+  authorization_declined: "Discord sign-in was cancelled. You can try again whenever you're ready.",
+  oauth_not_ready: "Discord sign-in is not available right now. Please try again in a moment.",
+  oauth_failed: "We could not complete the Discord sign-in. Please try again.",
+  identity_link_failed: "You signed in, but we could not save your Discord identity. Please try again.",
+  discord_already_linked: "This Discord account is already linked to another Nexora Rank user.",
+  roblox_not_ready: "Roblox sign-in is not configured yet. Please try again shortly.",
+  roblox_already_linked: "This Roblox account is already linked to another Nexora Rank user.",
+};
+
+const setupSteps = [
+  { step: "01", title: "Connect both identities", explanation: "Start with Discord or Roblox, then securely connect the other account." },
+  { step: "02", title: "Set up your owner profile", explanation: "Add your account details and activate the complete Beta Free plan." },
+  { step: "03", title: "Launch your workspace", explanation: "Choose its name and receive your permanent Workspace ID and API base." },
+];
+
+function safeNextPath(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
+  return raw;
+}
+
+function DiscordMark() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
+    </svg>
+  );
+}
 
 export default function LoginPage() {
-  const [busyProvider, setBusyProvider] = useState<LoginProvider | null>(null);
+  const [busyProvider, setBusyProvider] = useState<"discord" | "custom:roblox" | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
 
-  async function continueWithProvider(provider: LoginProvider) {
+  // Read straight from location rather than useSearchParams so this page never
+  // needs a Suspense boundary during static rendering.
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get("error");
+    if (reason) {
+      const message = authErrors[reason] ?? "Sign-in could not be completed. Please try again.";
+      window.setTimeout(() => setAuthMessage(message), 0);
+    }
+  }, []);
+
+  async function continueWith(provider: "discord" | "custom:roblox") {
     setAuthMessage(null);
+
+    if (!isSupabaseConfigured()) {
+      setAuthMessage("Sign-in is not configured yet. Please try again shortly.");
+      return;
+    }
+
     setBusyProvider(provider);
     const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback?next=/onboarding`;
-    const isRoblox = provider === "custom:roblox";
+    const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo,
-        scopes: isRoblox ? "openid profile email" : "identify email guilds guilds.members.read",
+        scopes: provider === "discord" ? "identify email guilds guilds.members.read" : "openid profile email",
       },
     });
 
     if (error) {
       setBusyProvider(null);
-      setAuthMessage(
-        isRoblox
-          ? "Roblox sign-in is waiting for the approved OAuth app to be enabled in Supabase."
-          : "Discord sign-in could not start. The Discord provider must be enabled in Supabase.",
-      );
+      setAuthMessage(`${provider === "discord" ? "Discord" : "Roblox"} sign-in could not start. Please try again in a moment.`);
     }
   }
 
   return (
-    <main className="auth-page">
-      <div className="auth-aurora" />
-      <ThemeToggle className="fixed right-5 top-5 z-20 sm:right-8 sm:top-8" />
-      <Link href="/" className="absolute left-5 top-5 z-10 inline-flex items-center gap-2 text-sm text-white/45 transition hover:text-white sm:left-8 sm:top-8"><ArrowLeft className="size-4" /> Back to Nexora Rank</Link>
-      <div className="auth-card">
-        <div className="flex items-center justify-center gap-2.5"><BrandMark /><span className="text-base font-semibold text-white">Nexora Rank</span></div>
-        <div className="mt-8 text-center"><div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-blue-400/15 bg-blue-400/10 text-blue-300"><LockKeyhole className="size-5" /></div><h1 className="mt-5 text-3xl font-semibold tracking-[-.045em] text-white">Connect your identity</h1><p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-white/40">One secure sign-in will connect your Discord identity to the Roblox account you choose.</p></div>
-        <div className="mt-8 space-y-3">
-          <button className="oauth-button discord" onClick={() => continueWithProvider("discord")} disabled={busyProvider !== null}>
-            <span className="oauth-icon"><Bot className="size-5" /></span>
-            <span>{busyProvider === "discord" ? "Opening Discord…" : "Continue with Discord"}</span>
-            <span className="ml-auto rounded-full border border-emerald-400/10 bg-emerald-400/[.06] px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-emerald-300/70">
-              {busyProvider === "discord" ? <LoaderCircle className="size-3 animate-spin" /> : "OAuth"}
-            </span>
-          </button>
-          <button className="oauth-button roblox" onClick={() => continueWithProvider("custom:roblox")} disabled={busyProvider !== null}>
-            <span className="oauth-icon"><Gamepad2 className="size-5" /></span>
-            <span>{busyProvider === "custom:roblox" ? "Opening Roblox…" : "Continue with Roblox"}</span>
-            <span className="ml-auto rounded-full border border-white/10 bg-white/[.04] px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-white/35">
-              {busyProvider === "custom:roblox" ? <LoaderCircle className="size-3 animate-spin" /> : "OAuth"}
-            </span>
-          </button>
+    <main className="signin-page">
+      <section className="signin-editorial">
+        <Link href="/" className="signin-brand" aria-label="Nexora Rank home">
+          <BrandMark compact /> Nexora Rank
+        </Link>
+
+        <h1>
+          Sign in with the account
+          <em>your community already knows.</em>
+        </h1>
+        <p className="signin-lede">
+          Nexora Rank uses official Discord and Roblox OAuth. Your password never reaches us, and we
+          will never ask for a Roblox security cookie.
+        </p>
+
+        <div className="signin-scopes">
+          <h2>After sign in · about 2 minutes</h2>
+          <ul>
+            {setupSteps.map(({ step, title, explanation }) => (
+              <li key={step}>
+                <code>{step}</code>
+                <p><strong>{title}</strong><br />{explanation}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="signin-footnote">
+            <ShieldCheck aria-hidden="true" />
+            No payment method required. API keys stay server-side.
+          </p>
         </div>
-        {authMessage && <div role="status" className="mt-3 rounded-xl border border-amber-300/10 bg-amber-300/[.045] p-3 text-xs leading-5 text-amber-100/60">{authMessage}</div>}
-        <div className="auth-next">
-          <div className="auth-next-heading"><span>After sign in</span><b>About 2 minutes</b></div>
-          <AuthNextStep icon={UserRound} number="01" title="Connect both identities" detail="Start with either provider, then securely connect the other." />
-          <AuthNextStep icon={Check} number="02" title="Set up your owner profile" detail="Add account details and activate the complete Beta Free plan." />
-          <AuthNextStep icon={UsersRound} number="03" title="Launch your workspace" detail="Choose its name and receive your Workspace ID and API base." />
-          <div className="auth-next-result"><KeyRound className="size-3.5" /><span>No payment method required. API keys stay server-side.</span></div>
+      </section>
+
+      <section className="signin-action">
+        {/* Ambient field, bounded to this column, with the action card floating
+            on top of it as real glass — it samples the field behind it. */}
+        <div className="signin-field" aria-hidden="true" />
+        <div className="signin-action-inner glass-strong">
+          <div className="signin-action-top">
+            {/* The brand shows here on phones, where the editorial column is
+                reordered below the action; on desktop the editorial one is used. */}
+            <Link href="/" className="signin-brand signin-brand-mobile" aria-label="Nexora Rank home">
+              <BrandMark compact /> Nexora Rank
+            </Link>
+            <Link href="/" className="signin-back">
+              <ArrowLeft className="size-4" aria-hidden="true" /> Back
+            </Link>
+          </div>
+
+          <span className="signin-eyebrow">Sign in</span>
+          <h2>Choose how to begin</h2>
+          <p className="signin-action-lede">
+            Start with either identity. Setup will guide you through connecting the second one.
+          </p>
+
+          <button className="discord-button pill" onClick={() => continueWith("discord")} disabled={busyProvider !== null}>
+            {busyProvider === "discord" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <DiscordMark />}
+            {busyProvider === "discord" ? "Opening Discord…" : "Continue with Discord"}
+          </button>
+
+          <button className="roblox-pending pill" onClick={() => continueWith("custom:roblox")} disabled={busyProvider !== null}>
+            {busyProvider === "custom:roblox" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <RobloxMark />}
+            <b>{busyProvider === "custom:roblox" ? "Opening Roblox…" : "Continue with Roblox"}</b>
+          </button>
+
+          {authMessage && (
+            <div role="alert" className="signin-alert">
+              <TriangleAlert aria-hidden="true" />
+              <span>{authMessage}</span>
+            </div>
+          )}
+
+          <p className="signin-legal">
+            By continuing you agree to the{" "}
+            <Link href="/legal/terms-of-service">Terms of Service</Link> and acknowledge the{" "}
+            <Link href="/legal/privacy">Privacy Policy</Link>.
+          </p>
         </div>
-        <p className="mt-6 text-center text-[10px] leading-5 text-white/22">Nexora uses official OAuth and never asks for a Discord token or Roblox security cookie.</p>
-        <p className="mt-4 text-center text-[10px] text-white/25">By continuing, you agree to the <Link href="/legal/terms-of-service" className="underline hover:text-white/60">Terms</Link> and acknowledge the <Link href="/legal/privacy" className="underline hover:text-white/60">Privacy Policy</Link>.</p>
-      </div>
+      </section>
     </main>
   );
 }
 
-function AuthNextStep({ icon: Icon, number, title, detail }: { icon: typeof UserRound; number: string; title: string; detail: string }) {
-  return <div className="auth-next-step"><span className="auth-next-icon"><Icon /></span><div><span>{number}</span><b>{title}</b><p>{detail}</p></div></div>;
+function RobloxMark() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M5.164 2 2 18.836 18.836 22 22 5.164 5.164 2Zm8.09 12.67-3.924-.738.738-3.924 3.924.738-.738 3.924Z" />
+    </svg>
+  );
 }

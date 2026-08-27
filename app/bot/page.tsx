@@ -26,7 +26,6 @@ import {
   Workflow,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "Discord Bot",
@@ -61,9 +60,8 @@ export default function BotPage() {
           <a href="#permissions" className="nav-link">Permissions</a>
         </div>
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <Link href="/login" className="hidden rounded-xl px-4 py-2 text-sm font-medium text-white/68 transition hover:text-white sm:block">Sign in</Link>
-          <Link href="/dashboard" className="bot-primary-button inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold">Open demo <ArrowRight className="size-3.5" /></Link>
+          <Link href="/dashboard" className="bot-primary-button inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold">Open app <ArrowRight className="size-3.5" /></Link>
         </div>
       </nav>
 
@@ -178,7 +176,7 @@ export default function BotPage() {
         <div className="bot-cta mx-auto max-w-7xl">
           <Sparkles className="size-6 text-white/70" />
           <h2 className="mt-5 max-w-3xl text-balance text-4xl font-semibold tracking-[-.055em] text-white sm:text-6xl">The Discord surface for your whole Roblox operation.</h2>
-          <p className="mt-5 max-w-xl text-sm leading-7 text-white/38">The public invite opens after OAuth, permissions, and real-world sync tests are complete. The product preview is ready now.</p>
+          <p className="mt-5 max-w-xl text-sm leading-7 text-white/38">The public bot invite opens after permissions and real-world sync tests are complete. The secure web workspace is available now.</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/dashboard" className="bot-primary-button inline-flex h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold">Explore dashboard <ArrowRight className="size-4" /></Link>
             <Link href="/login" className="bot-secondary-button inline-flex h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold"><MessageSquareText className="size-4" /> Prepare connection</Link>
