@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   description: "Connect Discord and Roblox identities, then run ranking, activity, applications, and automation from one trusted workspace.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
   applicationName: "Nexora Rank",
+  other: { "codex-preview": "development" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
