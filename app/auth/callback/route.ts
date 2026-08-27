@@ -19,5 +19,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=oauth_failed", url.origin));
   }
 
+  await supabase.rpc("sync_auth_identities");
   return NextResponse.redirect(new URL(safeNext, url.origin));
 }

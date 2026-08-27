@@ -165,6 +165,63 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+          scopes: string[]
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          revoked_at?: string | null
+          scopes?: string[]
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_keys_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       application_forms: {
         Row: {
           closes_at: string | null
@@ -524,23 +581,47 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          contact_email: string | null
           created_at: string
           display_name: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
+          onboarding_completed_at: string | null
+          password_set_at: string | null
+          plan_key: string
+          plan_selected_at: string | null
+          roblox_link_deferred_at: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          contact_email?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id: string
+          last_name?: string | null
+          onboarding_completed_at?: string | null
+          password_set_at?: string | null
+          plan_key?: string
+          plan_selected_at?: string | null
+          roblox_link_deferred_at?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          contact_email?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          onboarding_completed_at?: string | null
+          password_set_at?: string | null
+          plan_key?: string
+          plan_selected_at?: string | null
+          roblox_link_deferred_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -825,6 +906,7 @@ export type Database = {
           discord_guild_id: string | null
           id: string
           name: string
+          public_id: string
           roblox_group_id: string | null
           slug: string
           updated_at: string
@@ -835,6 +917,7 @@ export type Database = {
           discord_guild_id?: string | null
           id?: string
           name: string
+          public_id?: string
           roblox_group_id?: string | null
           slug: string
           updated_at?: string
@@ -845,6 +928,7 @@ export type Database = {
           discord_guild_id?: string | null
           id?: string
           name?: string
+          public_id?: string
           roblox_group_id?: string | null
           slug?: string
           updated_at?: string
@@ -868,6 +952,8 @@ export type Database = {
         Args: { workspace_name: string; workspace_slug: string }
         Returns: string
       }
+      sync_auth_identities: { Args: never; Returns: string[] }
+      sync_discord_identity: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
