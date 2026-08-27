@@ -928,6 +928,10 @@ export type Database = {
         Args: { workspace_name: string; workspace_slug: string }
         Returns: string
       }
+      sync_discord_identity: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

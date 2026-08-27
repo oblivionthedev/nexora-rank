@@ -20,5 +20,25 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" suppressHydrationWarning><body className="antialiased"><ThemeProvider>{children}</ThemeProvider></body></html>;
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Cabinet Grotesk (headlines) + Satoshi (body) from Fontshare, JetBrains
+            Mono for identifiers and receipts. These were previously declared in
+            CSS but never loaded, so every page fell back to a system font. */}
+        <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          rel="stylesheet"
+          href="https://api.fontshare.com/v2/css?f%5B%5D=cabinet-grotesk@700,800&f%5B%5D=satoshi@400,500,700&display=swap"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+        />
+      </head>
+      <body className="antialiased"><ThemeProvider>{children}</ThemeProvider></body>
+    </html>
+  );
 }
