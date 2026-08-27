@@ -11,7 +11,8 @@ export const dynamic = "force-dynamic";
 
 export default async function OnboardingCompletePage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const authResult = await supabase.auth.getUser().catch(() => null);
+  const user = authResult?.data.user ?? null;
   if (!user) redirect("/login?next=/onboarding/complete");
 
   const { data: membership } = await supabase
