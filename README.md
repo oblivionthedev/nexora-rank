@@ -40,20 +40,34 @@ npx supabase db push
 
 Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Never place a Supabase secret/service-role key, Discord client secret, Roblox secret, or Lemon Squeezy key in a `NEXT_PUBLIC_` variable.
 
-Discord and Roblox authorization are brokered by Supabase Auth. Provider
-applications redirect to:
+Set `CRON_SECRET` to a random 32+ byte server-only value in Vercel Production. The daily `/api/cron/roblox-membership` job uses it to authenticate membership checks. Free-plan enforcement is stored separately in `nexora_private.platform_policy` and defaults to disabled while Roblox OAuth is under review. Enable it only after OAuth is approved and the cron path has been verified.
 
-- Supabase callback: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
+For the separate server-side Roblox Open Cloud flow, set these server-only variables in `.env.local` or Vercel:
 
-In Supabase Auth URL Configuration, allow these application callback URLs:
+- `ROBLOX_CLIENT_ID`
+- `ROBLOX_CLIENT_SECRET`
+
+In Supabase Auth, enable Discord and add these application callback URLs:
 
 - Local: `http://localhost:3000/auth/callback`
 - Production: `https://YOUR_DOMAIN/auth/callback`
 
-Discord uses the built-in Supabase provider. Roblox uses a custom OIDC provider
-named `custom:roblox` with issuer `https://apis.roblox.com/oauth/`, scopes
-`openid profile`, optional email, and PKCE enabled. See
-`docs/oauth-setup.md` for the full provider checklist.
+For Roblox sign-in, create a Supabase **Custom Provider** with these settings:
+
+- Configuration: Auto-discovery (OIDC)
+- Name: `Roblox`
+- Identifier: `custom:roblox`
+- Issuer URL: `https://apis.roblox.com/oauth/`
+- Scopes: `openid profile`
+- Email optional: enabled
+- PKCE: enabled
+- Client ID and Client Secret: copy them from the Roblox OAuth application
+
+Register Supabase's callback URL in the Roblox OAuth application:
+
+- Production: `https://oomtmrfmqnndmwjqdpsj.supabase.co/auth/v1/callback`
+
+The existing `/auth/roblox/callback` URLs belong only to the separate direct Open Cloud flow. They do not replace the Supabase callback used by `custom:roblox` sign-in. Never expose the Roblox client secret in a `NEXT_PUBLIC_` variable.
 
 ## Vercel deployment
 

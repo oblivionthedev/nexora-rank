@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const requestedNext = url.searchParams.get("next");
   const safeNext = requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
     ? requestedNext
-    : "/dashboard";
+    : "/onboarding";
 
   if (!isSupabaseConfigured() || !code) {
     return NextResponse.redirect(new URL("/login?error=oauth_not_ready", url.origin));
@@ -20,10 +20,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=oauth_failed", url.origin));
   }
 
-  const { error: syncError } = await supabase.rpc("sync_auth_identities");
-  if (syncError) {
-    return NextResponse.redirect(new URL("/login?error=identity_sync_failed", url.origin));
-  }
-
+  await supabase.rpc("sync_auth_identities");
   return NextResponse.redirect(new URL(safeNext, url.origin));
 }

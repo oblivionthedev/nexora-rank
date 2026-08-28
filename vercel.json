@@ -1,5 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "npx next build"
+  "buildCommand": "npx next build",
+  "crons": [
+    {
+      "path": "/api/cron/roblox-membership",
+      "schedule": "17 3 * * *"
+    },
+    {
+      "path": "/api/cron/status-history",
+      "schedule": "47 3 * * *"
+    }
+  ]
 }

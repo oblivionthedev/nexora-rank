@@ -585,6 +585,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           first_name: string | null
+          free_roblox_group_checked_at: string | null
+          free_roblox_group_status: string
           id: string
           last_name: string | null
           onboarding_completed_at: string | null
@@ -592,6 +594,9 @@ export type Database = {
           plan_key: string
           plan_selected_at: string | null
           roblox_link_deferred_at: string | null
+          selected_roblox_group_id: string | null
+          selected_roblox_group_name: string | null
+          selected_roblox_group_role: string | null
           updated_at: string
         }
         Insert: {
@@ -600,6 +605,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           first_name?: string | null
+          free_roblox_group_checked_at?: string | null
+          free_roblox_group_status?: string
           id: string
           last_name?: string | null
           onboarding_completed_at?: string | null
@@ -607,6 +614,9 @@ export type Database = {
           plan_key?: string
           plan_selected_at?: string | null
           roblox_link_deferred_at?: string | null
+          selected_roblox_group_id?: string | null
+          selected_roblox_group_name?: string | null
+          selected_roblox_group_role?: string | null
           updated_at?: string
         }
         Update: {
@@ -615,6 +625,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           first_name?: string | null
+          free_roblox_group_checked_at?: string | null
+          free_roblox_group_status?: string
           id?: string
           last_name?: string | null
           onboarding_completed_at?: string | null
@@ -622,6 +634,9 @@ export type Database = {
           plan_key?: string
           plan_selected_at?: string | null
           roblox_link_deferred_at?: string | null
+          selected_roblox_group_id?: string | null
+          selected_roblox_group_name?: string | null
+          selected_roblox_group_role?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -774,6 +789,30 @@ export type Database = {
           },
         ]
       }
+      service_status_snapshots: {
+        Row: {
+          checked_at: string
+          checked_on: string
+          detail: string | null
+          service_key: string
+          state: string
+        }
+        Insert: {
+          checked_at?: string
+          checked_on?: string
+          detail?: string | null
+          service_key: string
+          state: string
+        }
+        Update: {
+          checked_at?: string
+          checked_on?: string
+          detail?: string | null
+          service_key?: string
+          state?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -899,44 +938,159 @@ export type Database = {
           },
         ]
       }
+      workspace_roblox_eligibility: {
+        Row: {
+          grace_expires_at: string | null
+          grace_started_at: string | null
+          last_checked_at: string | null
+          last_error_code: string | null
+          last_member_at: string | null
+          owner_user_id: string
+          required_group_id: string
+          status: string
+          suspended_at: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          grace_expires_at?: string | null
+          grace_started_at?: string | null
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          last_member_at?: string | null
+          owner_user_id: string
+          required_group_id?: string
+          status?: string
+          suspended_at?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          grace_expires_at?: string | null
+          grace_started_at?: string | null
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          last_member_at?: string | null
+          owner_user_id?: string
+          required_group_id?: string
+          status?: string
+          suspended_at?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_roblox_eligibility_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_roblox_eligibility_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_logs: {
+        Row: { id: number; workspace_id: string; source: string; severity: string; event_type: string; summary: string; actor_user_id: string | null; metadata: Json; created_at: string }
+        Insert: { id?: never; workspace_id: string; source: string; severity?: string; event_type: string; summary: string; actor_user_id?: string | null; metadata?: Json; created_at?: string }
+        Update: { id?: never; workspace_id?: string; source?: string; severity?: string; event_type?: string; summary?: string; actor_user_id?: string | null; metadata?: Json; created_at?: string }
+        Relationships: []
+      }
+      workspace_settings: {
+        Row: { workspace_id: string; allowed_roblox_rank_min: number; allowed_roblox_role_ids: string[]; theme_mode: string; theme_color_start: string; theme_color_end: string; updated_by: string | null; updated_at: string }
+        Insert: { workspace_id: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; theme_mode?: string; theme_color_start?: string; theme_color_end?: string; updated_by?: string | null; updated_at?: string }
+        Update: { workspace_id?: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; theme_mode?: string; theme_color_start?: string; theme_color_end?: string; updated_by?: string | null; updated_at?: string }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           created_at: string
           created_by: string
           discord_guild_id: string | null
+          discord_guild_name: string | null
           id: string
+          appeal_allowed: boolean
+          appeal_note: string | null
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          moderation_status: string
+          moderation_expires_at: string | null
           name: string
+          operational_status: string
           public_id: string
           roblox_group_id: string | null
+          roblox_group_name: string | null
+          roblox_group_icon_url: string | null
           slug: string
+          suspended_at: string | null
+          suspension_reason: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           created_by: string
           discord_guild_id?: string | null
+          discord_guild_name?: string | null
           id?: string
+          appeal_allowed?: boolean
+          appeal_note?: string | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: string
+          moderation_expires_at?: string | null
           name: string
+          operational_status?: string
           public_id?: string
           roblox_group_id?: string | null
+          roblox_group_name?: string | null
+          roblox_group_icon_url?: string | null
           slug: string
+          suspended_at?: string | null
+          suspension_reason?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           created_by?: string
           discord_guild_id?: string | null
+          discord_guild_name?: string | null
           id?: string
+          appeal_allowed?: boolean
+          appeal_note?: string | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: string
+          moderation_expires_at?: string | null
           name?: string
+          operational_status?: string
           public_id?: string
           roblox_group_id?: string | null
+          roblox_group_name?: string | null
+          roblox_group_icon_url?: string | null
           slug?: string
+          suspended_at?: string | null
+          suspension_reason?: string | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "workspaces_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspaces_moderated_by_fkey"
+            columns: ["moderated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -948,20 +1102,89 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      staff_access_state: { Args: never; Returns: Json }
+      staff_console_state: {
+        Args: { search_query?: string; status_filter?: string }
+        Returns: Json
+      }
+      staff_grant_role: {
+        Args: { target_email: string; target_role: string }
+        Returns: Json
+      }
+      staff_moderate_workspace: {
+        Args: {
+          action_reason: string
+          appeal_message?: string
+          can_appeal?: boolean
+          moderation_action: string
+          suspension_days?: number
+          target_workspace_id: string
+        }
+        Returns: Json
+      }
+      staff_revoke_role: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      staff_find_workspaces: { Args: { group_query: string }; Returns: Json }
+      workspace_control_state: { Args: { target_public_id: string }; Returns: Json }
+      save_workspace_settings: { Args: { target_workspace_id: string; rank_min: number; role_ids: string[] }; Returns: boolean }
+      save_workspace_theme: { Args: { target_workspace_id: string; requested_theme_mode: string; requested_color_start: string; requested_color_end: string }; Returns: boolean }
+      set_workspace_roblox_group: { Args: { target_workspace_id: string; group_id: string; group_name: string; icon_url: string; oauth_verified: boolean }; Returns: boolean }
+      create_discord_link_code: { Args: { target_workspace_id: string }; Returns: Json }
+      claim_discord_link_code: { Args: { raw_code: string; guild_id: string; guild_name: string; discord_user_id: string }; Returns: Json }
+      authenticate_workspace_api_key: { Args: { raw_key: string }; Returns: Json }
+      release_expired_staff_suspensions: { Args: { candidate_secret: string }; Returns: number }
+      claim_free_membership_checks: {
+        Args: { batch_size?: number; candidate_secret: string }
+        Returns: {
+          owner_user_id: string
+          plan_key: string
+          plan_status: string
+          roblox_user_id: string
+          workspace_id: string
+        }[]
+      }
       complete_onboarding: { Args: never; Returns: Json }
       confirm_password_set: { Args: never; Returns: string }
       create_workspace: {
         Args: { workspace_name: string; workspace_slug: string }
         Returns: string
       }
+      get_free_membership_policy: { Args: never; Returns: Json }
       issue_workspace_api_key: {
         Args: { p_name?: string; p_workspace_id: string }
         Returns: Json
       }
       onboarding_state: { Args: never; Returns: Json }
+      record_free_membership_check: {
+        Args: {
+          candidate_secret: string
+          check_result: string
+          error_code?: string
+          target_workspace_id: string
+        }
+        Returns: string
+      }
+      record_owner_membership_preflight: {
+        Args: {
+          candidate_secret: string
+          check_result: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
+      record_status_snapshots: {
+        Args: { candidate_secret: string; snapshots: Json }
+        Returns: number
+      }
       revoke_workspace_api_key: {
         Args: { p_key_id: string }
         Returns: undefined
+      }
+      rotate_workspace_api_key: {
+        Args: { p_workspace_id: string }
+        Returns: Json
       }
       save_onboarding_profile: {
         Args: {
@@ -973,6 +1196,10 @@ export type Database = {
       }
       select_onboarding_plan: {
         Args: { p_plan_key: string }
+        Returns: undefined
+      }
+      select_onboarding_roblox_group: {
+        Args: { p_group_id: string; p_group_name: string; p_group_role: string }
         Returns: undefined
       }
       set_roblox_link_deferred: {
@@ -1113,4 +1340,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

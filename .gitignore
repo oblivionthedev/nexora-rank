@@ -20,6 +20,13 @@
 # misc
 .DS_Store
 *.pem
+.openai/
+.vinext/
+.snapshot-manifest.json
+.git-info-refs
+.git-pack.pack
+.git-upload-pack-response
+supabase/.temp/
 
 # debug
 npm-debug.log*
@@ -29,32 +36,15 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-!.env.example
 
 # vercel
 .vercel
 
 # typescript
 next-env.d.ts
+tsconfig.tsbuildinfo
 /dist/
 /.wrangler/
 /.sites-runtime/
 /outputs/
 /work/
-
-# Local source snapshots and deployment helpers
-/.github-source/
-/.nexorasite-source/
-/.git-info-refs
-/.git-pack.pack
-/.git-upload-pack-response
-/extract_git_pack.py
-/unpack_git_snapshot.py
-/tsconfig.tsbuildinfo
-
-# Discord bot is deployed separately from the website
-/Nexora-Bot/
-/Nexora-Bot*.zip
-
-.vercel
-.env*

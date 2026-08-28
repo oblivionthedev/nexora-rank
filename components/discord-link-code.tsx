@@ -1,0 +1,7 @@
+"use client";
+import { useActionState } from "react";
+import { Check, Copy, Link2 } from "lucide-react";
+import { createDiscordCode, type LinkCodeState } from "@/app/dashboard/[workspaceId]/actions";
+
+const initial:LinkCodeState={};
+export function DiscordLinkCode({publicId,disabled}:{publicId:string;disabled:boolean}){const[state,action,pending]=useActionState(createDiscordCode,initial);return <div className="mt-5"><form action={action}><input type="hidden" name="public_id" value={publicId}/><button disabled={pending||disabled} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#ffffff] px-5 text-sm font-bold text-[#050303] disabled:opacity-40"><Link2 className="size-4"/>{pending?"Creating code…":"Create /link code"}</button></form>{state.code?<div className="mt-4 rounded-2xl border border-[#d79a9a]/20 bg-[#d79a9a]/7 p-4"><p className="flex items-center gap-2 text-sm font-bold text-[#e5b4b4]"><Check className="size-4"/>Run this in your Discord server</p><div className="mt-3 flex items-center gap-2 rounded-xl bg-black/30 p-3"><code className="text-lg font-bold text-white">/link {state.code}</code><button onClick={()=>navigator.clipboard.writeText(state.code||"")} className="ml-auto rounded-lg p-2 text-white/50 hover:bg-white/5" aria-label="Copy link command"><Copy className="size-4"/></button></div><p className="mt-2 text-xs text-white/40">Expires in 10 minutes. The bot confirms the server automatically.</p></div>:null}{state.error?<p className="mt-3 text-sm text-red-200">{state.error}</p>:null}</div>}

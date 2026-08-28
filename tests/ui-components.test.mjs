@@ -83,3 +83,17 @@ test("renders sidebar skeletons deterministically", async () => {
   assert.equal(first, second);
   assert.match(first, /--skeleton-width:70%/);
 });
+
+test("keeps the Roblox login mark inside its button", async () => {
+  const [css, login, onboarding] = await Promise.all([
+    readFile(path.join(root, "app/globals.css"), "utf8"),
+    readFile(path.join(root, "app/login/page.tsx"), "utf8"),
+    readFile(path.join(root, "components/onboarding-identity-actions.tsx"), "utf8"),
+  ]);
+
+  assert.match(css, /\.roblox-pending svg\{width:19px;height:19px;flex:0 0 19px\}/);
+  assert.match(login, /"openid profile"/);
+  assert.match(onboarding, /"openid profile"/);
+  assert.doesNotMatch(login, /openid profile email/);
+  assert.doesNotMatch(onboarding, /openid profile email/);
+});
