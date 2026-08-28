@@ -1001,6 +1001,10 @@ export type Database = {
           created_by: string
           discord_guild_id: string | null
           id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          moderation_status: string
           name: string
           operational_status: string
           public_id: string
@@ -1015,6 +1019,10 @@ export type Database = {
           created_by: string
           discord_guild_id?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: string
           name: string
           operational_status?: string
           public_id?: string
@@ -1029,6 +1037,10 @@ export type Database = {
           created_by?: string
           discord_guild_id?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: string
           name?: string
           operational_status?: string
           public_id?: string
@@ -1046,6 +1058,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "workspaces_moderated_by_fkey"
+            columns: ["moderated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -1053,6 +1072,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      staff_access_state: { Args: never; Returns: Json }
+      staff_console_state: {
+        Args: { search_query?: string; status_filter?: string }
+        Returns: Json
+      }
+      staff_grant_role: {
+        Args: { target_email: string; target_role: string }
+        Returns: Json
+      }
+      staff_moderate_workspace: {
+        Args: {
+          action_reason: string
+          moderation_action: string
+          target_workspace_id: string
+        }
+        Returns: Json
+      }
+      staff_revoke_role: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       claim_free_membership_checks: {
         Args: { batch_size?: number; candidate_secret: string }
         Returns: {
@@ -1258,4 +1298,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

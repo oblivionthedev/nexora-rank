@@ -66,8 +66,8 @@ export default async function DashboardPage() {
 
   if (!membership) redirect("/onboarding");
 
-  const [{ data: workspace }, { count: memberCount }, { count: rankCount }, { count: activityCount }, { data: integrations }, { data: eligibility }, { data: subscription }, { data: policy }, { data: apiKey }] = await Promise.all([
-    supabase.from("workspaces").select("id, public_id, name, slug, discord_guild_id, roblox_group_id, operational_status, suspension_reason").eq("id", membership.workspace_id).single(),
+  const [{ data: workspace }, { count: memberCount }, { count: rankCount }, { count: activityCount }, { data: integrations }, { data: eligibility }, { data: subscription }, { data: policy }, { data: apiKey }, { data: staffAccess }] = await Promise.all([
+    supabase.from("workspaces").select("id, public_id, name, slug, discord_guild_id, roblox_group_id, operational_status, suspension_reason, moderation_status, moderation_reason").eq("id", membership.workspace_id).single(),
     supabase.from("workspace_members").select("workspace_id", { count: "exact", head: true }).eq("workspace_id", membership.workspace_id),
     supabase.from("rank_actions").select("id", { count: "exact", head: true }).eq("workspace_id", membership.workspace_id),
     supabase.from("activity_sessions").select("id", { count: "exact", head: true }).eq("workspace_id", membership.workspace_id),
@@ -76,6 +76,7 @@ export default async function DashboardPage() {
     supabase.from("subscriptions").select("plan_key, status").eq("workspace_id", membership.workspace_id).maybeSingle(),
     supabase.rpc("get_free_membership_policy"),
     supabase.from("api_keys").select("key_prefix").eq("workspace_id", membership.workspace_id).is("revoked_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.rpc("staff_access_state"),
   ]);
   if (!workspace) redirect("/dashboard?error=workspace_failed");
   const integrationState = new Map((integrations ?? []).map((item) => [item.provider, item.status]));
@@ -83,6 +84,8 @@ export default async function DashboardPage() {
   const membershipEnforced = Boolean(membershipPolicy?.enabled);
   const paidExempt = Boolean(subscription?.plan_key !== "free" && ["active", "trialing"].includes(subscription?.status ?? ""));
   const graceDeadline = eligibility?.grace_expires_at ? new Date(eligibility.grace_expires_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) : null;
+  const isStaff = Boolean((staffAccess as { authorized?: boolean } | null)?.authorized);
+  const manuallyModerated = workspace.moderation_status !== "clear";
 
   const initials = displayName.slice(0, 2).toUpperCase();
 
@@ -142,6 +145,7 @@ export default async function DashboardPage() {
             <span className="microlabel hidden lg:block">Workspace</span>
             <span className="hidden truncate text-[13px] font-semibold text-white lg:block">{workspace.name}</span>
             <div className="ml-auto flex items-center gap-2">
+              {isStaff ? <Link href="/staff" className="pill pill-ghost"><ShieldCheck className="size-3.5" /><span className="hidden sm:inline">Staff</span></Link> : null}
               <form action={signOut}>
                 <button type="submit" className="pill pill-ghost">
                   <LogOut className="size-3.5" aria-hidden="true" />
@@ -158,7 +162,11 @@ export default async function DashboardPage() {
         </header>
 
         <div className="app-content">
-          {membershipEnforced && !paidExempt ? (
+          {manuallyModerated ? (
+            <section className={`mb-4 rounded-2xl border px-5 py-4 ${workspace.moderation_status === "banned" ? "border-red-400/30 bg-red-400/10" : "border-amber-300/30 bg-amber-300/10"}`} role="alert">
+              <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-red-300" /><div><b className="text-sm text-white">Workspace {workspace.moderation_status}</b><p className="mt-1 text-xs leading-6 text-white/62">{workspace.moderation_reason || "This workspace was restricted by Nexora staff."} Contact Nexora support if you believe this was a mistake.</p></div></div>
+            </section>
+          ) : membershipEnforced && !paidExempt ? (
             <section className={`mb-4 rounded-2xl border px-5 py-4 ${workspace.operational_status === "suspended" ? "border-red-400/30 bg-red-400/10" : eligibility?.status === "grace" ? "border-amber-300/30 bg-amber-300/10" : "border-[#d3aa70]/22 bg-[#d3aa70]/8"}`} role="status">
               <div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#e8c489]" /><div><b className="text-sm text-white">{workspace.operational_status === "suspended" ? "Workspace suspended" : eligibility?.status === "grace" ? "Roblox membership grace period" : "Free-plan membership requirement"}</b><p className="mt-1 text-xs leading-6 text-white/62">{workspace.operational_status === "suspended" ? "The owner must rejoin Roblox community 596263047. Nexora restores this workspace automatically after a successful check." : eligibility?.status === "grace" ? `The owner left the required community. Rejoin before ${graceDeadline} UTC to avoid suspension on the next successful verification.` : "The workspace owner must remain in Roblox community 596263047. Checks are automatic; provider outages never count as leaving."}</p></div></div>
             </section>
@@ -224,7 +232,7 @@ export default async function DashboardPage() {
             </div>
             <div className="mt-5 grid gap-3 lg:grid-cols-[.7fr_1.3fr]">
               <DeveloperItem title="Permanent workspace ID" value={workspace.public_id} />
-              <ApiKeyControl workspaceId={workspace.id} currentPrefix={apiKey?.key_prefix} />
+              <ApiKeyControl workspaceId={workspace.id} currentPrefix={apiKey?.key_prefix} disabled={workspace.operational_status === "suspended"} />
             </div>
           </section>
         </div>

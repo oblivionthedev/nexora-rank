@@ -1,0 +1,95 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import {
+  Activity, AlertTriangle, ArrowLeft, Ban, CheckCircle2, Clock3,
+  LockKeyhole, LogOut, RotateCcw, Search, ShieldCheck, UsersRound,
+} from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { signOut } from "@/app/dashboard/actions";
+import { grantStaffRole, moderateWorkspace, revokeStaffRole } from "./actions";
+
+export const dynamic = "force-dynamic";
+
+type Access = { authorized: boolean; role: "owner" | "admin" | "moderator" | "support"; can_moderate: boolean; can_ban: boolean; can_manage_staff: boolean };
+type WorkspaceRow = { id: string; public_id: string; name: string; plan: string; subscription_status: string; operational_status: string; moderation_status: "clear" | "suspended" | "banned"; moderation_reason: string | null; moderated_at: string | null; owner_name: string; owner_email: string | null; created_at: string };
+type StaffRow = { user_id: string; role: Access["role"]; active: boolean; display_name: string; email: string | null; created_at: string };
+type ActionRow = { id: number; action_type: string; reason: string; workspace_name: string | null; actor_name: string; created_at: string };
+type ConsoleState = { access: Access; counts: { total: number; active: number; suspended: number; banned: number }; workspaces: WorkspaceRow[]; staff: StaffRow[]; recent_actions: ActionRow[] };
+
+const notices: Record<string, string> = {
+  workspace_suspend: "Workspace suspended.", workspace_restore: "Workspace moderation cleared.", workspace_ban: "Workspace banned.",
+  staff_updated: "Staff access updated.", staff_revoked: "Staff access revoked.",
+};
+const errors: Record<string, string> = {
+  invalid_moderation_request: "Choose a valid action and enter a reason of at least 4 characters.", staff_access_denied: "This account is not staff.",
+  staff_moderation_denied: "Your role cannot moderate workspaces.", staff_ban_denied: "Only owners and admins can ban workspaces.",
+  moderation_reason_required: "A reason between 4 and 500 characters is required.", workspace_not_found: "That workspace no longer exists.",
+  staff_management_denied: "Your role cannot manage staff.", invalid_staff_role: "That staff role is invalid.",
+  nexora_account_not_found: "No Nexora account uses that email yet. Ask them to sign in first.", owner_role_required: "Only the platform owner can change that role.",
+  owner_role_cannot_be_changed: "The platform owner role cannot be changed here.", staff_member_not_found: "That staff member was not found.",
+  invalid_staff_request: "Enter a valid account email and role.", action_failed: "The action could not be completed.",
+};
+
+export default async function StaffPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; notice?: string; error?: string }> }) {
+  if (!isSupabaseConfigured()) redirect("/login?error=oauth_not_ready");
+  const params = await searchParams;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login?next=/staff");
+  const status = ["active", "suspended", "banned"].includes(params.status ?? "") ? params.status! : "all";
+  const { data, error } = await supabase.rpc("staff_console_state", { search_query: params.q?.slice(0, 120) || undefined, status_filter: status });
+  if (error || !data) redirect("/staff/login");
+  const state = data as unknown as ConsoleState;
+
+  return (
+    <div className="min-h-screen bg-[#080806] text-white">
+      <header className="sticky top-0 z-30 border-b border-white/8 bg-[#080806]/88 px-5 py-3 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1480px] items-center gap-3">
+          <Link href="/" className="flex items-center gap-2"><BrandMark compact /><span className="hidden text-sm font-semibold sm:inline">Nexora Staff</span></Link>
+          <span className="rounded-full border border-[#d3aa70]/25 bg-[#d3aa70]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#e8c489]">{state.access.role}</span>
+          <div className="ml-auto flex gap-2"><Link href="/dashboard" className="pill pill-ghost"><ArrowLeft className="size-3.5" />Dashboard</Link><form action={signOut}><button className="pill pill-ghost" type="submit"><LogOut className="size-3.5" /><span className="hidden sm:inline">Sign out</span></button></form></div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-[1480px] px-5 py-10 sm:py-14">
+        <section className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div><p className="microlabel">Platform operations</p><h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-.035em] sm:text-6xl">Workspace control.</h1><p className="mt-4 max-w-2xl text-sm leading-7 text-white/55">Review every workspace, enforce platform rules, and keep a permanent record of staff actions.</p></div>
+          <div className="flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/8 px-4 py-2 text-xs text-emerald-200"><ShieldCheck className="size-4" />Database authorization active</div>
+        </section>
+
+        {params.notice && notices[params.notice] ? <div className="mt-7 flex gap-3 rounded-2xl border border-emerald-300/20 bg-emerald-300/8 p-4 text-sm text-emerald-100"><CheckCircle2 className="size-5" />{notices[params.notice]}</div> : null}
+        {params.error && errors[params.error] ? <div className="mt-7 flex gap-3 rounded-2xl border border-red-300/20 bg-red-300/8 p-4 text-sm text-red-100"><AlertTriangle className="size-5" />{errors[params.error]}</div> : null}
+
+        <section className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Metric label="All workspaces" value={state.counts.total} icon={UsersRound} />
+          <Metric label="Active" value={state.counts.active} icon={Activity} tone="green" />
+          <Metric label="Suspended" value={state.counts.suspended} icon={LockKeyhole} tone="amber" />
+          <Metric label="Banned" value={state.counts.banned} icon={Ban} tone="red" />
+        </section>
+
+        <section className="mt-8 rounded-[28px] border border-white/9 bg-white/[.025] p-4 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><h2 className="text-xl font-bold">Workspaces</h2><p className="mt-1 text-xs text-white/42">Search by workspace, permanent ID, owner, or email.</p></div>
+            <form className="flex flex-col gap-2 sm:flex-row" action="/staff"><label className="relative"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/35" /><input name="q" defaultValue={params.q} placeholder="Search workspaces" className="min-h-11 w-full rounded-full border border-white/10 bg-black/30 pl-11 pr-4 text-sm outline-none focus:border-[#d3aa70]/50 sm:w-72" /></label><select name="status" defaultValue={status} className="min-h-11 rounded-full border border-white/10 bg-[#13120f] px-4 text-sm"><option value="all">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="banned">Banned</option></select><button className="min-h-11 rounded-full bg-white px-5 text-sm font-bold text-black">Filter</button></form>
+          </div>
+          <div className="mt-6 space-y-3">{state.workspaces.length ? state.workspaces.map((workspace) => <WorkspaceCard key={workspace.id} workspace={workspace} access={state.access} />) : <div className="rounded-2xl border border-dashed border-white/10 py-14 text-center text-sm text-white/40">No matching workspaces.</div>}</div>
+        </section>
+
+        <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_.82fr]">
+          <section className="rounded-[28px] border border-white/9 bg-white/[.025] p-5 sm:p-7"><div className="flex items-center gap-3"><Clock3 className="size-5 text-[#e8c489]" /><div><h2 className="font-bold">Recent staff actions</h2><p className="text-xs text-white/40">Newest first · audit records cannot be edited from the website</p></div></div><div className="mt-5 divide-y divide-white/7">{state.recent_actions.length ? state.recent_actions.map((action) => <div key={action.id} className="grid gap-1 py-4 sm:grid-cols-[1fr_auto]"><div><p className="text-sm font-semibold">{humanAction(action.action_type)}{action.workspace_name ? ` · ${action.workspace_name}` : ""}</p><p className="mt-1 text-xs text-white/45">{action.reason} · by {action.actor_name}</p></div><time className="text-[11px] text-white/32">{formatDate(action.created_at)}</time></div>) : <p className="py-8 text-sm text-white/40">No staff actions yet.</p>}</div></section>
+          <section className="rounded-[28px] border border-white/9 bg-white/[.025] p-5 sm:p-7"><div className="flex items-center gap-3"><UsersRound className="size-5 text-[#e8c489]" /><div><h2 className="font-bold">Staff access</h2><p className="text-xs text-white/40">Platform roles are separate from workspace roles</p></div></div>
+            {state.access.can_manage_staff ? <form action={grantStaffRole} className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto_auto]"><input type="email" name="email" required placeholder="Existing Nexora account email" className="min-h-11 rounded-xl border border-white/10 bg-black/30 px-4 text-sm outline-none focus:border-[#d3aa70]/50" /><select name="role" className="min-h-11 rounded-xl border border-white/10 bg-[#13120f] px-3 text-sm"><option value="support">Support</option><option value="moderator">Moderator</option>{state.access.role === "owner" ? <option value="admin">Admin</option> : null}</select><button className="min-h-11 rounded-xl bg-[#ece5da] px-4 text-sm font-bold text-black">Grant</button></form> : null}
+            <div className="mt-5 space-y-2">{state.staff.map((member) => <div key={member.user_id} className="flex items-center gap-3 rounded-2xl border border-white/7 bg-black/20 p-3"><span className="flex size-9 items-center justify-center rounded-full bg-white/6 text-xs font-bold">{member.display_name.slice(0,2).toUpperCase()}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{member.display_name}</p><p className="truncate text-[11px] text-white/38">{member.email || "No contact email"}</p></div><span className="text-[10px] font-bold uppercase tracking-widest text-[#e8c489]">{member.role}</span>{state.access.can_manage_staff && member.role !== "owner" && !(state.access.role === "admin" && member.role === "admin") ? <form action={revokeStaffRole}><input type="hidden" name="user_id" value={member.user_id} /><button className="rounded-full border border-red-300/15 px-3 py-1.5 text-[11px] text-red-200 hover:bg-red-300/10">Revoke</button></form> : null}</div>)}</div>
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function Metric({ label, value, icon: Icon, tone = "neutral" }: { label: string; value: number; icon: typeof Activity; tone?: "neutral" | "green" | "amber" | "red" }) { const tones = { neutral: "text-white/55 bg-white/6", green: "text-emerald-200 bg-emerald-300/8", amber: "text-amber-200 bg-amber-300/8", red: "text-red-200 bg-red-300/8" }; return <article className="rounded-3xl border border-white/9 bg-white/[.025] p-5"><div className={`flex size-10 items-center justify-center rounded-2xl ${tones[tone]}`}><Icon className="size-4" /></div><p className="mt-5 text-3xl font-extrabold">{value}</p><p className="mt-1 text-xs text-white/40">{label}</p></article>; }
+
+function WorkspaceCard({ workspace, access }: { workspace: WorkspaceRow; access: Access }) { const canRestore = access.can_moderate && workspace.moderation_status !== "clear"; return <article className="rounded-3xl border border-white/8 bg-black/20 p-4 sm:p-5"><div className="flex flex-col gap-5 xl:flex-row xl:items-center"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-lg font-bold">{workspace.name}</h3><StatusBadge workspace={workspace} /><span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/45">{workspace.plan}</span></div><div className="mt-3 grid gap-1 text-xs text-white/43 sm:grid-cols-2 xl:grid-cols-4"><span>ID <code className="text-[#e8c489]">{workspace.public_id}</code></span><span className="truncate">Owner {workspace.owner_name}</span><span className="truncate">{workspace.owner_email || "No email"}</span><span>Created {formatDate(workspace.created_at)}</span></div>{workspace.moderation_reason ? <p className="mt-3 rounded-xl border border-white/7 bg-white/3 px-3 py-2 text-xs text-white/55">Reason: {workspace.moderation_reason}</p> : null}</div>{access.can_moderate ? <form action={moderateWorkspace} className="grid gap-2 sm:grid-cols-[minmax(180px,1fr)_auto] xl:w-[520px]"><input type="hidden" name="workspace_id" value={workspace.id} /><input name="reason" required minLength={4} maxLength={500} placeholder={canRestore ? "Reason for clearing moderation" : "Required staff reason"} className="min-h-11 rounded-xl border border-white/10 bg-black/30 px-4 text-sm outline-none focus:border-[#d3aa70]/50" /><div className="flex gap-2">{canRestore ? <button name="moderation_action" value="restore" className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-300/20 px-3 text-xs font-bold text-emerald-200 hover:bg-emerald-300/8"><RotateCcw className="size-3.5" />Restore</button> : <button name="moderation_action" value="suspend" className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-amber-300/20 px-3 text-xs font-bold text-amber-200 hover:bg-amber-300/8"><LockKeyhole className="size-3.5" />Suspend</button>}{access.can_ban && workspace.moderation_status !== "banned" ? <button name="moderation_action" value="ban" className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-red-300/20 px-3 text-xs font-bold text-red-200 hover:bg-red-300/8"><Ban className="size-3.5" />Ban</button> : null}</div></form> : <span className="text-xs text-white/35">Read-only access</span>}</div></article>; }
+function StatusBadge({ workspace }: { workspace: WorkspaceRow }) { const status = workspace.moderation_status === "banned" ? "Banned" : workspace.operational_status === "suspended" ? "Suspended" : "Active"; const tone = status === "Active" ? "border-emerald-300/20 bg-emerald-300/8 text-emerald-200" : status === "Banned" ? "border-red-300/20 bg-red-300/8 text-red-200" : "border-amber-300/20 bg-amber-300/8 text-amber-200"; return <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${tone}`}>{status}</span>; }
+function humanAction(value: string) { return value.split("_").map((word) => word[0]?.toUpperCase() + word.slice(1)).join(" "); }
+function formatDate(value: string) { return new Date(value).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) + " UTC"; }
