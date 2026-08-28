@@ -73,7 +73,7 @@ export default async function Home({ searchParams }: HomeProps) {
               <h1 className="mt-6 font-display text-[clamp(2.7rem,5.6vw,5.1rem)] font-extrabold leading-[0.96] tracking-[-0.03em] text-white">
                 Run your group.
                 <br />
-                <span className="text-[#0bda8e]">Not the busywork.</span>
+                <span className="text-[#d79a9a]">Not the busywork.</span>
               </h1>
             </div>
             <div className="lg:pb-3">
@@ -174,13 +174,13 @@ export default async function Home({ searchParams }: HomeProps) {
                             <svg viewBox="0 0 500 150" role="img" className="w-full">
                               <defs>
                                 <linearGradient id="pulse" x1="0" x2="0" y1="0" y2="1">
-                                  <stop offset="0" stopColor="#0bda8e" stopOpacity=".3" />
-                                  <stop offset="1" stopColor="#0bda8e" stopOpacity="0" />
+                                  <stop offset="0" stopColor="#d79a9a" stopOpacity=".3" />
+                                  <stop offset="1" stopColor="#d79a9a" stopOpacity="0" />
                                 </linearGradient>
                               </defs>
                               <path d="M0 25H500M0 75H500M0 125H500" stroke="rgba(255,255,255,.06)" strokeWidth="1" />
                               <path d="M0 122 C45 114 54 82 98 91 S160 105 200 66 S273 96 310 54 S374 75 414 38 S465 42 500 22 L500 150 L0 150Z" fill="url(#pulse)" />
-                              <path d="M0 122 C45 114 54 82 98 91 S160 105 200 66 S273 96 310 54 S374 75 414 38 S465 42 500 22" fill="none" stroke="#0bda8e" strokeWidth="2.2" strokeLinecap="round" />
+                              <path d="M0 122 C45 114 54 82 98 91 S160 105 200 66 S273 96 310 54 S374 75 414 38 S465 42 500 22" fill="none" stroke="#d79a9a" strokeWidth="2.2" strokeLinecap="round" />
                             </svg>
                           </div>
                         </div>
@@ -280,7 +280,7 @@ export default async function Home({ searchParams }: HomeProps) {
                 { label: "Support", text: "Human help during private beta", icon: UsersRound },
               ].map(({ label, text, icon: Icon }) => (
                 <div key={label} className="glass-faint flex items-center gap-3 px-4 py-3.5">
-                  <span className="font-mono text-[11px] font-medium uppercase tracking-wider text-[#0bda8e]">{label}</span>
+                  <span className="font-mono text-[11px] font-medium uppercase tracking-wider text-[#d79a9a]">{label}</span>
                   <span className="flex-1 text-[13px] text-white/62">{text}</span>
                   <Icon className="size-4 text-emerald-400" aria-hidden="true" />
                 </div>
@@ -462,7 +462,7 @@ function PriceCard({ name, price, description, items, featured = false }: { name
       <ul className="space-y-3">
         {items.map((item) => (
           <li key={item} className="flex items-center gap-2.5 text-sm text-white/70">
-            <Check className="size-3.5 flex-none text-[#0bda8e]" aria-hidden="true" />
+            <Check className="size-3.5 flex-none text-[#d79a9a]" aria-hidden="true" />
             {item}
           </li>
         ))}

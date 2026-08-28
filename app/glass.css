@@ -17,8 +17,8 @@
       as a self-contained object with its own shadow — a top island on desktop, a
       thumb-reachable bottom island on phones.
 
-   Palette follows Panora's AMOLED system: #030602 black, white copy, faint
-   lavender-white surfaces, #0bda8e green and #0ea2c4 cyan accents.
+   AMOLED rose-gold palette: #050303 black, white copy, faint blush-white
+   surfaces, #d79a9a soft rose and #b76e79 deep rose accents.
    ========================================================================== */
 
 :root {
@@ -29,16 +29,16 @@
   --r-inner: 15px;
   --r-field: 13px;
 
-  /* ---- Panora card layers: lavender-white at 5% and 10%. ---------------- */
-  --glass-tint: rgba(218, 175, 255, 0.05);
-  --glass-tint-strong: rgba(218, 175, 255, 0.1);
-  --glass-tint-faint: rgba(218, 175, 255, 0.035);
+  /* ---- Blush-white card layers at 5% and 10%. --------------------------- */
+  --glass-tint: rgba(244, 203, 196, 0.05);
+  --glass-tint-strong: rgba(244, 203, 196, 0.1);
+  --glass-tint-faint: rgba(244, 203, 196, 0.035);
 
   /* Opaque fallbacks, used when backdrop-filter is unavailable or unwanted.
      These are the flattened equivalents against --background. */
-  --glass-solid: #070a08;
-  --glass-solid-strong: #090c0a;
-  --glass-solid-faint: #050806;
+  --glass-solid: #0b0707;
+  --glass-solid-strong: #0e0909;
+  --glass-solid-faint: #080505;
 
   --glass-blur: 22px;
   --glass-blur-strong: 34px;
@@ -48,12 +48,12 @@
   --rim-mid: rgba(255, 255, 255, 0.07);
   --rim-dark: rgba(0, 0, 0, 0.4);
 
-  /* ---- Panora brand accents -------------------------------------------- */
-  --brass: #0bda8e;
-  --brass-lift: #0bda8e;
-  --brass-soft: #0bda8e;
-  --ember: #0ea2c4;
-  --oxblood: #030602;
+  /* ---- Rose-gold brand accents ----------------------------------------- */
+  --brass: #d79a9a;
+  --brass-lift: #d79a9a;
+  --brass-soft: #d79a9a;
+  --ember: #b76e79;
+  --oxblood: #050303;
 
   --lift-sm: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
   --lift-md: 0 18px 40px -20px rgba(0, 0, 0, 0.72);
@@ -329,7 +329,7 @@
 }
 
 .pill-solid {
-  color: #030602;
+  color: #050303;
   background-color: #ffffff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34), 0 6px 18px -8px rgba(255, 255, 255, 0.18);
 }
@@ -398,8 +398,8 @@
   height: 150%;
   z-index: 0;
   background:
-    radial-gradient(46% 44% at 14% 6%, rgba(11, 218, 142, 0.34) 0%, transparent 60%),
-    radial-gradient(42% 40% at 76% 2%, rgba(14, 162, 196, 0.28) 0%, transparent 62%),
+    radial-gradient(46% 44% at 14% 6%, rgba(215, 154, 154, 0.34) 0%, transparent 60%),
+    radial-gradient(42% 40% at 76% 2%, rgba(183, 110, 121, 0.28) 0%, transparent 62%),
     radial-gradient(56% 46% at 46% 100%, rgba(3, 6, 2, 0.75) 0%, transparent 68%);
   filter: blur(30px);
   pointer-events: none;
@@ -421,7 +421,7 @@
 .chassis-screen {
   border-radius: 22px;
   overflow: hidden;
-  background: #030602;
+  background: #050303;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 
@@ -693,7 +693,7 @@
   }
 }
 
-.api-key-control{display:grid;gap:13px;padding:16px;border:1px solid rgba(255,255,255,.075);border-radius:16px;background:rgba(255,255,255,.018)}.api-key-control form{display:flex;justify-content:flex-end}.api-key-control button svg{width:14px}.api-key-reveal{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:12px 12px 11px 14px;border:1px solid rgba(52,211,153,.18);border-radius:11px;background:rgba(52,211,153,.045)}.api-key-reveal span{display:block;color:#6ee7b7;font:600 8px var(--font-mono);letter-spacing:.07em;text-transform:uppercase}.api-key-reveal code{display:block;margin-top:6px;color:#fff;font:500 13px var(--font-mono);letter-spacing:.04em}.api-key-reveal button{display:flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:9px;background:rgba(255,255,255,.06)}.api-key-current{display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.52);font-size:11px}.api-key-current svg{width:14px;color:#6ee7b7}.api-key-current code{color:#0bda8e}.api-key-error{color:#fca5a5;font-size:10px}
+.api-key-control{display:grid;gap:13px;padding:16px;border:1px solid rgba(255,255,255,.075);border-radius:16px;background:rgba(255,255,255,.018)}.api-key-control form{display:flex;justify-content:flex-end}.api-key-control button svg{width:14px}.api-key-reveal{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:12px 12px 11px 14px;border:1px solid rgba(52,211,153,.18);border-radius:11px;background:rgba(52,211,153,.045)}.api-key-reveal span{display:block;color:#6ee7b7;font:600 8px var(--font-mono);letter-spacing:.07em;text-transform:uppercase}.api-key-reveal code{display:block;margin-top:6px;color:#fff;font:500 13px var(--font-mono);letter-spacing:.04em}.api-key-reveal button{display:flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:9px;background:rgba(255,255,255,.06)}.api-key-current{display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.52);font-size:11px}.api-key-current svg{width:14px;color:#6ee7b7}.api-key-current code{color:#d79a9a}.api-key-error{color:#fca5a5;font-size:10px}
 
 /* Content offset so the floating top island never overlaps page content. */
 .below-island {
@@ -729,7 +729,7 @@
   gap: 14px;
   padding: 18px 14px 26px;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
-  background: #060907;
+  background: #090606;
 }
 
 @media (min-width: 1024px) {
@@ -770,8 +770,8 @@
   height: 32px;
   flex: none;
   border-radius: var(--r-pill);
-  background-color: rgba(11, 218, 142, 0.12);
-  color: #0bda8e;
+  background-color: rgba(215, 154, 154, 0.12);
+  color: #d79a9a;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 0.66rem;
   font-weight: 500;
