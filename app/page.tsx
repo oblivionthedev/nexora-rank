@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   Activity, ArrowRight, Blocks, Bot, Check, Clock3, FileCheck2, Fingerprint,
   Gauge, GitBranch, LayoutGrid, Link2, ListChecks, LockKeyhole, Radio,
@@ -41,7 +42,20 @@ const railGroups: { label: string; items: RailItem[] }[] = [
   ] },
 ];
 
-export default function Home() {
+type HomeProps = {
+  searchParams: Promise<{ code?: string | string[] }>;
+};
+
+export default async function Home({ searchParams }: HomeProps) {
+  // Supabase falls back to the configured Site URL when a requested OAuth
+  // redirect is missing from its allow-list. Do not discard the one-time code
+  // in that case: send it through the normal PKCE session exchange and setup.
+  const params = await searchParams;
+  const oauthCode = Array.isArray(params.code) ? params.code[0] : params.code;
+  if (oauthCode) {
+    redirect(`/auth/callback?code=${encodeURIComponent(oauthCode)}&next=%2Fonboarding`);
+  }
+
   return (
     <main className="site-shell island-clearance overflow-hidden">
       <SiteNav />

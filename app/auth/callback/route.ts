@@ -4,8 +4,9 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const safeNext = url.searchParams.get("next")?.startsWith("/")
-    ? url.searchParams.get("next")!
+  const requestedNext = url.searchParams.get("next");
+  const safeNext = requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
+    ? requestedNext
     : "/onboarding";
 
   if (!isSupabaseConfigured() || !code) {
