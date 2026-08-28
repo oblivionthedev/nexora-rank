@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
  * with a "Soon" marker and are not focusable, so the shape of the product is
  * legible without offering dead links.
  */
-type RailItem = { icon: typeof Gauge; label: string; active?: boolean; soon?: boolean };
+type RailItem = { icon: typeof Gauge; label: string; href?: string; active?: boolean; soon?: boolean };
 
 const railGroups: { label: string; items: RailItem[] }[] = [
   {
@@ -42,7 +42,7 @@ const railGroups: { label: string; items: RailItem[] }[] = [
   {
     label: "Identity",
     items: [
-      { icon: Link2, label: "Connections" },
+      { icon: Link2, label: "Connections", href: "/dashboard/connections" },
       { icon: Fingerprint, label: "Audit trail", soon: true },
     ],
   },
@@ -98,19 +98,26 @@ export default async function DashboardPage() {
           {railGroups.map((group) => (
             <div key={group.label} className="rail-group">
               <p className="microlabel">{group.label}</p>
-              {group.items.map((item) => (
-                <span
-                  key={item.label}
-                  className="rail-item"
-                  data-active={item.active ? "true" : undefined}
-                  data-disabled={item.soon ? "true" : undefined}
-                  aria-disabled={item.soon ? "true" : undefined}
-                >
+              {group.items.map((item) => {
+                const content = <>
                   <item.icon className="size-4" aria-hidden="true" />
                   {item.label}
                   {item.soon && <span className="rail-soon">Soon</span>}
-                </span>
-              ))}
+                </>;
+                return item.href ? (
+                  <Link key={item.label} href={item.href} className="rail-item">{content}</Link>
+                ) : (
+                  <span
+                    key={item.label}
+                    className="rail-item"
+                    data-active={item.active ? "true" : undefined}
+                    data-disabled={item.soon ? "true" : undefined}
+                    aria-disabled={item.soon ? "true" : undefined}
+                  >
+                    {content}
+                  </span>
+                );
+              })}
             </div>
           ))}
         </nav>
@@ -181,8 +188,8 @@ export default async function DashboardPage() {
             <section className="glass p-6 sm:p-7">
               <PanelTitle title="Launch connections" description="Nexora requests only the access required for each operation." />
               <div className="mt-5 space-y-2.5">
-                <Connection icon={Bot} name="Discord" detail="Identity, server membership, role sync, commands" status={integrationState.get("discord") ?? (workspace.discord_guild_id ? "connected" : "not connected")} href="/onboarding?manage=identities" />
-                <Connection icon={Gamepad2} name="Roblox" detail="Official OAuth identity and Open Cloud group access" status={integrationState.get("roblox") ?? (workspace.roblox_group_id ? "connected" : "not connected")} href="/onboarding?manage=identities" />
+                <Connection icon={Bot} name="Discord" detail="Identity, server membership, role sync, commands" status={integrationState.get("discord") ?? (workspace.discord_guild_id ? "pending" : "not connected")} href="/dashboard/connections" />
+                <Connection icon={Gamepad2} name="Roblox" detail="Official OAuth identity and Open Cloud group access" status={integrationState.get("roblox") ?? (workspace.roblox_group_id ? "pending" : "not connected")} href="/dashboard/connections" />
                 <Connection icon={Webhook} name="Developer API" detail="Scoped game-server keys and signed webhooks" status="ready" />
               </div>
             </section>
