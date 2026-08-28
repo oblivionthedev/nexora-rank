@@ -70,7 +70,7 @@ export default function LoginPage() {
       provider,
       options: {
         redirectTo,
-        scopes: provider === "discord" ? "identify email guilds guilds.members.read" : "openid profile email",
+        scopes: provider === "discord" ? "identify email guilds guilds.members.read" : "openid profile",
       },
     });
 

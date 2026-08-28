@@ -19,7 +19,7 @@ export function OnboardingIdentityAction({ provider }: { provider: Provider }) {
       provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
-        scopes: isRoblox ? "openid profile email" : "identify email guilds guilds.members.read",
+        scopes: isRoblox ? "openid profile" : "identify email guilds guilds.members.read",
       },
     });
 

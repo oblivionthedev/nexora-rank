@@ -127,6 +127,7 @@ code, .mono, time { font-family: "JetBrains Mono", "SFMono-Regular", Consolas, m
 
 .roblox-pending{display:flex;width:100%;height:54px;align-items:center;gap:12px;margin-top:10px;padding:0 18px;border:1px dashed rgba(255,255,255,.16);border-radius:var(--r-pill);background:none;color:rgba(247,243,236,.56);font-size:14px;font-family:inherit;cursor:pointer;transition:border-color .18s ease}
 .roblox-pending:hover{border-color:rgba(255,255,255,.24)}
+.roblox-pending svg{width:19px;height:19px;flex:0 0 19px}
 .roblox-pending b{color:rgba(247,243,236,.72);font-weight:600}
 .roblox-pending .soon{margin-left:auto;color:rgba(247,243,236,.42);font-size:10px;font-weight:600;letter-spacing:.11em;text-transform:uppercase}
 
