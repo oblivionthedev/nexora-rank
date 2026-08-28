@@ -77,7 +77,7 @@ export async function selectRobloxGroup(formData: FormData) {
   if (!link) redirect("/onboarding?error=roblox_identity_required");
   const memberships = await listRobloxGroups(link.provider_user_id);
   if (!memberships.ok) redirect("/onboarding?error=roblox_groups_unavailable");
-  const chosen = memberships.groups.find((group) => group.id === groupId);
+  const chosen = memberships.groups.find((group) => group.id === groupId && group.roleRank === 255);
   if (!chosen) redirect("/onboarding?error=invalid_roblox_group");
   const { error } = await supabase.rpc("select_onboarding_roblox_group", {
     p_group_id: chosen.id,

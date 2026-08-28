@@ -14,6 +14,7 @@ function errorCode(message?: string) {
     "moderation_reason_required", "workspace_not_found", "staff_management_denied",
     "invalid_staff_role", "nexora_account_not_found", "owner_role_required",
     "owner_role_cannot_be_changed", "staff_member_not_found",
+    "invalid_suspension_days", "invalid_moderation_request",
   ];
   return known.find((code) => message?.includes(code)) ?? "action_failed";
 }
@@ -29,6 +30,10 @@ export async function moderateWorkspace(formData: FormData) {
   const workspaceId = clean(formData.get("workspace_id"));
   const action = clean(formData.get("moderation_action"));
   const reason = clean(formData.get("reason"));
+  const daysValue = clean(formData.get("suspension_days"));
+  const suspensionDays = action === "suspend" ? Number(daysValue) : undefined;
+  const canAppeal = formData.get("appeal_allowed") === "on";
+  const appealMessage = clean(formData.get("appeal_message"));
   if (!workspaceId || !["suspend", "restore", "ban"].includes(action) || reason.length < 4 || reason.length > 500) {
     redirect("/staff?error=invalid_moderation_request");
   }
@@ -38,6 +43,9 @@ export async function moderateWorkspace(formData: FormData) {
     target_workspace_id: workspaceId,
     moderation_action: action,
     action_reason: reason,
+    suspension_days: suspensionDays,
+    can_appeal: canAppeal,
+    appeal_message: appealMessage || undefined,
   });
   if (error) redirect(`/staff?error=${errorCode(error.message)}`);
   revalidatePath("/staff");

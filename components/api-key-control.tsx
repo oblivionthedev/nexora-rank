@@ -12,8 +12,8 @@ export function ApiKeyControl({ workspaceId, currentPrefix, disabled = false }: 
   return (
     <div className="api-key-control">
       <div>
-        <p className="microlabel">Private API key</p>
-        <p className="mt-2 text-xs leading-6 text-white/48">{disabled ? "Credential changes are locked while this workspace is suspended." : "Exactly 25 characters. Replacing it immediately disables the previous key."}</p>
+        <p className="text-sm font-bold text-white/80">Private API key</p>
+        <p className="mt-2 text-sm leading-7 text-white/48">{disabled ? "Key changes are locked while this workspace is restricted." : "Exactly 25 characters. Replacing it immediately disables the previous key."}</p>
       </div>
       {visibleKey ? (
         <div className="api-key-reveal" role="status">

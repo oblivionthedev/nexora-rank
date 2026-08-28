@@ -1,0 +1,5 @@
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/config";
+
+export async function POST(request:Request){let body:unknown;try{body=await request.json()}catch{return Response.json({ok:false,error:"invalid_json"},{status:400})}const input=body as Record<string,unknown>;const code=String(input.code||"").toUpperCase();const guildId=String(input.guild_id||"");const guildName=String(input.guild_name||"");const userId=String(input.discord_user_id||"");const supabase=createClient<Database>(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});const{data,error}=await supabase.rpc("claim_discord_link_code",{raw_code:code,guild_id:guildId,guild_name:guildName,discord_user_id:userId});if(error)return Response.json({ok:false,error:error.message.includes("expired")?"code_invalid_or_expired":"link_failed"},{status:error.code==="P0002"?404:400});return Response.json({ok:true,workspace:data})}

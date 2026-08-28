@@ -2,12 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Activity, AlertTriangle, ArrowLeft, Ban, CheckCircle2, Clock3,
-  LockKeyhole, LogOut, RotateCcw, Search, ShieldCheck, UsersRound,
+  LockKeyhole, LogOut, Search, ShieldCheck, UsersRound,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { signOut } from "@/app/dashboard/actions";
-import { grantStaffRole, moderateWorkspace, revokeStaffRole } from "./actions";
+import { grantStaffRole, revokeStaffRole } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,7 @@ type Access = { authorized: boolean; role: "owner" | "admin" | "moderator" | "su
 type WorkspaceRow = { id: string; public_id: string; name: string; plan: string; subscription_status: string; operational_status: string; moderation_status: "clear" | "suspended" | "banned"; moderation_reason: string | null; moderated_at: string | null; owner_name: string; owner_email: string | null; created_at: string };
 type StaffRow = { user_id: string; role: Access["role"]; active: boolean; display_name: string; email: string | null; created_at: string };
 type ActionRow = { id: number; action_type: string; reason: string; workspace_name: string | null; actor_name: string; created_at: string };
+type GroupResult = { id:string; public_id:string; name:string; roblox_group_id:string|null; roblox_group_name:string|null; roblox_group_icon_url:string|null; moderation_status:string; operational_status:string };
 type ConsoleState = { access: Access; counts: { total: number; active: number; suspended: number; banned: number }; workspaces: WorkspaceRow[]; staff: StaffRow[]; recent_actions: ActionRow[] };
 
 const notices: Record<string, string> = {
@@ -31,16 +32,20 @@ const errors: Record<string, string> = {
   invalid_staff_request: "Enter a valid account email and role.", action_failed: "The action could not be completed.",
 };
 
-export default async function StaffPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; notice?: string; error?: string }> }) {
+export default async function StaffPage({ searchParams }: { searchParams: Promise<{ q?: string; group?: string; status?: string; notice?: string; error?: string }> }) {
   if (!isSupabaseConfigured()) redirect("/login?error=oauth_not_ready");
   const params = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/staff");
   const status = ["active", "suspended", "banned"].includes(params.status ?? "") ? params.status! : "all";
-  const { data, error } = await supabase.rpc("staff_console_state", { search_query: params.q?.slice(0, 120) || undefined, status_filter: status });
+  const [{ data, error }, { data: groupData }] = await Promise.all([
+    supabase.rpc("staff_console_state", { search_query: params.q?.slice(0, 120) || undefined, status_filter: status }),
+    params.group ? supabase.rpc("staff_find_workspaces", { group_query: params.group.slice(0, 120) }) : Promise.resolve({ data: [] }),
+  ]);
   if (error || !data) redirect("/staff/login");
   const state = data as unknown as ConsoleState;
+  const groupResults = (groupData ?? []) as unknown as GroupResult[];
 
   return (
     <div className="min-h-screen bg-[#080806] text-white">
@@ -60,6 +65,8 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
 
         {params.notice && notices[params.notice] ? <div className="mt-7 flex gap-3 rounded-2xl border border-emerald-300/20 bg-emerald-300/8 p-4 text-sm text-emerald-100"><CheckCircle2 className="size-5" />{notices[params.notice]}</div> : null}
         {params.error && errors[params.error] ? <div className="mt-7 flex gap-3 rounded-2xl border border-red-300/20 bg-red-300/8 p-4 text-sm text-red-100"><AlertTriangle className="size-5" />{errors[params.error]}</div> : null}
+
+        <section className="mt-8 rounded-[28px] border border-[#d3aa70]/18 bg-[#d3aa70]/[.045] p-5 sm:p-7"><p className="text-xs font-bold uppercase tracking-[.16em] text-[#e8c489]">Find a Roblox group</p><h2 className="mt-3 text-2xl font-bold">Search before taking action</h2><p className="mt-2 text-sm leading-7 text-white/48">Enter the Roblox group ID, group name, or Nexora workspace ID. Open the matching group to review it before suspending or banning.</p><form action="/staff" className="mt-5 flex flex-col gap-2 sm:flex-row"><input name="group" required defaultValue={params.group} placeholder="Roblox group ID or name" className="min-h-12 flex-1 rounded-xl border border-white/10 bg-black/30 px-4 text-base outline-none focus:border-[#d3aa70]/50"/><button className="min-h-12 rounded-xl bg-[#ece5da] px-6 text-sm font-bold text-black">Search groups</button></form>{params.group?<div className="mt-5 space-y-2">{groupResults.length?groupResults.map(result=><Link key={result.id} href={`/staff/workspaces/${result.public_id}`} className="flex items-center gap-4 rounded-2xl border border-white/9 bg-black/25 p-4 transition hover:border-[#d3aa70]/35"><span className="flex size-12 items-center justify-center rounded-xl bg-white/6 text-sm font-bold">{result.roblox_group_name?.slice(0,2).toUpperCase()||"RB"}</span><div className="min-w-0"><p className="truncate text-base font-bold">{result.roblox_group_name||result.name}</p><p className="mt-1 text-sm text-white/40">Group {result.roblox_group_id||"not linked"} · {result.name} · {result.public_id}</p></div><span className="ml-auto text-sm font-bold capitalize text-[#e8c489]">Open →</span></Link>):<p className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/40">No Nexora workspace uses that group.</p>}</div>:null}</section>
 
         <section className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Metric label="All workspaces" value={state.counts.total} icon={UsersRound} />
@@ -89,7 +96,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
 
 function Metric({ label, value, icon: Icon, tone = "neutral" }: { label: string; value: number; icon: typeof Activity; tone?: "neutral" | "green" | "amber" | "red" }) { const tones = { neutral: "text-white/55 bg-white/6", green: "text-emerald-200 bg-emerald-300/8", amber: "text-amber-200 bg-amber-300/8", red: "text-red-200 bg-red-300/8" }; return <article className="rounded-3xl border border-white/9 bg-white/[.025] p-5"><div className={`flex size-10 items-center justify-center rounded-2xl ${tones[tone]}`}><Icon className="size-4" /></div><p className="mt-5 text-3xl font-extrabold">{value}</p><p className="mt-1 text-xs text-white/40">{label}</p></article>; }
 
-function WorkspaceCard({ workspace, access }: { workspace: WorkspaceRow; access: Access }) { const canRestore = access.can_moderate && workspace.moderation_status !== "clear"; return <article className="rounded-3xl border border-white/8 bg-black/20 p-4 sm:p-5"><div className="flex flex-col gap-5 xl:flex-row xl:items-center"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-lg font-bold">{workspace.name}</h3><StatusBadge workspace={workspace} /><span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/45">{workspace.plan}</span></div><div className="mt-3 grid gap-1 text-xs text-white/43 sm:grid-cols-2 xl:grid-cols-4"><span>ID <code className="text-[#e8c489]">{workspace.public_id}</code></span><span className="truncate">Owner {workspace.owner_name}</span><span className="truncate">{workspace.owner_email || "No email"}</span><span>Created {formatDate(workspace.created_at)}</span></div>{workspace.moderation_reason ? <p className="mt-3 rounded-xl border border-white/7 bg-white/3 px-3 py-2 text-xs text-white/55">Reason: {workspace.moderation_reason}</p> : null}</div>{access.can_moderate ? <form action={moderateWorkspace} className="grid gap-2 sm:grid-cols-[minmax(180px,1fr)_auto] xl:w-[520px]"><input type="hidden" name="workspace_id" value={workspace.id} /><input name="reason" required minLength={4} maxLength={500} placeholder={canRestore ? "Reason for clearing moderation" : "Required staff reason"} className="min-h-11 rounded-xl border border-white/10 bg-black/30 px-4 text-sm outline-none focus:border-[#d3aa70]/50" /><div className="flex gap-2">{canRestore ? <button name="moderation_action" value="restore" className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-300/20 px-3 text-xs font-bold text-emerald-200 hover:bg-emerald-300/8"><RotateCcw className="size-3.5" />Restore</button> : <button name="moderation_action" value="suspend" className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-amber-300/20 px-3 text-xs font-bold text-amber-200 hover:bg-amber-300/8"><LockKeyhole className="size-3.5" />Suspend</button>}{access.can_ban && workspace.moderation_status !== "banned" ? <button name="moderation_action" value="ban" className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-red-300/20 px-3 text-xs font-bold text-red-200 hover:bg-red-300/8"><Ban className="size-3.5" />Ban</button> : null}</div></form> : <span className="text-xs text-white/35">Read-only access</span>}</div></article>; }
+function WorkspaceCard({ workspace, access }: { workspace: WorkspaceRow; access: Access }) { return <article className="rounded-3xl border border-white/8 bg-black/20 p-4 sm:p-5"><div className="flex flex-col gap-5 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-lg font-bold">{workspace.name}</h3><StatusBadge workspace={workspace} /><span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/45">{workspace.plan}</span></div><div className="mt-3 grid gap-1 text-xs text-white/43 sm:grid-cols-2 xl:grid-cols-4"><span>ID <code className="text-[#e8c489]">{workspace.public_id}</code></span><span className="truncate">Owner {workspace.owner_name}</span><span className="truncate">{workspace.owner_email || "No email"}</span><span>Created {formatDate(workspace.created_at)}</span></div>{workspace.moderation_reason ? <p className="mt-3 rounded-xl border border-white/7 bg-white/3 px-3 py-2 text-xs text-white/55">Reason: {workspace.moderation_reason}</p> : null}</div><Link href={`/staff/workspaces/${workspace.public_id}`} className="rounded-xl border border-[#d3aa70]/25 bg-[#d3aa70]/8 px-5 py-3 text-center text-sm font-bold text-[#e8c489]">{access.can_moderate ? "Review & moderate" : "View workspace"}</Link></div></article>; }
 function StatusBadge({ workspace }: { workspace: WorkspaceRow }) { const status = workspace.moderation_status === "banned" ? "Banned" : workspace.operational_status === "suspended" ? "Suspended" : "Active"; const tone = status === "Active" ? "border-emerald-300/20 bg-emerald-300/8 text-emerald-200" : status === "Banned" ? "border-red-300/20 bg-red-300/8 text-red-200" : "border-amber-300/20 bg-amber-300/8 text-amber-200"; return <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${tone}`}>{status}</span>; }
 function humanAction(value: string) { return value.split("_").map((word) => word[0]?.toUpperCase() + word.slice(1)).join(" "); }
 function formatDate(value: string) { return new Date(value).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) + " UTC"; }

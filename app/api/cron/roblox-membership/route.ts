@@ -18,6 +18,7 @@ export async function GET(request: Request) {
   }
 
   const supabase = createMembershipAutomationClient();
+  await supabase.rpc("release_expired_staff_suspensions", { candidate_secret: secret });
   const { data, error } = await supabase.rpc("claim_free_membership_checks", {
     candidate_secret: secret,
     batch_size: 250,

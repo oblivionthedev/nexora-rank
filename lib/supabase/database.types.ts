@@ -995,20 +995,38 @@ export type Database = {
           },
         ]
       }
+      workspace_logs: {
+        Row: { id: number; workspace_id: string; source: string; severity: string; event_type: string; summary: string; actor_user_id: string | null; metadata: Json; created_at: string }
+        Insert: { id?: never; workspace_id: string; source: string; severity?: string; event_type: string; summary: string; actor_user_id?: string | null; metadata?: Json; created_at?: string }
+        Update: { id?: never; workspace_id?: string; source?: string; severity?: string; event_type?: string; summary?: string; actor_user_id?: string | null; metadata?: Json; created_at?: string }
+        Relationships: []
+      }
+      workspace_settings: {
+        Row: { workspace_id: string; allowed_roblox_rank_min: number; allowed_roblox_role_ids: string[]; updated_by: string | null; updated_at: string }
+        Insert: { workspace_id: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; updated_by?: string | null; updated_at?: string }
+        Update: { workspace_id?: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; updated_by?: string | null; updated_at?: string }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           created_at: string
           created_by: string
           discord_guild_id: string | null
+          discord_guild_name: string | null
           id: string
+          appeal_allowed: boolean
+          appeal_note: string | null
           moderated_at: string | null
           moderated_by: string | null
           moderation_reason: string | null
           moderation_status: string
+          moderation_expires_at: string | null
           name: string
           operational_status: string
           public_id: string
           roblox_group_id: string | null
+          roblox_group_name: string | null
+          roblox_group_icon_url: string | null
           slug: string
           suspended_at: string | null
           suspension_reason: string | null
@@ -1018,15 +1036,21 @@ export type Database = {
           created_at?: string
           created_by: string
           discord_guild_id?: string | null
+          discord_guild_name?: string | null
           id?: string
+          appeal_allowed?: boolean
+          appeal_note?: string | null
           moderated_at?: string | null
           moderated_by?: string | null
           moderation_reason?: string | null
           moderation_status?: string
+          moderation_expires_at?: string | null
           name: string
           operational_status?: string
           public_id?: string
           roblox_group_id?: string | null
+          roblox_group_name?: string | null
+          roblox_group_icon_url?: string | null
           slug: string
           suspended_at?: string | null
           suspension_reason?: string | null
@@ -1036,15 +1060,21 @@ export type Database = {
           created_at?: string
           created_by?: string
           discord_guild_id?: string | null
+          discord_guild_name?: string | null
           id?: string
+          appeal_allowed?: boolean
+          appeal_note?: string | null
           moderated_at?: string | null
           moderated_by?: string | null
           moderation_reason?: string | null
           moderation_status?: string
+          moderation_expires_at?: string | null
           name?: string
           operational_status?: string
           public_id?: string
           roblox_group_id?: string | null
+          roblox_group_name?: string | null
+          roblox_group_icon_url?: string | null
           slug?: string
           suspended_at?: string | null
           suspension_reason?: string | null
@@ -1084,7 +1114,10 @@ export type Database = {
       staff_moderate_workspace: {
         Args: {
           action_reason: string
+          appeal_message?: string
+          can_appeal?: boolean
           moderation_action: string
+          suspension_days?: number
           target_workspace_id: string
         }
         Returns: Json
@@ -1093,6 +1126,13 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: boolean
       }
+      staff_find_workspaces: { Args: { group_query: string }; Returns: Json }
+      workspace_control_state: { Args: { target_public_id: string }; Returns: Json }
+      save_workspace_settings: { Args: { target_workspace_id: string; rank_min: number; role_ids: string[] }; Returns: boolean }
+      create_discord_link_code: { Args: { target_workspace_id: string }; Returns: Json }
+      claim_discord_link_code: { Args: { raw_code: string; guild_id: string; guild_name: string; discord_user_id: string }; Returns: Json }
+      authenticate_workspace_api_key: { Args: { raw_key: string }; Returns: Json }
+      release_expired_staff_suspensions: { Args: { candidate_secret: string }; Returns: number }
       claim_free_membership_checks: {
         Args: { batch_size?: number; candidate_secret: string }
         Returns: {

@@ -72,6 +72,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const robloxIdentity = providerMap.get("roblox");
   const robloxGroupsResult = robloxIdentity?.provider_user_id ? await listRobloxGroups(robloxIdentity.provider_user_id) : null;
   const robloxGroups = robloxGroupsResult?.ok ? robloxGroupsResult.groups : [];
+  const ownedRobloxGroups = robloxGroups.filter((group) => group.roleRank === 255);
   const membershipPolicy = policy as { enabled?: boolean; group_id?: string; grace_hours?: number } | null;
   const membershipEnforced = Boolean(membershipPolicy?.enabled);
   // During provider review the policy remains disabled, so Discord-only testing
@@ -144,12 +145,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
               <span className="setup-kicker">Roblox community</span>
               <h2>Choose the group this workspace will run.</h2>
               <p>Nexora checked the groups visible on your connected Roblox account. This choice is separate from the Nexora support community required by the Free plan after OAuth approval.</p>
-              {robloxGroups.length ? (
+              {ownedRobloxGroups.length ? (
                 <form action={selectRobloxGroup} className="setup-form">
-                  <label><span>Community to rank</span><select name="roblox_group_id" required defaultValue={profile?.selected_roblox_group_id ?? ""}><option value="" disabled>Select a Roblox community</option>{robloxGroups.map((group) => <option value={group.id} key={group.id}>{group.name} — {group.role}</option>)}</select><small>Only communities attached to the verified Roblox identity appear here.</small></label>
+                  <label><span>Group to manage</span><select name="roblox_group_id" required defaultValue={profile?.selected_roblox_group_id ?? (ownedRobloxGroups.length === 1 ? ownedRobloxGroups[0].id : "")}><option value="" disabled>Select a group you own</option>{ownedRobloxGroups.map((group) => <option value={group.id} key={group.id}>{group.name} — owner</option>)}</select><small>Nexora only lists groups owned by the connected Roblox account. A single owned group is selected automatically.</small></label>
                   <Button type="submit" className="button-glow h-12 rounded-xl">Use this community <ArrowRight /></Button>
                 </form>
-              ) : <div className="onboarding-error" role="status">{robloxGroupsResult && !robloxGroupsResult.ok ? "Roblox could not return your groups right now. Refresh and try again." : "This account does not belong to any Roblox communities yet."}</div>}
+              ) : <div className="onboarding-error" role="status">{robloxGroupsResult && !robloxGroupsResult.ok ? "Roblox could not return your groups right now. Refresh and try again." : "This account does not own a Roblox group yet."}</div>}
             </section>
           ) : null}
 
