@@ -48,3 +48,16 @@ tsconfig.tsbuildinfo
 /.sites-runtime/
 /outputs/
 /work/
+
+# Local source snapshots and deployment helpers
+/.github-source/
+/.nexorasite-source/
+/.git-info-refs
+/.git-pack.pack
+/.git-upload-pack-response
+/extract_git_pack.py
+/unpack_git_snapshot.py
+
+# Discord bot is deployed separately from the website
+/Nexora-Bot/
+/Nexora-Bot*.zip

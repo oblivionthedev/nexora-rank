@@ -6,19 +6,20 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://nexorarank.tech"),
-  title: { default: "Nexora Rank — Identity & Operations for Roblox Communities", template: "%s · Nexora Rank" },
-  description: "Connect Discord and Roblox identities, then run ranking, activity, applications, and automation from one trusted workspace.",
+  title: { default: "Nexora Rank — Opening Soon", template: "%s · Nexora Rank" },
+  description: "Nexora Rank is opening soon. A calmer, safer way to run your Roblox community is on the way.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
   applicationName: "Nexora Rank",
+  other: { "codex-preview": "development" },
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
     siteName: "Nexora Rank",
-    title: "Nexora Rank — Identity & Operations for Roblox Communities",
-    description: "Connect Discord and Roblox identities, ranking, activity, and automation in one trusted workspace.",
+    title: "Nexora Rank — Opening Soon",
+    description: "A calmer, safer way to run your Roblox community is on the way.",
   },
-  twitter: { card: "summary", title: "Nexora Rank", description: "Identity and operations for Roblox communities." },
+  twitter: { card: "summary", title: "Nexora Rank — Opening Soon", description: "A calmer, safer way to run your Roblox community is on the way." },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
