@@ -1,8 +1,27 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowUpRight, Clock3, ShieldCheck, Sparkles } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 
-export default function Home() {
+type HomeProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams;
+  const oauthCode = Array.isArray(params.code) ? params.code[0] : params.code;
+
+  // Supabase falls back to the configured Site URL when an exact redirect URL
+  // is missing from its allow list. Preserve that successful OAuth response by
+  // forwarding it to the normal server-side exchange route.
+  if (oauthCode) {
+    const callbackParams = new URLSearchParams({
+      code: oauthCode,
+      next: "/dashboard",
+    });
+    redirect(`/auth/callback?${callbackParams.toString()}`);
+  }
+
   return (
     <main className="opening-page">
       <div className="opening-glow" aria-hidden="true" />
@@ -72,4 +91,3 @@ export default function Home() {
     </main>
   );
 }
-
