@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { Ban, Bot, ChevronRight, FileClock, Gauge, LockKeyhole, LogOut, Settings, ShieldCheck, UsersRound } from "lucide-react";
+import { Activity, Ban, BookOpen, Bot, Building2, ChevronRight, ClipboardList, FileClock, Gauge, GitBranch, LockKeyhole, LogOut, MessagesSquare, Settings, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { RestrictedRouteSync } from "@/components/restricted-route-sync";
 import { signOut } from "@/app/dashboard/actions";
@@ -8,6 +8,13 @@ import { signOut } from "@/app/dashboard/actions";
 const items = [
   { label: "Overview", path: "", icon: Gauge },
   { label: "Connections", path: "/connections", icon: Bot },
+  { label: "Ranking", path: "/ranking", icon: GitBranch },
+  { label: "Activity & quotas", path: "/activity", icon: Activity },
+  { label: "Applications", path: "/applications", icon: ClipboardList },
+  { label: "Automations", path: "/automations", icon: Sparkles },
+  { label: "Operations", path: "/operations", icon: Building2 },
+  { label: "Communications", path: "/communications", icon: MessagesSquare },
+  { label: "Knowledge", path: "/knowledge", icon: BookOpen },
   { label: "Members", path: "/members", icon: UsersRound },
   { label: "Logs", path: "/logs", icon: FileClock },
   { label: "Settings & API", path: "/settings", icon: Settings },

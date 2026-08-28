@@ -58,6 +58,5 @@ tsconfig.tsbuildinfo
 /extract_git_pack.py
 /unpack_git_snapshot.py
 
-# Discord bot is deployed separately from the website
-/Nexora-Bot/
+# Discord bot deploys separately, but its source is versioned with the platform.
 /Nexora-Bot*.zip

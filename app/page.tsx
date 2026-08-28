@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowUpRight, Clock3, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bot, LayoutDashboard, ShieldCheck, Sparkles } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 
 type HomeProps = {
@@ -34,7 +34,7 @@ export default async function Home({ searchParams }: HomeProps) {
         </Link>
         <div className="opening-state">
           <span aria-hidden="true" />
-          In development
+          Now live
         </div>
       </header>
 
@@ -47,42 +47,46 @@ export default async function Home({ searchParams }: HomeProps) {
 
         <div className="opening-kicker">
           <Sparkles className="size-3.5" />
-          Something powerful is taking shape
+          Roblox community operations, in one workspace
         </div>
         <h1 id="opening-title">
-          Nexora is<br />
-          <span>opening soon.</span>
+          Run your community<br />
+          <span>with confidence.</span>
         </h1>
         <p className="opening-copy">
-          We&apos;re putting the final details into a calmer, safer way to run
-          your Roblox community—from Discord to every rank operation.
+          Manage ranking, staff activity, applications, automations, sessions,
+          and Discord operations with clear permissions and complete audit history.
         </p>
 
-        <div className="opening-details" aria-label="Launch information">
+        <div className="opening-details" aria-label="Nexora capabilities">
           <div>
-            <Clock3 className="size-4" />
-            <span><b>Currently building</b>Final testing and polish</span>
+            <LayoutDashboard className="size-4" />
+            <span><b>One control center</b>Workspaces, staff, activity and forms</span>
           </div>
           <div>
             <ShieldCheck className="size-4" />
-            <span><b>Built with care</b>Security comes first</span>
+            <span><b>Permission protected</b>Every sensitive action is recorded</span>
           </div>
         </div>
 
-        <a
-          className="opening-support"
-          href="https://ko-fi.com/obliviondev"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Support the development <ArrowUpRight className="size-4" />
-        </a>
+        <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <Link className="opening-support" href="/login?next=/dashboard">
+            Open Nexora <ArrowRight className="size-4" />
+          </Link>
+          <Link className="opening-support" href="/bot">
+            Meet the Discord bot <Bot className="size-4" />
+          </Link>
+          <a className="opening-support" href="https://ko-fi.com/obliviondev" target="_blank" rel="noreferrer">
+            Support Nexora <ArrowUpRight className="size-4" />
+          </a>
+        </div>
       </section>
 
       <footer className="opening-footer">
         <span>© 2026 Nexora</span>
         <nav aria-label="Legal">
-          <Link href="/login?next=/dashboard">Owner access</Link>
+          <Link href="/login?next=/dashboard">Sign in</Link>
+          <Link href="/security">Security</Link>
           <Link href="/legal/terms-of-service">Terms</Link>
           <Link href="/legal/privacy">Privacy</Link>
           <Link href="/legal">Legal</Link>

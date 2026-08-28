@@ -6,24 +6,24 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://nexorarank.tech"),
-  title: { default: "Nexora Rank — Opening Soon", template: "%s · Nexora Rank" },
-  description: "Nexora Rank is opening soon. A calmer, safer way to run your Roblox community is on the way.",
+  title: { default: "Nexora Rank — Roblox Community Operations", template: "%s · Nexora Rank" },
+  description: "Manage Roblox community ranking, staff activity, applications, sessions, automations, and Discord operations from one secure workspace.",
   icons: {
     icon: [{ url: "/nexora-discord-logo.png", type: "image/png" }],
     shortcut: "/nexora-discord-logo.png",
     apple: "/nexora-discord-logo.png",
   },
   applicationName: "Nexora Rank",
-  other: { "codex-preview": "development" },
+  other: { "codex-preview": "production" },
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
     siteName: "Nexora Rank",
-    title: "Nexora Rank — Opening Soon",
-    description: "A calmer, safer way to run your Roblox community is on the way.",
+    title: "Nexora Rank — Roblox Community Operations",
+    description: "Ranking, activity, applications, sessions, automations, and Discord operations in one secure workspace.",
   },
-  twitter: { card: "summary", title: "Nexora Rank — Opening Soon", description: "A calmer, safer way to run your Roblox community is on the way." },
+  twitter: { card: "summary", title: "Nexora Rank — Roblox Community Operations", description: "Run your Roblox community from one secure, auditable workspace." },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -1,0 +1,27 @@
+{
+  "name": "nexora-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The official Discord operations bot for Nexora Rank.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "register": "node src/register-commands.js",
+    "check": "node scripts/check.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.54.0",
+    "discord.js": "14.27.0",
+    "dotenv": "17.4.2",
+    "ws": "8.21.3",
+    "zod": "4.4.3"
+  },
+  "overrides": {
+    "@supabase/storage-js": "2.10.4"
+  }
+}

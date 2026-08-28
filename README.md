@@ -2,7 +2,7 @@
 
 Nexora Rank is a modern Roblox community operations platform for group ranking, staff activity, applications, automations, and Discord/Roblox account linking.
 
-This repository contains the high-fidelity product foundation plus a production-oriented Supabase schema and Discord OAuth exchange. Live provider operations remain gated until the dedicated Nexora Supabase, Discord, and Roblox projects are attached.
+This repository contains the production Nexora website, workspace dashboard, Supabase schema, and Discord integration. Roblox ranking execution remains gated until the official OAuth and Open Cloud approvals are available.
 
 ## Included in this milestone
 
