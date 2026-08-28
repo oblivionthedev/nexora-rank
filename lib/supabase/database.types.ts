@@ -1129,6 +1129,7 @@ export type Database = {
       staff_find_workspaces: { Args: { group_query: string }; Returns: Json }
       workspace_control_state: { Args: { target_public_id: string }; Returns: Json }
       save_workspace_settings: { Args: { target_workspace_id: string; rank_min: number; role_ids: string[] }; Returns: boolean }
+      set_workspace_roblox_group: { Args: { target_workspace_id: string; group_id: string; group_name: string; icon_url: string; oauth_verified: boolean }; Returns: boolean }
       create_discord_link_code: { Args: { target_workspace_id: string }; Returns: Json }
       claim_discord_link_code: { Args: { raw_code: string; guild_id: string; guild_name: string; discord_user_id: string }; Returns: Json }
       authenticate_workspace_api_key: { Args: { raw_key: string }; Returns: Json }
