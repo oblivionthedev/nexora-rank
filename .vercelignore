@@ -1,0 +1,10 @@
+.vercel
+.env*
+.git*
+.vinext
+.wrangler
+dist
+node_modules
+tsconfig.tsbuildinfo
+extract_git_pack.py
+unpack_git_snapshot.py
