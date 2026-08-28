@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { checkRequiredRobloxMembership, createMembershipAutomationClient } from "@/lib/roblox-membership";
 import { createClient } from "@/lib/supabase/server";
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,46}[a-z0-9]$/;
@@ -84,7 +85,41 @@ export async function createOnboardingWorkspace(formData: FormData) {
     redirect("/onboarding?error=invalid_workspace");
   }
 
-  const { supabase } = await authenticatedClient();
+  const { supabase, user } = await authenticatedClient();
+
+  const { data: policy } = await supabase.rpc("get_free_membership_policy");
+  const membershipPolicy = policy as { enabled?: boolean } | null;
+  if (membershipPolicy?.enabled) {
+    const secret = process.env.CRON_SECRET;
+    if (!secret) redirect("/onboarding?error=membership_check_unavailable");
+
+    const { data: robloxLink } = await supabase
+      .from("account_links")
+      .select("provider_user_id")
+      .eq("user_id", user.id)
+      .eq("provider", "roblox")
+      .maybeSingle();
+    if (!robloxLink) redirect("/onboarding?error=roblox_identity_required");
+
+    const membership = await checkRequiredRobloxMembership(robloxLink.provider_user_id);
+    const automation = createMembershipAutomationClient();
+    if (!membership.ok) {
+      await automation.rpc("record_owner_membership_preflight", {
+        candidate_secret: secret,
+        target_user_id: user.id,
+        check_result: "unverifiable",
+      });
+      redirect("/onboarding?error=membership_check_unavailable");
+    }
+
+    await automation.rpc("record_owner_membership_preflight", {
+      candidate_secret: secret,
+      target_user_id: user.id,
+      check_result: membership.member ? "member" : "not_member",
+    });
+    if (!membership.member) redirect("/onboarding?error=roblox_membership_required");
+  }
+
   const { error } = await supabase.rpc("create_workspace", {
     workspace_name: name,
     workspace_slug: slug,
@@ -93,6 +128,7 @@ export async function createOnboardingWorkspace(formData: FormData) {
   if (error) {
     if (error.message.includes("free_workspace_limit")) redirect("/dashboard");
     if (error.message.includes("onboarding_incomplete")) redirect("/onboarding?error=onboarding_incomplete");
+    if (error.message.includes("roblox_membership_required")) redirect("/onboarding?error=roblox_membership_required");
     if (error.code === "23505") redirect("/onboarding?error=slug_taken");
     redirect("/onboarding?error=workspace_failed");
   }

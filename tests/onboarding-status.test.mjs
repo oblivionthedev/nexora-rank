@@ -9,9 +9,25 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 test("allows Discord-only onboarding while Roblox approval is pending", async () => {
   const onboarding = await readFile(path.join(root, "app/onboarding/page.tsx"), "utf8");
 
-  assert.match(onboarding, /const identityReady = discordConnected;/);
+  assert.match(onboarding, /const identityReady = discordConnected && \(!membershipEnforced \|\| robloxConnected\);/);
   assert.match(onboarding, /Available after approval/);
-  assert.doesNotMatch(onboarding, /!robloxConnected \? <OnboardingIdentityAction provider="custom:roblox"/);
+  assert.match(onboarding, /membershipEnforced \? <OnboardingIdentityAction provider="custom:roblox"/);
+});
+
+test("implements fail-safe free workspace Roblox membership enforcement", async () => {
+  const [migration, cron, legal] = await Promise.all([
+    readFile(path.join(root, "supabase/migrations/20260828113000_add_free_workspace_roblox_eligibility.sql"), "utf8"),
+    readFile(path.join(root, "app/api/cron/roblox-membership/route.ts"), "utf8"),
+    readFile(path.join(root, "lib/legal-documents.ts"), "utf8"),
+  ]);
+
+  assert.match(migration, /free_roblox_membership_enforced boolean not null default false/);
+  assert.match(migration, /membership_grace_hours integer not null default 48/);
+  assert.match(migration, /check_result = 'unverifiable'/);
+  assert.match(migration, /suspension_reason = 'free_owner_left_required_roblox_group'/);
+  assert.match(cron, /request\.headers\.get\("authorization"\) !== `Bearer \$\{secret\}`/);
+  assert.match(legal, /Roblox community with ID 596263047/);
+  assert.match(legal, /48-hour grace period/);
 });
 
 test("exposes a live service status route and navigation entry", async () => {

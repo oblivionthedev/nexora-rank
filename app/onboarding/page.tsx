@@ -35,6 +35,9 @@ const messages: Record<string, string> = {
   workspace_failed: "The workspace could not be created.",
   onboarding_incomplete: "Complete the earlier setup steps before creating a workspace.",
   roblox_not_ready: "Roblox OAuth is waiting for app approval and provider configuration.",
+  roblox_identity_required: "Connect Roblox before creating a free workspace.",
+  roblox_membership_required: "The workspace owner must join the Nexora Roblox community before creating a free workspace.",
+  membership_check_unavailable: "Roblox could not be checked safely. Nothing was suspended; please try again shortly.",
 };
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ error?: string; manage?: string }> }) {
@@ -47,7 +50,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
   await supabase.rpc("sync_auth_identities");
 
-  const [{ data: profile }, { data: links }, { data: membership }] = await Promise.all([
+  const [{ data: profile }, { data: links }, { data: membership }, { data: policy }] = await Promise.all([
     supabase
       .from("profiles")
       .select("first_name, last_name, contact_email, plan_key, plan_selected_at, password_set_at, roblox_link_deferred_at")
@@ -55,14 +58,17 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
       .single(),
     supabase.from("account_links").select("provider, username, display_name").eq("user_id", user.id),
     supabase.from("workspace_members").select("workspace_id").eq("user_id", user.id).limit(1).maybeSingle(),
+    supabase.rpc("get_free_membership_policy"),
   ]);
 
   const providerMap = new Map((links ?? []).map((link) => [link.provider, link]));
   const discordConnected = providerMap.has("discord");
   const robloxConnected = providerMap.has("roblox");
-  // Roblox OAuth is awaiting provider approval. Discord is the only identity
-  // required during private-beta testing; Roblox can be connected later.
-  const identityReady = discordConnected;
+  const membershipPolicy = policy as { enabled?: boolean; group_id?: string; grace_hours?: number } | null;
+  const membershipEnforced = Boolean(membershipPolicy?.enabled);
+  // During provider review the policy remains disabled, so Discord-only testing
+  // stays available. Enabling the database policy also enables the Roblox step.
+  const identityReady = discordConnected && (!membershipEnforced || robloxConnected);
   if (membership && params.manage !== "identities") redirect(identityReady ? "/dashboard" : "/onboarding?manage=identities");
   const profileReady = Boolean(profile?.first_name && profile?.last_name && profile?.contact_email);
   const planReady = profile?.plan_key === "free" && Boolean(profile.plan_selected_at);
@@ -105,14 +111,14 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <section className="setup-card">
               <div className="setup-icon"><LockKeyhole /></div>
               <span className="setup-kicker">Identity foundation</span>
-              <h2>Start with Discord. Add Roblox when it is ready.</h2>
-              <p>Discord is all you need to test Nexora and launch a workspace today. Roblox OAuth is awaiting approval and will not block setup.</p>
+              <h2>{membershipEnforced ? "Connect both owner identities." : "Start with Discord. Add Roblox when it is ready."}</h2>
+              <p>{membershipEnforced ? "Free workspace owners must verify Roblox and remain in the Nexora community. Paid plans are exempt." : "Discord is all you need to test Nexora and launch a workspace today. Roblox OAuth is awaiting approval and will not block setup."}</p>
               <div className="provider-stack">
                 <ProviderStatus icon={Bot} name="Discord" description="Required for sign-in, server access, membership and role sync" state={discordConnected ? "connected" : "required"} username={providerMap.get("discord")?.display_name ?? providerMap.get("discord")?.username}>
                   {!discordConnected ? <OnboardingIdentityAction provider="discord" /> : null}
                 </ProviderStatus>
-                <ProviderStatus icon={Gamepad2} name="Roblox" description="Optional during testing · OAuth approval in progress" state={robloxConnected ? "connected" : "pending"} username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}>
-                  {!robloxConnected ? <span className="provider-availability">Available after approval</span> : null}
+                <ProviderStatus icon={Gamepad2} name="Roblox" description={membershipEnforced ? "Required for free-plan owner eligibility" : "Optional during testing · OAuth approval in progress"} state={robloxConnected ? "connected" : membershipEnforced ? "required" : "pending"} username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}>
+                  {!robloxConnected ? (membershipEnforced ? <OnboardingIdentityAction provider="custom:roblox" /> : <span className="provider-availability">Available after approval</span>) : null}
                 </ProviderStatus>
               </div>
               {identityReady && membership ? <Button asChild className="button-glow h-12 rounded-xl"><Link href="/dashboard">Return to dashboard <ArrowRight /></Link></Button> : null}
@@ -153,11 +159,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                     "Up to 500 linked members",
                     "10 staff seats",
                     "5,000 monthly API operations",
+                    membershipEnforced ? "Owner membership in the Nexora Roblox community" : "Roblox community rule activates after OAuth approval",
                     "30-day audit history",
                     "Ranking, activity and applications",
                   ].map((feature) => <span key={feature}><Check />{feature}</span>)}
                 </div>
-                <div className="setup-plan-note"><Sparkles /><span>All core tools are included during beta. Limits can be adjusted before paid plans launch.</span></div>
+                <div className="setup-plan-note"><Sparkles /><span>{membershipEnforced ? `If the owner later leaves community ${membershipPolicy?.group_id}, they have ${membershipPolicy?.grace_hours ?? 48} hours to rejoin before the next automated check can suspend the workspace.` : "All core tools are included during beta. Roblox membership enforcement is off while OAuth approval is pending."}</span></div>
               </article>
               <form action={selectFreePlan}><Button type="submit" className="button-glow h-12 w-full rounded-xl">Choose Beta Free <ArrowRight /></Button></form>
             </section>

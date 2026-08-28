@@ -585,6 +585,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           first_name: string | null
+          free_roblox_group_checked_at: string | null
+          free_roblox_group_status: string
           id: string
           last_name: string | null
           onboarding_completed_at: string | null
@@ -600,6 +602,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           first_name?: string | null
+          free_roblox_group_checked_at?: string | null
+          free_roblox_group_status?: string
           id: string
           last_name?: string | null
           onboarding_completed_at?: string | null
@@ -615,6 +619,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           first_name?: string | null
+          free_roblox_group_checked_at?: string | null
+          free_roblox_group_status?: string
           id?: string
           last_name?: string | null
           onboarding_completed_at?: string | null
@@ -899,6 +905,63 @@ export type Database = {
           },
         ]
       }
+      workspace_roblox_eligibility: {
+        Row: {
+          grace_expires_at: string | null
+          grace_started_at: string | null
+          last_checked_at: string | null
+          last_error_code: string | null
+          last_member_at: string | null
+          owner_user_id: string
+          required_group_id: string
+          status: string
+          suspended_at: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          grace_expires_at?: string | null
+          grace_started_at?: string | null
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          last_member_at?: string | null
+          owner_user_id: string
+          required_group_id?: string
+          status?: string
+          suspended_at?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          grace_expires_at?: string | null
+          grace_started_at?: string | null
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          last_member_at?: string | null
+          owner_user_id?: string
+          required_group_id?: string
+          status?: string
+          suspended_at?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_roblox_eligibility_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_roblox_eligibility_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspaces: {
         Row: {
           created_at: string
@@ -906,9 +969,12 @@ export type Database = {
           discord_guild_id: string | null
           id: string
           name: string
+          operational_status: string
           public_id: string
           roblox_group_id: string | null
           slug: string
+          suspended_at: string | null
+          suspension_reason: string | null
           updated_at: string
         }
         Insert: {
@@ -917,9 +983,12 @@ export type Database = {
           discord_guild_id?: string | null
           id?: string
           name: string
+          operational_status?: string
           public_id?: string
           roblox_group_id?: string | null
           slug: string
+          suspended_at?: string | null
+          suspension_reason?: string | null
           updated_at?: string
         }
         Update: {
@@ -928,9 +997,12 @@ export type Database = {
           discord_guild_id?: string | null
           id?: string
           name?: string
+          operational_status?: string
           public_id?: string
           roblox_group_id?: string | null
           slug?: string
+          suspended_at?: string | null
+          suspension_reason?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -948,9 +1020,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_free_membership_checks: {
+        Args: { batch_size?: number; candidate_secret: string }
+        Returns: {
+          owner_user_id: string
+          plan_key: string
+          plan_status: string
+          roblox_user_id: string | null
+          workspace_id: string
+        }[]
+      }
       create_workspace: {
         Args: { workspace_name: string; workspace_slug: string }
         Returns: string
+      }
+      get_free_membership_policy: { Args: never; Returns: Json }
+      record_free_membership_check: {
+        Args: {
+          candidate_secret: string
+          check_result: string
+          error_code?: string
+          target_workspace_id: string
+        }
+        Returns: string
+      }
+      record_owner_membership_preflight: {
+        Args: { candidate_secret: string; check_result: string; target_user_id: string }
+        Returns: undefined
       }
       sync_auth_identities: { Args: never; Returns: string[] }
       sync_discord_identity: { Args: never; Returns: boolean }

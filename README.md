@@ -40,6 +40,8 @@ npx supabase db push
 
 Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Never place a Supabase secret/service-role key, Discord client secret, Roblox secret, or Lemon Squeezy key in a `NEXT_PUBLIC_` variable.
 
+Set `CRON_SECRET` to a random 32+ byte server-only value in Vercel Production. The daily `/api/cron/roblox-membership` job uses it to authenticate membership checks. Free-plan enforcement is stored separately in `nexora_private.platform_policy` and defaults to disabled while Roblox OAuth is under review. Enable it only after OAuth is approved and the cron path has been verified.
+
 For the separate server-side Roblox Open Cloud flow, set these server-only variables in `.env.local` or Vercel:
 
 - `ROBLOX_CLIENT_ID`

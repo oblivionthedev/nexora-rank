@@ -1,111 +1,90 @@
 export type LegalSection = { heading: string; paragraphs?: string[]; items?: string[] };
-
-export type LegalDocument = {
-  slug: string;
-  shortTitle: string;
-  title: string;
-  summary: string;
-  sections: LegalSection[];
-};
+export type LegalDocument = { slug: string; shortTitle: string; title: string; summary: string; sections: LegalSection[] };
 
 export const legalDocuments: LegalDocument[] = [
   {
-    slug: "terms-of-service",
-    shortTitle: "Terms of Service",
-    title: "Nexora Rank Terms of Service",
-    summary: "The agreement for workspaces that use Nexora Rank, its dashboard, Discord bot, identity linking, and future paid services.",
+    slug: "terms-of-service", shortTitle: "Terms of Service", title: "Nexora Rank Terms of Service",
+    summary: "The service agreement for Nexora Rank accounts, workspaces, integrations, automations, and private-beta plans.",
     sections: [
-      { heading: "1. Pre-launch status", paragraphs: ["Nexora Rank is currently a private beta. These terms are a pre-launch draft and become binding only when the service is publicly offered and an operator is identified. Paid plans are not available today."] },
-      { heading: "2. Who may use the service", paragraphs: ["You must be at least 13 and old enough to use Discord and Roblox in your location. If you are under the age of legal majority, a parent or guardian must approve your use and any future purchase. A workspace owner must have authority to act for the community they connect."] },
-      { heading: "3. Accounts and integrations", paragraphs: ["You are responsible for your connected accounts, workspace membership, and accurate configuration. Nexora uses official authorization flows and will never ask for a Discord user token or a Roblox .ROBLOSECURITY cookie."], items: ["Follow Discord, Roblox, and applicable community rules.", "Grant only permissions you are authorized to grant.", "Keep recovery methods and administrator access secure.", "Tell us promptly about suspected unauthorized access."] },
-      { heading: "4. Workspace operations", paragraphs: ["Rank changes, role sync, applications, activity records, and automations may affect real communities. Workspace owners decide who can approve and execute actions and are responsible for reviewing permissions, rank paths, and automation rules before enabling them."] },
-      { heading: "5. Beta availability", paragraphs: ["Features may change, pause, or be removed during beta. We may limit operations to protect users, third-party platforms, or service reliability. Preview and simulated dashboard data must not be treated as a completed production integration."] },
-      { heading: "6. Future paid plans", paragraphs: ["If paid plans launch, price, renewal interval, taxes, cancellation controls, and the applicable checkout provider terms will be shown before purchase. No fee can be charged through the current private-beta site."] },
-      { heading: "7. Suspension and termination", paragraphs: ["We may restrict or end access for abuse, security risk, unlawful use, non-payment after paid plans launch, or violations of these terms or third-party platform rules. Workspace owners may stop using Nexora and request deletion subject to legal, security, and backup retention needs."] },
-      { heading: "8. Intellectual property", paragraphs: ["Nexora Rank, its interface, code, original graphics, and brand assets are protected by applicable intellectual-property law. You keep ownership of content you submit and give Nexora only the permission needed to host, process, and display it to operate the service."] },
-      { heading: "9. Disclaimers and liability", paragraphs: ["The beta is provided on an as-available basis. To the maximum extent permitted by law, Nexora does not guarantee uninterrupted service or that third-party platforms will accept every operation. Nothing in these terms removes consumer rights or liability that cannot legally be excluded. Final liability limits and governing-law terms require operator review before public launch."] },
-      { heading: "10. Contact and changes", paragraphs: ["Material changes will be dated and, when appropriate, announced in the dashboard or Discord support community. A dedicated legal contact and operator identity will be published before public registration or billing begins."] },
+      { heading: "1. Status and acceptance", paragraphs: ["Effective August 28, 2026. Nexora Rank is a private-beta service. By creating an account or using the website, dashboard, bot, API, integrations, or a workspace, you agree to these Terms and the policies in the Legal Center. If you act for a community or organization, you confirm that you may bind it to these terms."] },
+      { heading: "2. Eligibility and accounts", paragraphs: ["You must be at least 13, meet the minimum age for Discord and Roblox in your location, and have any parent or guardian permission required by law. Information must be accurate and sign-in methods must be protected."], items: ["Connect only Discord and Roblox accounts you may use.", "Workspace owners must be authorized to manage each connected server, group, community, or experience.", "Never share passwords, Discord user tokens, Roblox security cookies, API keys, or OAuth client secrets.", "Report suspected unauthorized access promptly."] },
+      { heading: "3. Free-plan Roblox community requirement", paragraphs: ["When membership enforcement is enabled, the owner of every Free workspace must connect their Roblox identity and remain a member of the Nexora Roblox community with ID 596263047. Nexora verifies this automatically. Workspaces on an active paid or trial plan above Free are exempt."], items: ["A confirmed departure starts a 48-hour grace period.", "Rejoining during the grace period restores eligibility.", "If the owner remains absent after the deadline, suspension may occur on the next successful automated verification.", "Roblox outages and inconclusive checks do not start the timer or cause a new suspension.", "Rejoining, or becoming eligible for an exempt active plan, automatically restores a workspace suspended only for this rule."] },
+      { heading: "4. Workspace responsibility", paragraphs: ["Rank changes, role sync, applications, activity records, API requests, and automations can affect real communities. Owners control staff access and must review permissions, rank paths, connected resources, API keys, and automation rules. Nexora may retain audit evidence needed for security and dispute handling."] },
+      { heading: "5. Beta availability", paragraphs: ["Features may change, pause, or be removed during beta. Nexora does not guarantee uninterrupted service or that Discord, Roblox, Vercel, Supabase, or another platform will accept every request. The Status page reports current health where available. Operations may be limited to protect users, platforms, or reliability."] },
+      { heading: "6. Plans and billing", paragraphs: ["The private beta currently offers a Free plan without active checkout. Before paid plans launch, Nexora will show price, tax handling, renewal, cancellation, refund terms, provider, and material limits before purchase. A downgrade to Free may make the Roblox requirement applicable after notice and a reasonable opportunity to comply."] },
+      { heading: "7. Suspension and termination", paragraphs: ["Nexora may restrict or end access for material or repeated policy violations, abuse, security risks, unlawful use, third-party platform enforcement, future non-payment, or failure to meet a plan eligibility rule. Where appropriate, Nexora will explain the reason and offer a review path. Deletion requests remain subject to necessary security, legal, dispute, audit, and backup retention."] },
+      { heading: "8. Intellectual property", paragraphs: ["Nexora Rank and its original code, interface, graphics, and brand are protected by applicable law. You retain submitted content and grant Nexora a limited worldwide license to host, process, transmit, and display it only to provide, secure, and support the service. Feedback may be used without payment or public attribution."] },
+      { heading: "9. Disclaimers and liability", paragraphs: ["The beta is provided on an as-available basis. To the maximum extent permitted by law, Nexora disclaims implied warranties and is not responsible for events controlled by independent platforms. Nothing excludes mandatory consumer rights or liability that cannot legally be limited. Operator identity, governing law, disputes, and final liability terms require qualified legal review before public billing."] },
+      { heading: "10. Changes and contact", paragraphs: ["Material changes will be dated and announced through the dashboard or official support community when appropriate. Urgent security, legal, or platform changes may take effect sooner. The legal operator and dedicated legal, privacy, and support contacts will be published before public billing; never post secrets or personal data publicly."] },
     ],
   },
   {
-    slug: "terms-of-use",
-    shortTitle: "Terms of Use",
-    title: "Website & Bot Terms of Use",
-    summary: "Rules for the public website, documentation, downloadable brand assets, demo dashboard, and Discord command surfaces.",
+    slug: "terms-of-use", shortTitle: "Terms of Use", title: "Website & Bot Terms of Use",
+    summary: "Rules for Nexora’s website, dashboard, documentation, bot commands, API, and supplied assets.",
     sections: [
-      { heading: "1. Accepting these terms", paragraphs: ["By browsing or using Nexora public surfaces after launch, you agree to these website and bot terms. Workspace services are additionally governed by the Terms of Service."] },
-      { heading: "2. Permitted use", items: ["Evaluate Nexora for a community you own or are authorized to manage.", "Download provided bot assets for accurate Nexora listings and documentation.", "Share links to Nexora pages without suggesting an endorsement or partnership.", "Use commands only in servers where you have permission."] },
-      { heading: "3. Prohibited use", items: ["Probe, scrape, overload, or bypass security and access controls.", "Impersonate Nexora or misrepresent affiliation.", "Copy the interface or brand assets to create a confusingly similar service.", "Use demos or command responses to deceive users about completed actions.", "Upload malware, unlawful content, or credentials belonging to another person."] },
-      { heading: "4. Third-party services", paragraphs: ["Discord and Roblox are independent platforms with their own terms and privacy practices. Nexora is not endorsed by or affiliated with Discord Inc. or Roblox Corporation unless explicitly stated."] },
-      { heading: "5. Feedback and availability", paragraphs: ["If you submit feedback, you allow Nexora to use it without restriction or payment, without identifying you publicly. Public pages may change or be unavailable while the private beta is developed."] },
+      { heading: "1. Scope", paragraphs: ["Effective August 28, 2026. These rules apply to Nexora’s public website, dashboard, documentation, Discord bot, API, status page, and supplied assets. Account and workspace use is also governed by the Terms of Service."] },
+      { heading: "2. Permitted use", items: ["Evaluate or operate Nexora for a community you own or may manage.", "Use commands and APIs only in authorized servers, groups, experiences, and workspaces.", "Use supplied brand assets only for accurate Nexora listings and documentation.", "Link to public pages without implying sponsorship or partnership."] },
+      { heading: "3. Prohibited use", items: ["Probe, scrape, overload, reverse engineer, or bypass security, rate limits, or suspension controls except where law expressly permits.", "Impersonate anyone or misrepresent affiliation or completed actions.", "Create a confusingly similar service using Nexora’s interface or brand.", "Submit malware, unlawful content, stolen credentials, unauthorized personal data, or another person’s secrets.", "Manipulate identities, plan status, Roblox membership checks, eligibility, or audit evidence.", "Spam, raid, harass, exploit, discriminate, defraud, or evade Discord or Roblox enforcement."] },
+      { heading: "4. Independent platforms", paragraphs: ["Discord and Roblox are independent platforms with their own terms, developer policies, community standards, privacy practices, permissions, and limits. Nexora is not endorsed by or affiliated with Discord Inc. or Roblox Corporation unless explicitly stated."] },
+      { heading: "5. Automated controls", paragraphs: ["Nexora uses automated controls for security, quotas, plan eligibility, and the Free-plan Roblox community rule. Provider failures are inconclusive rather than non-compliant. Owners may request review of an incorrect automated result through official support."] },
+      { heading: "6. Availability", paragraphs: ["Beta features, limits, and commands may change. The Status page is operational information, not a service-level agreement. Continued use after an effective update means acceptance where permitted by law."] },
     ],
   },
   {
-    slug: "privacy",
-    shortTitle: "Privacy Policy",
-    title: "Nexora Rank Privacy Policy",
-    summary: "What data Nexora expects to process, why it is needed, who receives it, and the controls available to users.",
+    slug: "privacy", shortTitle: "Privacy Policy", title: "Nexora Rank Privacy Policy",
+    summary: "What Nexora processes, why it is needed, how automated eligibility works, and the choices available to users.",
     sections: [
-      { heading: "1. Pre-launch notice", paragraphs: ["The current site is a private preview and real account connections remain disabled until the dedicated Nexora backend is connected. This policy documents the intended production data flow and will be finalized with the operator identity and contact details before launch."] },
-      { heading: "2. Data we process", items: ["Discord account ID, username, avatar, server ID, roles, and authorized workspace membership.", "Roblox account ID, username, display name, group membership, rank, and authorized Open Cloud results.", "Workspace configuration, applications, activity summaries, approval decisions, automation events, and audit records.", "Technical logs such as time, request status, approximate network information, device/browser data, and security events.", "Billing identifiers and plan status after payments launch; full card details stay with the checkout provider."] },
-      { heading: "3. Why we process it", paragraphs: ["We process data to provide requested account linking and workspace features, secure the service, prevent abuse, maintain auditability, support users, and meet legal obligations. Where applicable, the legal basis may be contract, legitimate interests, consent, or legal obligation depending on the activity and location."] },
-      { heading: "4. Children and teenagers", paragraphs: ["Nexora is not directed to children under 13. Where consent is the legal basis, users below their country’s digital-consent age require verifiable parent or guardian consent. Community owners must not use Nexora to collect unnecessary personal information from minors."] },
-      { heading: "5. Sharing and processors", paragraphs: ["Data may be shared with infrastructure, authentication, monitoring, support, and future payment providers only as needed to operate Nexora. Discord and Roblox receive requests as independent platforms. We do not sell personal data or use Roblox API data to train AI models."] },
-      { heading: "6. Retention", paragraphs: ["Account and workspace data is kept while needed to provide the service. Security and audit records may be retained longer to investigate abuse and preserve operational integrity. Exact production retention periods will be published before launch; deletion from backups may take additional time."] },
-      { heading: "7. Your choices and rights", items: ["Disconnect authorized accounts and revoke access from Discord or Roblox.", "Ask for access, correction, deletion, restriction, objection, or portability where applicable.", "Withdraw consent without affecting earlier lawful processing.", "Complain to the relevant data-protection authority.", "Request workspace deletion, subject to necessary security and legal retention."] },
-      { heading: "8. Security and international transfers", paragraphs: ["Nexora is designed around scoped OAuth, row-level access controls, encrypted transport, secret isolation, and auditable privileged operations. No internet service can promise absolute security. If data crosses borders, an appropriate transfer mechanism will be used where required."] },
-      { heading: "9. Contact", paragraphs: ["A dedicated privacy email and the legal operator’s identity will be published before public registration. Until then, do not submit sensitive information through the preview."] },
+      { heading: "1. Scope", paragraphs: ["Effective August 28, 2026. This policy covers the Nexora private beta: website, sign-in, onboarding, dashboard, Discord bot, Roblox integration, API, status page, support, and workspaces. Nexora is not intended for children under 13. The legal operator and dedicated privacy contact will be added before public billing."] },
+      { heading: "2. Data processed", items: ["Account data: Supabase user ID, contact email, name, avatar, session, and authentication metadata.", "Discord data: account ID, username, display name, avatar, connected server ID, authorized roles, membership, and integration status.", "Roblox data: account ID, username, display name, avatar, connected resource identifiers, public community membership and role, and authorized Open Cloud results.", "Workspace data: members, roles, plan, configuration, applications, activity, rank actions, automations, API use, and audit records.", "Eligibility data: membership in Roblox community 596263047, check times, grace dates, provider errors, and membership-policy suspension status.", "Technical data: timestamps, request status, browser/device and approximate network information, security events, logs, and service health.", "Future billing data: customer, plan, invoice, renewal, and payment-status identifiers; Nexora does not intend to store full card details."] },
+      { heading: "3. Sources", paragraphs: ["Data comes from you, authorized workspace users, Supabase Auth, Discord OAuth and APIs, Roblox OAuth and public or authorized APIs, connected game servers, Nexora security systems, and future billing providers. Roblox’s public membership endpoint may be checked without retaining a Roblox access token for that check."] },
+      { heading: "4. Purposes and legal bases", paragraphs: ["Nexora processes data to create accounts and workspaces, provide integrations and automations, enforce limits and eligibility, secure and troubleshoot the service, prevent abuse, provide support, maintain auditability, and meet legal obligations. Depending on location and activity, the basis may be contract, legitimate interests, consent, or legal obligation."] },
+      { heading: "5. Automated Free-plan eligibility", paragraphs: ["When enabled, Nexora compares the linked Roblox user ID of a Free workspace owner with public membership data for community 596263047. Confirmed absence starts a 48-hour grace period; a successful check after expiry can suspend the workspace. Provider errors do not start the timer or cause new suspension. Rejoining or becoming an eligible active paid or trial workspace restores a workspace suspended only for this rule. Owners may request human review."] },
+      { heading: "6. Sharing", paragraphs: ["Data is shared only as needed with infrastructure, authentication, monitoring, support, and future billing providers; with Discord or Roblox for requested functions; when legally required; or to protect users and the service. Nexora does not sell personal data or use Discord or Roblox API data to train general-purpose AI models."] },
+      { heading: "7. Retention", paragraphs: ["Account and workspace data is retained while needed for service. Eligibility results and grace dates remain while the workspace exists and may remain in audit records for security or disputes. OAuth data is refreshed or deleted when no longer needed under provider rules. Security records may be kept longer where necessary; deleted data can remain temporarily in encrypted backups."] },
+      { heading: "8. Rights and choices", items: ["Disconnect or revoke Discord and Roblox access, understanding required features may stop.", "Request access, correction, deletion, restriction, objection, or portability where applicable.", "Withdraw consent where it is the basis, without affecting earlier lawful processing.", "Request human review of an automated eligibility or suspension result.", "Request workspace deletion subject to necessary security, legal, audit, and backup retention.", "Complain to the relevant data-protection authority."] },
+      { heading: "9. Security and transfers", paragraphs: ["Nexora uses scoped OAuth, encrypted transport, row-level database controls, isolated secrets, and audit records. No internet service is perfectly secure. Vercel and Supabase may process data in locations covered by their terms; appropriate transfer safeguards will be used where required."] },
+      { heading: "10. Contact and changes", paragraphs: ["Use official Nexora support for beta privacy requests and avoid posting personal data publicly. A dedicated privacy contact and operator identity will be published before public billing. Material changes will be dated and communicated where required."] },
     ],
   },
   {
-    slug: "cookies",
-    shortTitle: "Cookie Policy",
-    title: "Cookie & Local Storage Policy",
-    summary: "A plain-language record of browser storage Nexora uses now and may use after account connections launch.",
+    slug: "cookies", shortTitle: "Cookie Policy", title: "Cookie & Local Storage Policy",
+    summary: "Authentication, security, preference, and optional analytics storage used by Nexora.",
     sections: [
-      { heading: "1. Current preview", paragraphs: ["The private preview does not use advertising cookies. Necessary browser storage may be used for security, interface state, and preview access."] },
-      { heading: "2. Necessary storage", items: ["Authentication session cookies after sign-in launches.", "Security, anti-abuse, load balancing, and request-integrity values.", "Preferences needed to remember interface or consent choices."] },
-      { heading: "3. Analytics", paragraphs: ["Optional analytics will remain off unless they are configured with an appropriate legal basis and, where required, consent. Nexora will not add advertising trackers silently."] },
-      { heading: "4. Controls", paragraphs: ["You can clear or block storage in your browser. Blocking necessary cookies may prevent sign-in and dashboard features. A consent control will be added before any non-essential cookies are enabled."] },
+      { heading: "1. Current use", paragraphs: ["Effective August 28, 2026. Nexora uses necessary browser storage for Supabase sessions, OAuth completion, request security, routing, and interface state. Nexora does not currently use advertising cookies."] },
+      { heading: "2. Necessary storage", items: ["Authentication cookies that keep a valid session.", "Short-lived OAuth state and verifier values for Discord and Roblox.", "Security, anti-abuse, routing, and request-integrity values used by Nexora, Vercel, or Supabase.", "Local preferences for interface or consent choices."] },
+      { heading: "3. Optional storage", paragraphs: ["Optional analytics and other non-essential storage remain off unless configured with an appropriate legal basis and consent where required. Nexora will not silently add advertising or cross-site tracking."] },
+      { heading: "4. Controls", paragraphs: ["You may clear or block browser storage, but blocking necessary values may prevent sign-in, OAuth, onboarding, or dashboard use. A consent control will be added before non-essential cookies requiring consent are enabled."] },
     ],
   },
   {
-    slug: "acceptable-use",
-    shortTitle: "Acceptable Use",
-    title: "Acceptable Use Policy",
-    summary: "The safety and platform-integrity rules that apply to every account, bot command, workspace, and automation.",
+    slug: "acceptable-use", shortTitle: "Acceptable Use", title: "Acceptable Use Policy",
+    summary: "Safety, platform-integrity, credential, automation, and eligibility rules for every Nexora surface.",
     sections: [
-      { heading: "Use Nexora responsibly", items: ["Do not harass, exploit, discriminate against, or endanger users.", "Do not automate spam, raids, mass unsolicited messages, or deceptive engagement.", "Do not evade Roblox or Discord enforcement, rate limits, or permission systems.", "Do not request, store, or share Discord user tokens, Roblox security cookies, passwords, or private keys.", "Do not falsify activity, applications, votes, identities, rank eligibility, or audit evidence.", "Do not access another workspace or account without authorization.", "Do not sell, broker, or use platform-derived personal data for profiling or AI training.", "Do not use Nexora for unlawful commerce, fraud, malware, or intellectual-property infringement."] },
-      { heading: "Enforcement", paragraphs: ["Nexora may slow, block, reverse, preserve evidence of, or report abusive activity when reasonably necessary. Serious or repeated violations may result in workspace suspension or termination."] },
-      { heading: "Reporting", paragraphs: ["A dedicated abuse and security reporting channel will be published before launch. Do not post secrets or personal data in a public Discord channel when reporting an issue."] },
+      { heading: "Use Nexora responsibly", items: ["Do not harass, exploit, discriminate against, threaten, or endanger users.", "Do not automate spam, raids, deceptive engagement, or abusive rank actions.", "Do not evade Discord or Roblox enforcement, permissions, rate limits, or platform rules.", "Do not request, store, or share Discord user tokens, Roblox security cookies, passwords, keys, or another person’s OAuth secrets.", "Do not falsify activity, applications, votes, identities, plan status, Roblox membership, eligibility checks, or audit evidence.", "Do not access another workspace, account, server, group, or experience without authorization.", "Do not sell, broker, profile, or use platform data for general-purpose AI training.", "Do not use Nexora for malware, fraud, unlawful commerce, infringement, or suspension circumvention."] },
+      { heading: "Enforcement", paragraphs: ["Nexora may rate-limit, block, reverse, suspend, preserve evidence of, or report abuse. Serious or repeated violations may end access. The Free-plan membership process has its own 48-hour rejoin period and does not limit urgent security, abuse, or legal action."] },
+      { heading: "Reporting and review", paragraphs: ["Use official Nexora support to report abuse, security issues, or an incorrect eligibility result. Never post secrets or personal data publicly. Nexora may request information reasonably needed to verify ownership and investigate."] },
     ],
   },
   {
-    slug: "refunds",
-    shortTitle: "Refund Policy",
-    title: "Cancellation & Refund Policy",
-    summary: "What applies today and the commitments Nexora will make before any paid plan becomes available.",
+    slug: "refunds", shortTitle: "Refund Policy", title: "Cancellation & Refund Policy",
+    summary: "What applies in the free private beta and what must be published before checkout launches.",
     sections: [
-      { heading: "No paid checkout today", paragraphs: ["Nexora Rank is currently free in private beta. There is no active checkout and Nexora cannot charge or refund a payment through this site."] },
-      { heading: "Before billing launches", paragraphs: ["The checkout will clearly show the merchant of record, total price, tax handling, billing period, renewal behavior, cancellation method, and refund eligibility before payment. The final policy will respect mandatory consumer rights in the buyer’s location."] },
-      { heading: "Planned subscription controls", items: ["Cancel future renewals from the billing portal.", "Keep access through the paid billing period unless fraud or abuse requires suspension.", "Request correction of duplicate or unauthorized charges promptly.", "Receive receipts and plan status from the checkout provider."] },
-      { heading: "Checkout provider", paragraphs: ["Lemon Squeezy is the planned merchant-of-record provider but is not connected yet. Its buyer terms and payment handling will also apply if selected for launch."] },
+      { heading: "No paid checkout today", paragraphs: ["Effective August 28, 2026. Nexora is free in private beta. There is no active checkout, so Nexora cannot charge, cancel, or refund a payment through this site today."] },
+      { heading: "Before billing launches", paragraphs: ["Future checkout will identify the seller or merchant of record, total price, taxes, billing period, renewal, cancellation, refund eligibility, and provider terms before payment. Mandatory consumer rights apply regardless of this policy."] },
+      { heading: "Planned controls", items: ["Cancel future renewal through a billing portal.", "Keep access through the paid period unless security, abuse, law, or payment failure requires restriction.", "Request review of duplicate, incorrect, or unauthorized charges.", "Receive receipts and visible plan status.", "Receive practical notice before a downgrade makes Free-plan eligibility applicable."] },
+      { heading: "Payment provider", paragraphs: ["Lemon Squeezy is under consideration as merchant of record but is not connected. This page will be updated if a provider is selected."] },
     ],
   },
   {
-    slug: "subprocessors",
-    shortTitle: "Subprocessors",
-    title: "Infrastructure & Subprocessors",
-    summary: "A transparent view of services used or planned for hosting, authentication, storage, delivery, and payments.",
+    slug: "subprocessors", shortTitle: "Subprocessors", title: "Infrastructure & Subprocessors",
+    summary: "Services used for hosting, authentication, database operations, and independent platform integrations.",
     sections: [
-      { heading: "Current preview", items: ["OpenAI Sites — private preview build and hosting environment.", "Cloudflare — delivery and security infrastructure used by the current Sites preview."] },
-      { heading: "Planned production services", items: ["Vercel — application hosting and delivery.", "Supabase — PostgreSQL database, authentication, row-level access control, and storage.", "Lemon Squeezy — planned merchant of record for checkout, tax, billing, and refunds."] },
-      { heading: "Independent platforms", paragraphs: ["Discord and Roblox are integrations and independent platforms, not simply Nexora subprocessors. Their own terms and privacy policies govern the data they process. Provider roles, locations, and transfer safeguards will be finalized before production data is accepted."] },
-      { heading: "Changes", paragraphs: ["Material additions that affect production personal data will be reflected here before or promptly after they take effect, with notice where legally required."] },
+      { heading: "Current infrastructure", items: ["Vercel — hosting, server functions, deployment, delivery, and scheduled membership-check triggers.", "Supabase — authentication, PostgreSQL database, row-level access control, OAuth provider connection, and backend services."] },
+      { heading: "Independent platforms", paragraphs: ["Discord and Roblox are integrations and independent platforms, not ordinary Nexora subprocessors. Their terms and privacy policies govern their processing. Nexora contacts them only for sign-in, authorized functions, service health, and the Free-plan membership check."] },
+      { heading: "Future provider", items: ["Lemon Squeezy — under consideration for merchant-of-record checkout, taxes, billing, and refunds; not connected."] },
+      { heading: "Transfers and changes", paragraphs: ["Provider access is limited to its service. Provider terms govern locations, retention, and security; Nexora will use required transfer safeguards. Material additions will be listed before or promptly after they begin, with notice where required."] },
     ],
   },
 ];
 
-export function getLegalDocument(slug: string) {
-  return legalDocuments.find((document) => document.slug === slug);
-}
+export function getLegalDocument(slug: string) { return legalDocuments.find((document) => document.slug === slug); }
