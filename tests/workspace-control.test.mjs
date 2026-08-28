@@ -47,3 +47,13 @@ test("workspace themes and restrictions are enforced across UI and database", as
   assert.match(editor, /type="color"/);
   assert.match(editor, /gradient/);
 });
+
+test("overview connection cards use provider marks and branded actions", async () => {
+  const overview = await readFile(new URL("../app/dashboard/[workspaceId]/page.tsx", import.meta.url), "utf8");
+  assert.match(overview, /function DiscordMark/);
+  assert.match(overview, /function RobloxMark/);
+  assert.match(overview, /bg-\[#5865f2\]/);
+  assert.match(overview, /provider="discord"/);
+  assert.match(overview, /provider="roblox"/);
+  assert.match(overview, /ready\?"Manage":"Setup"/);
+});
