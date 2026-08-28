@@ -1002,9 +1002,9 @@ export type Database = {
         Relationships: []
       }
       workspace_settings: {
-        Row: { workspace_id: string; allowed_roblox_rank_min: number; allowed_roblox_role_ids: string[]; updated_by: string | null; updated_at: string }
-        Insert: { workspace_id: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; updated_by?: string | null; updated_at?: string }
-        Update: { workspace_id?: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; updated_by?: string | null; updated_at?: string }
+        Row: { workspace_id: string; allowed_roblox_rank_min: number; allowed_roblox_role_ids: string[]; theme_mode: string; theme_color_start: string; theme_color_end: string; updated_by: string | null; updated_at: string }
+        Insert: { workspace_id: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; theme_mode?: string; theme_color_start?: string; theme_color_end?: string; updated_by?: string | null; updated_at?: string }
+        Update: { workspace_id?: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; theme_mode?: string; theme_color_start?: string; theme_color_end?: string; updated_by?: string | null; updated_at?: string }
         Relationships: []
       }
       workspaces: {
@@ -1129,6 +1129,7 @@ export type Database = {
       staff_find_workspaces: { Args: { group_query: string }; Returns: Json }
       workspace_control_state: { Args: { target_public_id: string }; Returns: Json }
       save_workspace_settings: { Args: { target_workspace_id: string; rank_min: number; role_ids: string[] }; Returns: boolean }
+      save_workspace_theme: { Args: { target_workspace_id: string; requested_theme_mode: string; requested_color_start: string; requested_color_end: string }; Returns: boolean }
       set_workspace_roblox_group: { Args: { target_workspace_id: string; group_id: string; group_name: string; icon_url: string; oauth_verified: boolean }; Returns: boolean }
       create_discord_link_code: { Args: { target_workspace_id: string }; Returns: Json }
       claim_discord_link_code: { Args: { raw_code: string; guild_id: string; guild_name: string; discord_user_id: string }; Returns: Json }

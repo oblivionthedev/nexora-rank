@@ -30,14 +30,14 @@ export default async function StaffLoginPage() {
           <div className="mt-10 flex size-14 items-center justify-center rounded-2xl bg-[#d79a9a]/12 text-[#d79a9a] ring-1 ring-[#d79a9a]/25">
             <LockKeyhole className="size-6" />
           </div>
-          <p className="microlabel mt-7">Restricted operations</p>
-          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.035em]">Staff sign-in</h1>
+          <p className="microlabel mt-7">Oblivion · platform owner</p>
+          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.035em]">Owner sign-in</h1>
           <p className="mt-4 text-sm leading-7 text-white/58">
-            Staff use their normal Nexora account. Access is granted by a platform owner and verified by the database on every request.
+            Only the Nexora platform owner can enter. Authorization is verified by the database on every request.
           </p>
           {signedIn ? (
             <div className="mt-8 rounded-2xl border border-red-400/25 bg-red-400/8 p-5">
-              <div className="flex gap-3"><ShieldCheck className="mt-0.5 size-5 text-red-300" /><div><b className="text-sm">No staff access</b><p className="mt-1 text-xs leading-6 text-white/55">This signed-in account is not assigned a platform staff role.</p></div></div>
+              <div className="flex gap-3"><ShieldCheck className="mt-0.5 size-5 text-red-300" /><div><b className="text-sm">Owner access required</b><p className="mt-1 text-xs leading-6 text-white/55">This signed-in account is not the platform owner.</p></div></div>
               <form action={signOut} className="mt-4"><button className="pill pill-ghost" type="submit">Sign out</button></form>
             </div>
           ) : (

@@ -30,3 +30,20 @@ test("API keys keep the required length and valid prefix", async () => {
   assert.match(sql, /nx_live_/);
   assert.match(sql, /ranks:write/);
 });
+
+test("workspace themes and restrictions are enforced across UI and database", async () => {
+  const [sql, shell, connections, editor] = await Promise.all([
+    readFile(new URL("../supabase/migrations/20260828171000_workspace_themes_and_owner_only_staff.sql", import.meta.url), "utf8"),
+    readFile(new URL("../components/workspace-shell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/dashboard/[workspaceId]/connections/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/workspace-theme-editor.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(sql, /save_workspace_theme/);
+  assert.match(sql, /operational_status<>'active'|operational_status <> 'active'/);
+  assert.match(sql, /role = 'owner'/);
+  assert.match(shell, /fixed inset-0 z-\[9999\]/);
+  assert.match(shell, /Dashboard controls, Discord bot actions, API keys, and in-game requests are disabled/);
+  assert.match(connections, /1542533178554585099/);
+  assert.match(editor, /type="color"/);
+  assert.match(editor, /gradient/);
+});

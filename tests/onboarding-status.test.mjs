@@ -6,12 +6,12 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-test("allows Discord-only onboarding while Roblox approval is pending", async () => {
+test("requires Roblox only when the OAuth feature is enabled", async () => {
   const onboarding = await readFile(path.join(root, "app/onboarding/page.tsx"), "utf8");
 
-  assert.match(onboarding, /const identityReady = discordConnected && \(!membershipEnforced \|\| robloxConnected\);/);
-  assert.match(onboarding, /Available after approval/);
-  assert.match(onboarding, /membershipEnforced \? <OnboardingIdentityAction provider="custom:roblox"/);
+  assert.match(onboarding, /const robloxAvailable = process\.env\.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED !== "false";/);
+  assert.match(onboarding, /const identityReady = discordConnected && \(!robloxAvailable \|\| robloxConnected\);/);
+  assert.match(onboarding, /robloxAvailable \? <OnboardingIdentityAction provider="custom:roblox"/);
 });
 
 test("implements fail-safe free workspace Roblox membership enforcement", async () => {
