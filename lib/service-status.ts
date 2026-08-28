@@ -14,6 +14,12 @@ type StatusPageResponse = {
   status?: { indicator?: string; description?: string };
 };
 
+type StatusIoResponse = {
+  result?: {
+    status_overall?: { updated?: string; status?: string; status_code?: number };
+  };
+};
+
 const statusSources = [
   {
     name: "Vercel edge network",
@@ -36,8 +42,9 @@ const statusSources = [
   {
     name: "Roblox platform",
     description: "OAuth, groups and ranking tools — optional in beta",
-    endpoint: "https://status.roblox.com/api/v2/status.json",
+    endpoint: "https://api.status.io/1.0/status/59db90dbcdeb2f04dadcf16d",
     href: "https://status.roblox.com",
+    format: "statusio",
   },
 ] as const;
 
@@ -56,6 +63,28 @@ async function readStatusPage(source: (typeof statusSources)[number]): Promise<S
       signal: AbortSignal.timeout(4500),
     });
     if (!response.ok) throw new Error(`status ${response.status}`);
+    if ("format" in source && source.format === "statusio") {
+      const payload = await response.json() as StatusIoResponse;
+      const overall = payload.result?.status_overall;
+      const label = overall?.status ?? "Status available";
+      const normalized = label.toLowerCase();
+      const state: HealthState = normalized.includes("operational")
+        ? "operational"
+        : normalized.includes("degraded") || normalized.includes("maintenance")
+          ? "degraded"
+          : normalized.includes("outage") || normalized.includes("disruption")
+            ? "outage"
+            : "unknown";
+      return {
+        name: source.name,
+        description: source.description,
+        state,
+        detail: label,
+        href: source.href,
+        updatedAt: overall?.updated,
+      };
+    }
+
     const payload = await response.json() as StatusPageResponse;
     return {
       name: source.name,
@@ -78,13 +107,15 @@ async function readStatusPage(source: (typeof statusSources)[number]): Promise<S
 
 async function readProjectAuth(): Promise<ServiceHealth> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) {
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !publishableKey) {
     return { name: "Nexora authentication", description: "Project sign-in and session exchange", state: "unknown", detail: "Health check is not configured" };
   }
 
   try {
     const response = await fetch(`${url}/auth/v1/health`, {
       cache: "no-store",
+      headers: { apikey: publishableKey },
       signal: AbortSignal.timeout(3500),
     });
     return {

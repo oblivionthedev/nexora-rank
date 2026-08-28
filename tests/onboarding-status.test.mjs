@@ -24,5 +24,7 @@ test("exposes a live service status route and navigation entry", async () => {
   assert.match(page, /getServiceHealth/);
   assert.match(health, /Nexora authentication/);
   assert.match(health, /discordstatus\.com\/api\/v2\/status\.json/);
+  assert.match(health, /api\.status\.io\/1\.0\/status\/59db90dbcdeb2f04dadcf16d/);
+  assert.match(health, /headers: \{ apikey: publishableKey \}/);
   assert.match(navigation, /href: "\/status", label: "Status"/);
 });
