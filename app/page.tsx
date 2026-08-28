@@ -63,6 +63,7 @@ export default function Home() {
       <footer className="opening-footer">
         <span>© 2026 Nexora</span>
         <nav aria-label="Legal">
+          <Link href="/login?next=/dashboard">Owner access</Link>
           <Link href="/legal/terms-of-service">Terms</Link>
           <Link href="/legal/privacy">Privacy</Link>
           <Link href="/legal">Legal</Link>

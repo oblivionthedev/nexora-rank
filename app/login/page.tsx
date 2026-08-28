@@ -4,9 +4,8 @@ import { useState } from "react";
 import type { ComponentType } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Bot, Check, LoaderCircle, LockKeyhole } from "lucide-react";
+import { ArrowLeft, Bot, Check, LoaderCircle, LockKeyhole } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
-import { Button } from "@/components/ui/button";
 import { nexoraOAuthProviders, startOAuthSignIn, type NexoraOAuthProvider } from "@/lib/supabase/oauth";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -41,8 +40,8 @@ export default function LoginPage() {
           <OAuthButton icon={RobloxIcon} name="Roblox" tone="roblox" busy={busyProvider === nexoraOAuthProviders.roblox} disabled={busyProvider !== null} onClick={() => continueWithProvider(nexoraOAuthProviders.roblox)} />
         </div>
         {authMessage && <div role="status" className="mt-3 rounded-xl border border-amber-300/10 bg-amber-300/[.045] p-3 text-xs leading-5 text-amber-100/60">{authMessage}</div>}
-        <div className="my-7 flex items-center gap-3"><span className="h-px flex-1 bg-white/[.07]" /><span className="text-[10px] font-semibold uppercase tracking-[.15em] text-white/20">Preview access</span><span className="h-px flex-1 bg-white/[.07]" /></div>
-        <Button asChild className="button-glow h-11 w-full rounded-xl"><Link href="/dashboard">Explore demo workspace <ArrowRight /></Link></Button>
+        <div className="my-7 flex items-center gap-3"><span className="h-px flex-1 bg-white/[.07]" /><span className="text-[10px] font-semibold uppercase tracking-[.15em] text-white/20">Private launch access</span><span className="h-px flex-1 bg-white/[.07]" /></div>
+        <p className="rounded-xl border border-white/[.06] bg-white/[.018] px-4 py-3 text-center text-[10px] leading-5 text-white/30">The dashboard is currently available only to Nexora&apos;s owner. Other accounts return to the opening-soon page.</p>
         <div className="mt-8 grid grid-cols-3 gap-2">
           {["Official OAuth", "Scoped access", "No cookies"].map((item) => <div key={item} className="rounded-xl border border-white/[.06] bg-white/[.018] px-2 py-3 text-center"><Check className="mx-auto size-3.5 text-emerald-400" /><span className="mt-1.5 block text-[9px] text-white/32">{item}</span></div>)}
         </div>
