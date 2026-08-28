@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Ban, Bot, ChevronRight, FileClock, Gauge, LockKeyhole, LogOut, Settings, ShieldCheck, UsersRound } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { RestrictedRouteSync } from "@/components/restricted-route-sync";
 import { signOut } from "@/app/dashboard/actions";
 
 const items = [
@@ -25,7 +26,7 @@ export function WorkspaceShell({ workspace, settings, children }: { workspace: W
   const gradient = settings.theme_mode === "solid" ? start : `linear-gradient(120deg, ${start}, ${end})`;
   const themeStyle = { "--workspace-accent": start, "--workspace-accent-end": end, "--workspace-gradient": gradient } as CSSProperties;
 
-  if (workspace.operational_status !== "active") return <WorkspaceLocked workspace={workspace} style={themeStyle} />;
+  if (workspace.operational_status !== "active") return <>{workspace.moderation_status === "banned" ? <RestrictedRouteSync canonicalPath={`/dashboard/${workspace.public_id}/not-approved`} /> : null}<WorkspaceLocked workspace={workspace} style={themeStyle} /></>;
 
   const base = `/dashboard/${workspace.public_id}`;
   return <div style={themeStyle} className="workspace-theme min-h-screen bg-[#050303] text-white lg:grid lg:grid-cols-[270px_minmax(0,1fr)]">

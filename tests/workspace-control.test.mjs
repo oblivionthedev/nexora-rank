@@ -57,3 +57,15 @@ test("overview connection cards use provider marks and branded actions", async (
   assert.match(overview, /provider="roblox"/);
   assert.match(overview, /ready\?"Manage":"Setup"/);
 });
+
+test("banned workspaces use a canonical not-approved URL", async () => {
+  const [shell, sync, page] = await Promise.all([
+    readFile(new URL("../components/workspace-shell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/restricted-route-sync.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/dashboard/[workspaceId]/not-approved/page.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(shell, /moderation_status === "banned"/);
+  assert.match(shell, /\/not-approved/);
+  assert.match(sync, /router\.replace\(canonicalPath\)/);
+  assert.match(page, /moderation_status !== "banned"/);
+});
