@@ -75,9 +75,10 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const ownedRobloxGroups = robloxGroups.filter((group) => group.roleRank === 255);
   const membershipPolicy = policy as { enabled?: boolean; group_id?: string; grace_hours?: number } | null;
   const membershipEnforced = Boolean(membershipPolicy?.enabled);
+  const robloxAvailable = process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED !== "false";
   // During provider review the policy remains disabled, so Discord-only testing
   // stays available. Enabling the database policy also enables the Roblox step.
-  const identityReady = discordConnected && (!membershipEnforced || robloxConnected);
+  const identityReady = discordConnected && (!robloxAvailable || robloxConnected);
   if (membership && params.manage !== "identities") redirect(identityReady ? "/dashboard" : "/onboarding?manage=identities");
   const profileReady = Boolean(profile?.first_name && profile?.last_name && profile?.contact_email);
   const planReady = profile?.plan_key === "free" && Boolean(profile.plan_selected_at);
@@ -125,14 +126,14 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <section className="setup-card">
               <div className="setup-icon"><LockKeyhole /></div>
               <span className="setup-kicker">Identity foundation</span>
-              <h2>{membershipEnforced ? "Connect both owner identities." : "Start with Discord. Add Roblox when it is ready."}</h2>
-              <p>{membershipEnforced ? "Free workspace owners must verify Roblox and remain in the Nexora community. Paid plans are exempt." : "Discord is all you need to test Nexora and launch a workspace today. Roblox OAuth is awaiting approval and will not block setup."}</p>
+              <h2>{robloxAvailable ? "Connect both owner identities." : "Start with Discord."}</h2>
+              <p>{robloxAvailable ? "Discord powers server access while Roblox verifies the account and groups used for ranking." : "Discord is available while Roblox OAuth is temporarily disabled."}</p>
               <div className="provider-stack">
                 <ProviderStatus icon={Bot} name="Discord" description="Required for sign-in, server access, membership and role sync" state={discordConnected ? "connected" : "required"} username={providerMap.get("discord")?.display_name ?? providerMap.get("discord")?.username}>
                   {!discordConnected ? <OnboardingIdentityAction provider="discord" /> : null}
                 </ProviderStatus>
-                <ProviderStatus icon={Gamepad2} name="Roblox" description={membershipEnforced ? "Required for free-plan owner eligibility" : "Optional during testing · OAuth approval in progress"} state={robloxConnected ? "connected" : membershipEnforced ? "required" : "pending"} username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}>
-                  {!robloxConnected ? (membershipEnforced ? <OnboardingIdentityAction provider="custom:roblox" /> : <span className="provider-availability">Available after approval</span>) : null}
+                <ProviderStatus icon={Gamepad2} name="Roblox" description={robloxAvailable ? "Required for groups, ranking and in-game activity" : "Temporarily unavailable"} state={robloxConnected ? "connected" : robloxAvailable ? "required" : "pending"} username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}>
+                  {!robloxConnected ? (robloxAvailable ? <OnboardingIdentityAction provider="custom:roblox" /> : <span className="provider-availability">Temporarily unavailable</span>) : null}
                 </ProviderStatus>
               </div>
               {identityReady && membership ? <Button asChild className="button-glow h-12 rounded-xl"><Link href="/dashboard">Return to dashboard <ArrowRight /></Link></Button> : null}

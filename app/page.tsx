@@ -191,7 +191,7 @@ export default async function Home({ searchParams }: HomeProps) {
                               <p className="microlabel">Live operations</p>
                               <p className="mt-1 text-[13px] font-semibold text-white">Workspace activity</p>
                             </div>
-                            <Radio className="size-3.5 text-emerald-400" aria-hidden="true" />
+                            <Radio className="size-3.5 text-[#d79a9a]" aria-hidden="true" />
                           </div>
                           <div className="mt-3 space-y-2">
                             {logRows.map((row) => (
@@ -282,7 +282,7 @@ export default async function Home({ searchParams }: HomeProps) {
                 <div key={label} className="glass-faint flex items-center gap-3 px-4 py-3.5">
                   <span className="font-mono text-[11px] font-medium uppercase tracking-wider text-[#d79a9a]">{label}</span>
                   <span className="flex-1 text-[13px] text-white/62">{text}</span>
-                  <Icon className="size-4 text-emerald-400" aria-hidden="true" />
+                  <Icon className="size-4 text-[#d79a9a]" aria-hidden="true" />
                 </div>
               ))}
             </div>
@@ -302,7 +302,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <div className="mt-8 space-y-4">
               {["Permission-aware rank paths", "Approval flows for sensitive actions", "Searchable, exportable audit history"].map((item) => (
                 <div key={item} className="flex items-center gap-3 text-sm text-white/70">
-                  <span className="flex size-6 flex-none items-center justify-center rounded-full bg-emerald-400/10 text-emerald-300">
+                  <span className="flex size-6 flex-none items-center justify-center rounded-full bg-[#d79a9a]/10 text-[#d79a9a]">
                     <Check className="size-3.5" aria-hidden="true" />
                   </span>
                   {item}
@@ -324,7 +324,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <div className="glass-faint mt-3 p-4">
               <div className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-2 text-xs font-medium text-white/76">
-                  <ShieldCheck className="size-4 text-emerald-400" aria-hidden="true" /> Safe to execute
+                  <ShieldCheck className="size-4 text-[#d79a9a]" aria-hidden="true" /> Safe to execute
                 </span>
                 <span className="microlabel">Preview mode</span>
               </div>
@@ -432,7 +432,7 @@ function Stat({ label, value, delta, dir, icon: Icon }: { label: string; value: 
 function FlowNode({ icon: Icon, label, value, success = false }: { icon: typeof UsersRound; label: string; value: string; success?: boolean }) {
   return (
     <div className="glass-faint p-4">
-      <span className={`stat-icon ${success ? "!text-emerald-300" : ""}`}><Icon className="size-4" aria-hidden="true" /></span>
+      <span className={`stat-icon ${success ? "!text-[#d79a9a]" : ""}`}><Icon className="size-4" aria-hidden="true" /></span>
       <p className="microlabel mt-3">{label}</p>
       <p className="mt-1.5 font-mono text-[12px] font-medium text-white">{value}</p>
     </div>

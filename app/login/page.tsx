@@ -43,7 +43,6 @@ function DiscordMark() {
 export default function LoginPage() {
   const [busyProvider, setBusyProvider] = useState<"discord" | "custom:roblox" | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
-  const robloxAvailable = process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
 
   // Read straight from location rather than useSearchParams so this page never
   // needs a Suspense boundary during static rendering.
@@ -141,9 +140,9 @@ export default function LoginPage() {
             {busyProvider === "discord" ? "Opening Discord…" : "Continue with Discord"}
           </button>
 
-          <button className="roblox-pending pill" onClick={() => robloxAvailable && continueWith("custom:roblox")} disabled={busyProvider !== null || !robloxAvailable}>
+          <button className="roblox-pending pill" onClick={() => continueWith("custom:roblox")} disabled={busyProvider !== null}>
             {busyProvider === "custom:roblox" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <RobloxMark />}
-            <b>{busyProvider === "custom:roblox" ? "Opening Roblox…" : robloxAvailable ? "Continue with Roblox" : "Roblox approval pending"}</b>
+            <b>{busyProvider === "custom:roblox" ? "Opening Roblox…" : "Continue with Roblox"}</b>
           </button>
 
           {authMessage && (
@@ -166,7 +165,7 @@ export default function LoginPage() {
 
 function RobloxMark() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ width: 18, height: 18, flex: "0 0 18px" }}>
       <path d="M5.164 2 2 18.836 18.836 22 22 5.164 5.164 2Zm8.09 12.67-3.924-.738.738-3.924 3.924.738-.738 3.924Z" />
     </svg>
   );
