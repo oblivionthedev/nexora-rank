@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { OnboardingIdentityAction } from "@/components/onboarding-identity-actions";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { saveOwnerProfile, selectFreePlan, createOnboardingWorkspace } from "./actions";
@@ -61,7 +60,9 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const providerMap = new Map((links ?? []).map((link) => [link.provider, link]));
   const discordConnected = providerMap.has("discord");
   const robloxConnected = providerMap.has("roblox");
-  const identityReady = discordConnected && robloxConnected;
+  // Roblox OAuth is awaiting provider approval. Discord is the only identity
+  // required during private-beta testing; Roblox can be connected later.
+  const identityReady = discordConnected;
   if (membership && params.manage !== "identities") redirect(identityReady ? "/dashboard" : "/onboarding?manage=identities");
   const profileReady = Boolean(profile?.first_name && profile?.last_name && profile?.contact_email);
   const planReady = profile?.plan_key === "free" && Boolean(profile.plan_selected_at);
@@ -73,19 +74,18 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
   return (
     <main className="setup-page">
-      <div className="setup-orbit setup-orbit-one" />
-      <div className="setup-orbit setup-orbit-two" />
       <header className="setup-topbar">
-        <Link href="/" className="flex items-center gap-2.5"><BrandMark /><span>Nexora Rank</span></Link>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <form action={signOut}><Button type="submit" variant="ghost" className="text-white/45">Sign out</Button></form>
+        <Link href="/" className="setup-brand"><BrandMark /><span>Nexora Rank</span></Link>
+        <div className="setup-topbar-actions">
+          <span className="setup-beta">Private beta</span>
+          <Link href="/status">System status</Link>
+          <form action={signOut}><button type="submit">Sign out</button></form>
         </div>
       </header>
 
       <div className="setup-shell">
         <aside className="setup-rail">
-          <div><span className="setup-eyebrow">Workspace setup</span><h1>Launch with the right foundation.</h1><p>One guided setup joins identity, plan, workspace, and developer access.</p></div>
+          <div><span className="setup-eyebrow">Nexora onboarding</span><h1>Build your community control room.</h1><p>A focused setup for identity, ownership, plan limits, and the workspace your team will run from.</p></div>
           <ol className="setup-steps">
             <SetupRailStep number={1} label="Identity" active={activeStep === 1} done={activeStep > 1} />
             <SetupRailStep number={2} label="Owner profile" active={activeStep === 2} done={activeStep > 2} />
@@ -93,7 +93,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <SetupRailStep number={4} label="Workspace" active={activeStep === 4} done={false} />
             <SetupRailStep number={5} label="Launch" active={false} done={false} />
           </ol>
-          <div className="setup-rail-note"><ShieldCheck /><div><b>Protected by design</b><span>Provider tokens and passwords never enter Nexora workspace tables.</span></div></div>
+          <div className="setup-rail-note"><ShieldCheck /><div><b>Protected by design</b><span>OAuth credentials stay with their providers. Nexora stores only the identity needed to operate your workspace.</span></div></div>
         </aside>
 
         <section className="setup-stage">
@@ -104,15 +104,15 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           {activeStep === 1 ? (
             <section className="setup-card">
               <div className="setup-icon"><LockKeyhole /></div>
-              <span className="setup-kicker">Connected identities</span>
-              <h2>One Nexora account. Two trusted identities.</h2>
-              <p>Discord powers community access and bot permissions. Roblox proves the account used for groups, ranking, and in-game activity.</p>
+              <span className="setup-kicker">Identity foundation</span>
+              <h2>Start with Discord. Add Roblox when it is ready.</h2>
+              <p>Discord is all you need to test Nexora and launch a workspace today. Roblox OAuth is awaiting approval and will not block setup.</p>
               <div className="provider-stack">
-                <ProviderStatus icon={Bot} name="Discord" description="Identity, servers, membership and role sync" connected={discordConnected} username={providerMap.get("discord")?.display_name ?? providerMap.get("discord")?.username}>
+                <ProviderStatus icon={Bot} name="Discord" description="Required for sign-in, server access, membership and role sync" state={discordConnected ? "connected" : "required"} username={providerMap.get("discord")?.display_name ?? providerMap.get("discord")?.username}>
                   {!discordConnected ? <OnboardingIdentityAction provider="discord" /> : null}
                 </ProviderStatus>
-                <ProviderStatus icon={Gamepad2} name="Roblox" description="Official OIDC identity for groups and ranking" connected={robloxConnected} username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}>
-                  {!robloxConnected ? <OnboardingIdentityAction provider="custom:roblox" /> : null}
+                <ProviderStatus icon={Gamepad2} name="Roblox" description="Optional during testing · OAuth approval in progress" state={robloxConnected ? "connected" : "pending"} username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}>
+                  {!robloxConnected ? <span className="provider-availability">Available after approval</span> : null}
                 </ProviderStatus>
               </div>
               {identityReady && membership ? <Button asChild className="button-glow h-12 rounded-xl"><Link href="/dashboard">Return to dashboard <ArrowRight /></Link></Button> : null}
@@ -191,6 +191,8 @@ function SetupRailStep({ number, label, active, done }: { number: number; label:
   return <li className={active ? "active" : done ? "done" : ""}><span>{done ? <Check /> : number}</span><b>{label}</b></li>;
 }
 
-function ProviderStatus({ icon: Icon, name, description, connected, username, children }: { icon: typeof Bot; name: string; description: string; connected: boolean; username?: string | null; children?: React.ReactNode }) {
-  return <article className={connected ? "connected" : ""}><span className="provider-icon"><Icon /></span><div><div className="flex items-center gap-2"><b>{name}</b><span className={connected ? "provider-pill connected" : "provider-pill"}>{connected ? "Connected" : "Required"}</span></div><p>{connected && username ? username : description}</p></div><div className="provider-action">{children ?? <Check />}</div></article>;
+function ProviderStatus({ icon: Icon, name, description, state, username, children }: { icon: typeof Bot; name: string; description: string; state: "connected" | "required" | "pending"; username?: string | null; children?: React.ReactNode }) {
+  const connected = state === "connected";
+  const statusLabel = connected ? "Connected" : state === "required" ? "Required" : "Coming soon";
+  return <article className={state}><span className="provider-icon"><Icon /></span><div><div className="flex items-center gap-2"><b>{name}</b><span className={`provider-pill ${state}`}>{statusLabel}</span></div><p>{connected && username ? username : description}</p></div><div className="provider-action">{children ?? (connected ? <Check /> : null)}</div></article>;
 }

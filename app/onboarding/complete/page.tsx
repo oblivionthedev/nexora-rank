@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Check, Code2, Gamepad2, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Code2, Gamepad2, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { CopyField } from "@/components/copy-field";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,7 +32,7 @@ export default async function OnboardingCompletePage() {
 
   return (
     <main className="setup-complete-page">
-      <header className="setup-topbar"><Link href="/" className="flex items-center gap-2.5"><BrandMark /><span>Nexora Rank</span></Link><ThemeToggle /></header>
+      <header className="setup-topbar"><Link href="/" className="setup-brand"><BrandMark /><span>Nexora Rank</span></Link><div className="setup-topbar-actions"><Link href="/status">System status</Link></div></header>
       <section className="setup-complete-card">
         <div className="setup-success-mark"><Check /></div>
         <span className="setup-kicker">Workspace ready</span>
@@ -46,11 +45,11 @@ export default async function OnboardingCompletePage() {
         <div className="setup-launch-grid">
           <article><Code2 /><div><b>Server scripts only</b><span>Keep API keys in ServerScriptService or a server secret. Never place them in LocalScripts.</span></div></article>
           <article><ShieldCheck /><div><b>Scoped access</b><span>Keys will be limited to exact actions such as activity:write or ranks:write.</span></div></article>
-          <article className={robloxConnected ? "ready" : ""}><Gamepad2 /><div><b>{robloxConnected ? "Roblox connected" : "Roblox connection required"}</b><span>{robloxConnected ? "Identity is ready for group setup." : "Ranking remains locked until Roblox OAuth is connected."}</span></div></article>
+          <article className={robloxConnected ? "ready" : ""}><Gamepad2 /><div><b>{robloxConnected ? "Roblox connected" : "Roblox coming soon"}</b><span>{robloxConnected ? "Identity is ready for group setup." : "Your workspace is ready for testing. Roblox tools unlock after OAuth approval."}</span></div></article>
         </div>
         <div className="setup-complete-actions">
           <Link href="/dashboard"><Button className="button-glow h-12 rounded-xl">Open dashboard <ArrowRight /></Button></Link>
-          {!robloxConnected ? <Link href="/onboarding?manage=identities" className="setup-secondary-link"><Sparkles /> Finish Roblox connection</Link> : null}
+          {!robloxConnected ? <span className="setup-secondary-link">Roblox is optional during private beta</span> : null}
         </div>
       </section>
     </main>

@@ -82,7 +82,7 @@ export default async function Home({ searchParams }: HomeProps) {
                 and automation from one auditable control room.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Link href="/login?next=/dashboard" className="pill pill-solid pill-lg">
+                <Link href="/login?next=/onboarding" className="pill pill-solid pill-lg">
                   Start your workspace <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
                 <Link href="/security" className="pill pill-ghost pill-lg">

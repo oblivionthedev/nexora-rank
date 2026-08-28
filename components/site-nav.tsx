@@ -10,6 +10,7 @@ const links = [
   { href: "/#workflow", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
   { href: "/security", label: "Security" },
+  { href: "/status", label: "Status" },
 ];
 
 /**
@@ -74,7 +75,7 @@ export async function SiteNav({ active }: { active?: string } = {}) {
                 <Link href="/login" className="pill pill-ghost">
                   Sign in
                 </Link>
-                <Link href="/login?next=/dashboard" className="pill pill-solid">
+                <Link href="/login?next=/onboarding" className="pill pill-solid">
                   Get started <ArrowRight className="size-3.5" aria-hidden="true" />
                 </Link>
               </>
@@ -103,7 +104,7 @@ export async function SiteNav({ active }: { active?: string } = {}) {
             <Link href="/login" className="pill pill-ghost">
               Sign in
             </Link>
-            <Link href="/login?next=/dashboard" className="pill pill-solid">
+            <Link href="/login?next=/onboarding" className="pill pill-solid">
               <LogIn className="size-4" aria-hidden="true" />
               Get started
             </Link>
