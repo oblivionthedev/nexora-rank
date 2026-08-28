@@ -43,6 +43,7 @@ function DiscordMark() {
 export default function LoginPage() {
   const [busyProvider, setBusyProvider] = useState<"discord" | "custom:roblox" | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const robloxAvailable = process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
 
   // Read straight from location rather than useSearchParams so this page never
   // needs a Suspense boundary during static rendering.
@@ -140,9 +141,9 @@ export default function LoginPage() {
             {busyProvider === "discord" ? "Opening Discord…" : "Continue with Discord"}
           </button>
 
-          <button className="roblox-pending pill" onClick={() => continueWith("custom:roblox")} disabled={busyProvider !== null}>
+          <button className="roblox-pending pill" onClick={() => robloxAvailable && continueWith("custom:roblox")} disabled={busyProvider !== null || !robloxAvailable}>
             {busyProvider === "custom:roblox" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <RobloxMark />}
-            <b>{busyProvider === "custom:roblox" ? "Opening Roblox…" : "Continue with Roblox"}</b>
+            <b>{busyProvider === "custom:roblox" ? "Opening Roblox…" : robloxAvailable ? "Continue with Roblox" : "Roblox approval pending"}</b>
           </button>
 
           {authMessage && (

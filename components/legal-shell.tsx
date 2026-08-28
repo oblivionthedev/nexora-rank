@@ -19,7 +19,7 @@ export function LegalShell({ children, active }: { children: React.ReactNode; ac
         </aside>
         <div className="legal-content">{children}</div>
       </div>
-      <footer className="legal-footer"><div><BrandMark compact /><span>© 2026 Nexora Rank · Private beta</span></div><div><Link href="/">Home</Link><Link href="/bot">Discord bot</Link><Link href="/pricing">Pricing</Link></div></footer>
+      <footer className="legal-footer"><div><BrandMark compact /><span>© 2026 Nexora Rank · Private beta</span></div><div><Link href="/">Home</Link><Link href="/team">Team</Link><Link href="/pricing">Pricing</Link></div></footer>
     </main>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  Activity, ArrowRight, Blocks, Bot, Check, Clock3, FileCheck2, Fingerprint,
+  Activity, ArrowRight, Blocks, Check, Clock3, FileCheck2, Fingerprint,
   Gauge, GitBranch, LayoutGrid, Link2, ListChecks, LockKeyhole, Radio,
   ShieldCheck, Sparkle, TrendingUp, UsersRound,
 } from "lucide-react";
@@ -66,7 +66,7 @@ export default async function Home({ searchParams }: HomeProps) {
               claim and actions sit bottom-aligned in the narrower one. */}
           <div className="grid items-end gap-x-16 gap-y-9 lg:grid-cols-[1.12fr_0.88fr]">
             <div>
-              <Link href="/bot" className="chip" data-tone="brass">
+              <Link href="/team" className="chip" data-tone="brass">
                 <Sparkle className="size-3" aria-hidden="true" />
                 Nexora Identity Network — private beta
               </Link>
@@ -261,26 +261,26 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className="stage-field" aria-hidden="true" />
           <div className="stage-inner glass-strong grid gap-10 p-7 sm:p-12 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
             <div>
-              <p className="microlabel">Nexora for Discord</p>
+              <p className="microlabel">The people behind Nexora</p>
               <h2 className="mt-4 font-display text-4xl font-extrabold tracking-[-0.03em] text-white sm:text-5xl">
-                Every operation, one command away.
+                Small team. Serious standard.
               </h2>
               <p className="mt-5 max-w-xl text-sm leading-7 text-white/58">
-                Link identities, request rank changes, review applications, inspect activity, and
-                search the audit trail without turning Discord into a control panel maze.
+                Nexora is built by Roblox community operators who care about reliable tools,
+                careful permissions, and support that speaks plainly.
               </p>
-              <Link href="/bot" className="pill pill-ghost mt-8">
-                Explore the Discord bot <ArrowRight className="size-4" aria-hidden="true" />
+              <Link href="/team" className="pill pill-ghost mt-8">
+                Meet the team <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
             <div className="space-y-2.5">
               {[
-                { cmd: "/link", text: "Identity verified", icon: Check },
-                { cmd: "/rank", text: "Policy approved", icon: ShieldCheck },
-                { cmd: "/audit", text: "Receipt created", icon: Fingerprint },
-              ].map(({ cmd, text, icon: Icon }) => (
-                <div key={cmd} className="glass-faint flex items-center gap-3 px-4 py-3.5">
-                  <code className="font-mono text-[13px] font-medium text-[#e8c489]">{cmd}</code>
+                { label: "Product", text: "Focused community operations", icon: Sparkle },
+                { label: "Safety", text: "Reviewed access and audit trails", icon: ShieldCheck },
+                { label: "Support", text: "Human help during private beta", icon: UsersRound },
+              ].map(({ label, text, icon: Icon }) => (
+                <div key={label} className="glass-faint flex items-center gap-3 px-4 py-3.5">
+                  <span className="font-mono text-[11px] font-medium uppercase tracking-wider text-[#e8c489]">{label}</span>
                   <span className="flex-1 text-[13px] text-white/62">{text}</span>
                   <Icon className="size-4 text-emerald-400" aria-hidden="true" />
                 </div>
@@ -317,7 +317,7 @@ export default async function Home({ searchParams }: HomeProps) {
               <span className="chip" data-tone="live"><span className="chip-dot" />Ready</span>
             </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <FlowNode icon={Bot} label="Discord command" value="/promote MiraPlays" />
+              <FlowNode icon={UsersRound} label="Authorized staff" value="Request received" />
               <FlowNode icon={ShieldCheck} label="Policy check" value="3 rules passed" success />
               <FlowNode icon={GitBranch} label="Roblox rank" value="Senior Barista" />
             </div>
@@ -429,7 +429,7 @@ function Stat({ label, value, delta, dir, icon: Icon }: { label: string; value: 
   );
 }
 
-function FlowNode({ icon: Icon, label, value, success = false }: { icon: typeof Bot; label: string; value: string; success?: boolean }) {
+function FlowNode({ icon: Icon, label, value, success = false }: { icon: typeof UsersRound; label: string; value: string; success?: boolean }) {
   return (
     <div className="glass-faint p-4">
       <span className={`stat-icon ${success ? "!text-emerald-300" : ""}`}><Icon className="size-4" aria-hidden="true" /></span>

@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { checkRequiredRobloxMembership, createMembershipAutomationClient } from "@/lib/roblox-membership";
+import { checkRequiredRobloxMembership, createMembershipAutomationClient, listRobloxGroups } from "@/lib/roblox-membership";
 import { createClient } from "@/lib/supabase/server";
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,46}[a-z0-9]$/;
@@ -44,37 +44,47 @@ export async function saveOwnerProfile(formData: FormData) {
     !/[0-9]/.test(password)
   )) redirect("/onboarding?error=weak_password");
 
-  const { supabase, user } = await authenticatedClient();
-  let passwordSetAt: string | null = null;
+  const { supabase } = await authenticatedClient();
+
+  const { error: profileError } = await supabase.rpc("save_onboarding_profile", {
+    p_first_name: firstName,
+    p_last_name: lastName,
+    p_contact_email: contactEmail,
+  });
+  if (profileError) redirect("/onboarding?error=profile_update_failed");
 
   if (password) {
     const { error: passwordError } = await supabase.auth.updateUser({ password });
-    if (passwordError) redirect("/onboarding?error=password_update_failed");
-    passwordSetAt = new Date().toISOString();
+    if (passwordError && passwordError.code !== "same_password") redirect("/onboarding?error=password_update_failed");
+    const { error: confirmError } = await supabase.rpc("confirm_password_set");
+    if (confirmError) redirect("/onboarding?error=password_update_failed");
   }
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      first_name: firstName,
-      last_name: lastName,
-      display_name: `${firstName} ${lastName}`,
-      contact_email: contactEmail,
-      ...(passwordSetAt ? { password_set_at: passwordSetAt } : {}),
-    })
-    .eq("id", user.id);
-
-  if (error) redirect("/onboarding?error=profile_update_failed");
   redirect("/onboarding");
 }
 
 export async function selectFreePlan() {
-  const { supabase, user } = await authenticatedClient();
-  const { error } = await supabase
-    .from("profiles")
-    .update({ plan_key: "free", plan_selected_at: new Date().toISOString() })
-    .eq("id", user.id);
+  const { supabase } = await authenticatedClient();
+  const { error } = await supabase.rpc("select_onboarding_plan", { p_plan_key: "free" });
   if (error) redirect("/onboarding?error=plan_update_failed");
+  redirect("/onboarding");
+}
+
+export async function selectRobloxGroup(formData: FormData) {
+  const groupId = String(formData.get("roblox_group_id") ?? "").trim();
+  if (!/^\d+$/.test(groupId)) redirect("/onboarding?error=invalid_roblox_group");
+  const { supabase, user } = await authenticatedClient();
+  const { data: link } = await supabase.from("account_links").select("provider_user_id").eq("user_id", user.id).eq("provider", "roblox").maybeSingle();
+  if (!link) redirect("/onboarding?error=roblox_identity_required");
+  const memberships = await listRobloxGroups(link.provider_user_id);
+  if (!memberships.ok) redirect("/onboarding?error=roblox_groups_unavailable");
+  const chosen = memberships.groups.find((group) => group.id === groupId);
+  if (!chosen) redirect("/onboarding?error=invalid_roblox_group");
+  const { error } = await supabase.rpc("select_onboarding_roblox_group", {
+    p_group_id: chosen.id,
+    p_group_name: chosen.name,
+    p_group_role: chosen.role,
+  });
+  if (error) redirect("/onboarding?error=roblox_group_update_failed");
   redirect("/onboarding");
 }
 

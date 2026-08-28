@@ -3,10 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   Activity, Blocks, Bot, Check, Copy, FileCheck2, Fingerprint,
-  Gamepad2, Gauge, GitBranch, KeyRound, Link2, ListChecks, LogOut, Plus,
+  Gamepad2, Gauge, GitBranch, Link2, ListChecks, LogOut, Plus,
   ShieldCheck, UsersRound, Webhook,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { ApiKeyControl } from "@/components/api-key-control";
 import { Button } from "@/components/ui/button";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { signOut } from "./actions";
@@ -65,7 +66,7 @@ export default async function DashboardPage() {
 
   if (!membership) redirect("/onboarding");
 
-  const [{ data: workspace }, { count: memberCount }, { count: rankCount }, { count: activityCount }, { data: integrations }, { data: eligibility }, { data: subscription }, { data: policy }] = await Promise.all([
+  const [{ data: workspace }, { count: memberCount }, { count: rankCount }, { count: activityCount }, { data: integrations }, { data: eligibility }, { data: subscription }, { data: policy }, { data: apiKey }] = await Promise.all([
     supabase.from("workspaces").select("id, public_id, name, slug, discord_guild_id, roblox_group_id, operational_status, suspension_reason").eq("id", membership.workspace_id).single(),
     supabase.from("workspace_members").select("workspace_id", { count: "exact", head: true }).eq("workspace_id", membership.workspace_id),
     supabase.from("rank_actions").select("id", { count: "exact", head: true }).eq("workspace_id", membership.workspace_id),
@@ -74,6 +75,7 @@ export default async function DashboardPage() {
     supabase.from("workspace_roblox_eligibility").select("status, grace_expires_at, last_checked_at, required_group_id").eq("workspace_id", membership.workspace_id).maybeSingle(),
     supabase.from("subscriptions").select("plan_key, status").eq("workspace_id", membership.workspace_id).maybeSingle(),
     supabase.rpc("get_free_membership_policy"),
+    supabase.from("api_keys").select("key_prefix").eq("workspace_id", membership.workspace_id).is("revoked_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   if (!workspace) redirect("/dashboard?error=workspace_failed");
   const integrationState = new Map((integrations ?? []).map((item) => [item.provider, item.status]));
@@ -218,15 +220,11 @@ export default async function DashboardPage() {
 
           <section className="glass mt-3.5 p-6 sm:p-7">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <PanelTitle title="Developer access" description="Use the stable workspace ID from server scripts; never expose API keys in LocalScripts." />
-              <button disabled className="pill pill-ghost shrink-0 opacity-50">
-                <KeyRound className="size-3.5" aria-hidden="true" /> Create API key
-              </button>
+              <PanelTitle title="Workspace credentials" description="The workspace ID is permanent. The private key can be replaced whenever you need to revoke old access." />
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <DeveloperItem title="API base" value="https://api.nexorarank.tech/v1" />
-              <DeveloperItem title="Workspace" value={workspace.public_id} />
-              <DeveloperItem title="Default scope" value="activity:write" />
+            <div className="mt-5 grid gap-3 lg:grid-cols-[.7fr_1.3fr]">
+              <DeveloperItem title="Permanent workspace ID" value={workspace.public_id} />
+              <ApiKeyControl workspaceId={workspace.id} currentPrefix={apiKey?.key_prefix} />
             </div>
           </section>
         </div>

@@ -594,6 +594,9 @@ export type Database = {
           plan_key: string
           plan_selected_at: string | null
           roblox_link_deferred_at: string | null
+          selected_roblox_group_id: string | null
+          selected_roblox_group_name: string | null
+          selected_roblox_group_role: string | null
           updated_at: string
         }
         Insert: {
@@ -611,6 +614,9 @@ export type Database = {
           plan_key?: string
           plan_selected_at?: string | null
           roblox_link_deferred_at?: string | null
+          selected_roblox_group_id?: string | null
+          selected_roblox_group_name?: string | null
+          selected_roblox_group_role?: string | null
           updated_at?: string
         }
         Update: {
@@ -628,6 +634,9 @@ export type Database = {
           plan_key?: string
           plan_selected_at?: string | null
           roblox_link_deferred_at?: string | null
+          selected_roblox_group_id?: string | null
+          selected_roblox_group_name?: string | null
+          selected_roblox_group_role?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -779,6 +788,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_status_snapshots: {
+        Row: {
+          checked_at: string
+          checked_on: string
+          detail: string | null
+          service_key: string
+          state: string
+        }
+        Insert: {
+          checked_at?: string
+          checked_on?: string
+          detail?: string | null
+          service_key: string
+          state: string
+        }
+        Update: {
+          checked_at?: string
+          checked_on?: string
+          detail?: string | null
+          service_key?: string
+          state?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -1026,15 +1059,22 @@ export type Database = {
           owner_user_id: string
           plan_key: string
           plan_status: string
-          roblox_user_id: string | null
+          roblox_user_id: string
           workspace_id: string
         }[]
       }
+      complete_onboarding: { Args: never; Returns: Json }
+      confirm_password_set: { Args: never; Returns: string }
       create_workspace: {
         Args: { workspace_name: string; workspace_slug: string }
         Returns: string
       }
       get_free_membership_policy: { Args: never; Returns: Json }
+      issue_workspace_api_key: {
+        Args: { p_name?: string; p_workspace_id: string }
+        Returns: Json
+      }
+      onboarding_state: { Args: never; Returns: Json }
       record_free_membership_check: {
         Args: {
           candidate_secret: string
@@ -1045,7 +1085,43 @@ export type Database = {
         Returns: string
       }
       record_owner_membership_preflight: {
-        Args: { candidate_secret: string; check_result: string; target_user_id: string }
+        Args: {
+          candidate_secret: string
+          check_result: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
+      record_status_snapshots: {
+        Args: { candidate_secret: string; snapshots: Json }
+        Returns: number
+      }
+      revoke_workspace_api_key: {
+        Args: { p_key_id: string }
+        Returns: undefined
+      }
+      rotate_workspace_api_key: {
+        Args: { p_workspace_id: string }
+        Returns: Json
+      }
+      save_onboarding_profile: {
+        Args: {
+          p_contact_email: string
+          p_first_name: string
+          p_last_name: string
+        }
+        Returns: undefined
+      }
+      select_onboarding_plan: {
+        Args: { p_plan_key: string }
+        Returns: undefined
+      }
+      select_onboarding_roblox_group: {
+        Args: { p_group_id: string; p_group_name: string; p_group_role: string }
+        Returns: undefined
+      }
+      set_roblox_link_deferred: {
+        Args: { p_deferred: boolean }
         Returns: undefined
       }
       sync_auth_identities: { Args: never; Returns: string[] }

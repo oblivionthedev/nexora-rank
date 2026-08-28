@@ -6,8 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const links = [
   { href: "/#platform", label: "Platform" },
-  { href: "/bot", label: "Discord bot" },
-  { href: "/#workflow", label: "How it works" },
+  { href: "/team", label: "Team" },
   { href: "/pricing", label: "Pricing" },
   { href: "/security", label: "Security" },
   { href: "/status", label: "Status" },

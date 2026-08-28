@@ -1,6 +1,9 @@
+import { createMembershipAutomationClient } from "@/lib/roblox-membership";
+
 export type HealthState = "operational" | "degraded" | "outage" | "unknown";
 
 export type ServiceHealth = {
+  key: string;
   name: string;
   description: string;
   state: HealthState;
@@ -23,24 +26,28 @@ type StatusIoResponse = {
 const statusSources = [
   {
     name: "Vercel edge network",
+    key: "vercel",
     description: "Hosting, routing and server functions",
     endpoint: "https://www.vercel-status.com/api/v2/status.json",
     href: "https://www.vercel-status.com",
   },
   {
     name: "Supabase platform",
+    key: "supabase",
     description: "Authentication and workspace data",
     endpoint: "https://status.supabase.com/api/v2/status.json",
     href: "https://status.supabase.com",
   },
   {
     name: "Discord platform",
+    key: "discord",
     description: "Sign-in, servers, members and roles",
     endpoint: "https://discordstatus.com/api/v2/status.json",
     href: "https://discordstatus.com",
   },
   {
     name: "Roblox platform",
+    key: "roblox",
     description: "OAuth, groups and ranking tools — optional in beta",
     endpoint: "https://api.status.io/1.0/status/59db90dbcdeb2f04dadcf16d",
     href: "https://status.roblox.com",
@@ -76,6 +83,7 @@ async function readStatusPage(source: (typeof statusSources)[number]): Promise<S
             ? "outage"
             : "unknown";
       return {
+        key: source.key,
         name: source.name,
         description: source.description,
         state,
@@ -87,6 +95,7 @@ async function readStatusPage(source: (typeof statusSources)[number]): Promise<S
 
     const payload = await response.json() as StatusPageResponse;
     return {
+      key: source.key,
       name: source.name,
       description: source.description,
       state: mapIndicator(payload.status?.indicator),
@@ -96,6 +105,7 @@ async function readStatusPage(source: (typeof statusSources)[number]): Promise<S
     };
   } catch {
     return {
+      key: source.key,
       name: source.name,
       description: source.description,
       state: "unknown",
@@ -109,7 +119,7 @@ async function readProjectAuth(): Promise<ServiceHealth> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !publishableKey) {
-    return { name: "Nexora authentication", description: "Project sign-in and session exchange", state: "unknown", detail: "Health check is not configured" };
+    return { key: "authentication", name: "Nexora authentication", description: "Project sign-in and session exchange", state: "unknown", detail: "Health check is not configured" };
   }
 
   try {
@@ -119,13 +129,14 @@ async function readProjectAuth(): Promise<ServiceHealth> {
       signal: AbortSignal.timeout(3500),
     });
     return {
+      key: "authentication",
       name: "Nexora authentication",
       description: "Project sign-in and session exchange",
       state: response.ok ? "operational" : "outage",
       detail: response.ok ? "Accepting authentication requests" : `Health check returned ${response.status}`,
     };
   } catch {
-    return { name: "Nexora authentication", description: "Project sign-in and session exchange", state: "outage", detail: "Authentication health check did not respond" };
+    return { key: "authentication", name: "Nexora authentication", description: "Project sign-in and session exchange", state: "outage", detail: "Authentication health check did not respond" };
   }
 }
 
@@ -138,9 +149,30 @@ export async function getServiceHealth(): Promise<{ services: ServiceHealth[]; c
   return {
     checkedAt: new Date().toISOString(),
     services: [
-      { name: "Nexora website", description: "Public website and workspace dashboard", state: "operational", detail: "Serving requests normally" },
+      { key: "website", name: "Nexora website", description: "Public website and workspace dashboard", state: "operational", detail: "Serving requests normally" },
       auth,
       ...external,
     ],
   };
+}
+
+export type StatusSnapshot = { service_key: string; checked_on: string; state: HealthState; detail: string | null };
+
+export async function getStatusHistory(): Promise<StatusSnapshot[]> {
+  const supabase = createMembershipAutomationClient();
+  const since = new Date();
+  since.setUTCDate(since.getUTCDate() - 89);
+  const { data } = await supabase.from("service_status_snapshots").select("service_key, checked_on, state, detail").gte("checked_on", since.toISOString().slice(0, 10)).order("checked_on");
+  return (data ?? []) as StatusSnapshot[];
+}
+
+export async function recordServiceHealth(services: ServiceHealth[]) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return { ok: false as const, error: "missing_secret" };
+  const supabase = createMembershipAutomationClient();
+  const { data, error } = await supabase.rpc("record_status_snapshots", {
+    candidate_secret: secret,
+    snapshots: services.map((service) => ({ key: service.key, state: service.state, detail: service.detail })),
+  });
+  return error ? { ok: false as const, error: "record_failed" } : { ok: true as const, written: data ?? 0 };
 }

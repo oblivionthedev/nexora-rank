@@ -5,6 +5,7 @@ import {
   Bot,
   Check,
   CircleDollarSign,
+  Coffee,
   Gamepad2,
   KeyRound,
   LockKeyhole,
@@ -18,7 +19,8 @@ import { BrandMark } from "@/components/brand-mark";
 import { OnboardingIdentityAction } from "@/components/onboarding-identity-actions";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
-import { saveOwnerProfile, selectFreePlan, createOnboardingWorkspace } from "./actions";
+import { listRobloxGroups } from "@/lib/roblox-membership";
+import { saveOwnerProfile, selectFreePlan, createOnboardingWorkspace, selectRobloxGroup } from "./actions";
 import { signOut } from "@/app/dashboard/actions";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +40,9 @@ const messages: Record<string, string> = {
   roblox_identity_required: "Connect Roblox before creating a free workspace.",
   roblox_membership_required: "The workspace owner must join the Nexora Roblox community before creating a free workspace.",
   membership_check_unavailable: "Roblox could not be checked safely. Nothing was suspended; please try again shortly.",
+  invalid_roblox_group: "Choose a Roblox community from the verified account.",
+  roblox_groups_unavailable: "Roblox groups could not be loaded. Please try again shortly.",
+  roblox_group_update_failed: "That Roblox community could not be saved.",
 };
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ error?: string; manage?: string }> }) {
@@ -53,10 +58,10 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const [{ data: profile }, { data: links }, { data: membership }, { data: policy }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("first_name, last_name, contact_email, plan_key, plan_selected_at, password_set_at, roblox_link_deferred_at")
+      .select("first_name, last_name, contact_email, plan_key, plan_selected_at, password_set_at, roblox_link_deferred_at, selected_roblox_group_id, selected_roblox_group_name, selected_roblox_group_role")
       .eq("id", user.id)
       .single(),
-    supabase.from("account_links").select("provider, username, display_name").eq("user_id", user.id),
+    supabase.from("account_links").select("provider, username, display_name, provider_user_id").eq("user_id", user.id),
     supabase.from("workspace_members").select("workspace_id").eq("user_id", user.id).limit(1).maybeSingle(),
     supabase.rpc("get_free_membership_policy"),
   ]);
@@ -64,6 +69,9 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const providerMap = new Map((links ?? []).map((link) => [link.provider, link]));
   const discordConnected = providerMap.has("discord");
   const robloxConnected = providerMap.has("roblox");
+  const robloxIdentity = providerMap.get("roblox");
+  const robloxGroupsResult = robloxIdentity?.provider_user_id ? await listRobloxGroups(robloxIdentity.provider_user_id) : null;
+  const robloxGroups = robloxGroupsResult?.ok ? robloxGroupsResult.groups : [];
   const membershipPolicy = policy as { enabled?: boolean; group_id?: string; grace_hours?: number } | null;
   const membershipEnforced = Boolean(membershipPolicy?.enabled);
   // During provider review the policy remains disabled, so Discord-only testing
@@ -72,7 +80,16 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   if (membership && params.manage !== "identities") redirect(identityReady ? "/dashboard" : "/onboarding?manage=identities");
   const profileReady = Boolean(profile?.first_name && profile?.last_name && profile?.contact_email);
   const planReady = profile?.plan_key === "free" && Boolean(profile.plan_selected_at);
-  const activeStep = params.manage === "identities" ? 1 : !identityReady ? 1 : !profileReady ? 2 : !planReady ? 3 : 4;
+  const groupStepRequired = robloxConnected;
+  const groupReady = !groupStepRequired || Boolean(profile?.selected_roblox_group_id);
+  const profileStep = groupStepRequired ? 3 : 2;
+  const planStep = profileStep + 1;
+  const workspaceStep = planStep + 1;
+  const totalSteps = workspaceStep + 1;
+  const activeStep = params.manage === "identities" ? 1 : !identityReady ? 1 : !groupReady ? 2 : !profileReady ? profileStep : !planReady ? planStep : workspaceStep;
+  const steps = groupStepRequired
+    ? ["Identity", "Roblox group", "Owner profile", "Free plan", "Workspace", "Launch"]
+    : ["Identity", "Owner profile", "Free plan", "Workspace", "Launch"];
   const authEmail = user.email ?? "";
   const defaultFirstName = profile?.first_name ?? "";
   const defaultLastName = profile?.last_name ?? "";
@@ -93,18 +110,14 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         <aside className="setup-rail">
           <div><span className="setup-eyebrow">Nexora onboarding</span><h1>Build your community control room.</h1><p>A focused setup for identity, ownership, plan limits, and the workspace your team will run from.</p></div>
           <ol className="setup-steps">
-            <SetupRailStep number={1} label="Identity" active={activeStep === 1} done={activeStep > 1} />
-            <SetupRailStep number={2} label="Owner profile" active={activeStep === 2} done={activeStep > 2} />
-            <SetupRailStep number={3} label="Free plan" active={activeStep === 3} done={activeStep > 3} />
-            <SetupRailStep number={4} label="Workspace" active={activeStep === 4} done={false} />
-            <SetupRailStep number={5} label="Launch" active={false} done={false} />
+            {steps.map((label, index) => <SetupRailStep key={label} number={index + 1} label={label} active={activeStep === index + 1} done={activeStep > index + 1} />)}
           </ol>
           <div className="setup-rail-note"><ShieldCheck /><div><b>Protected by design</b><span>OAuth credentials stay with their providers. Nexora stores only the identity needed to operate your workspace.</span></div></div>
         </aside>
 
         <section className="setup-stage">
-          <div className="setup-progress"><span style={{ width: `${activeStep * 20}%` }} /></div>
-          <div className="setup-stage-head"><span>Step {activeStep} of 5</span><b>{activeStep * 20}% complete</b></div>
+          <div className="setup-progress"><span style={{ width: `${Math.round((activeStep / totalSteps) * 100)}%` }} /></div>
+          <div className="setup-stage-head"><span>Step {activeStep} of {totalSteps}</span><b>{Math.round((activeStep / totalSteps) * 100)}% complete</b></div>
           {errorMessage ? <div className="onboarding-error" role="alert">{errorMessage}</div> : null}
 
           {activeStep === 1 ? (
@@ -125,7 +138,22 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             </section>
           ) : null}
 
-          {activeStep === 2 ? (
+          {groupStepRequired && activeStep === 2 ? (
+            <section className="setup-card">
+              <div className="setup-icon"><Gamepad2 /></div>
+              <span className="setup-kicker">Roblox community</span>
+              <h2>Choose the group this workspace will run.</h2>
+              <p>Nexora checked the groups visible on your connected Roblox account. This choice is separate from the Nexora support community required by the Free plan after OAuth approval.</p>
+              {robloxGroups.length ? (
+                <form action={selectRobloxGroup} className="setup-form">
+                  <label><span>Community to rank</span><select name="roblox_group_id" required defaultValue={profile?.selected_roblox_group_id ?? ""}><option value="" disabled>Select a Roblox community</option>{robloxGroups.map((group) => <option value={group.id} key={group.id}>{group.name} — {group.role}</option>)}</select><small>Only communities attached to the verified Roblox identity appear here.</small></label>
+                  <Button type="submit" className="button-glow h-12 rounded-xl">Use this community <ArrowRight /></Button>
+                </form>
+              ) : <div className="onboarding-error" role="status">{robloxGroupsResult && !robloxGroupsResult.ok ? "Roblox could not return your groups right now. Refresh and try again." : "This account does not belong to any Roblox communities yet."}</div>}
+            </section>
+          ) : null}
+
+          {activeStep === profileStep ? (
             <section className="setup-card">
               <div className="setup-icon"><UserRound /></div>
               <span className="setup-kicker">Owner profile & security</span>
@@ -143,7 +171,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             </section>
           ) : null}
 
-          {activeStep === 3 ? (
+          {activeStep === planStep ? (
             <section className="setup-card">
               <div className="setup-icon"><CircleDollarSign /></div>
               <span className="setup-kicker">Plan & billing</span>
@@ -167,15 +195,16 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                 <div className="setup-plan-note"><Sparkles /><span>{membershipEnforced ? `If the owner later leaves community ${membershipPolicy?.group_id}, they have ${membershipPolicy?.grace_hours ?? 48} hours to rejoin before the next automated check can suspend the workspace.` : "All core tools are included during beta. Roblox membership enforcement is off while OAuth approval is pending."}</span></div>
               </article>
               <form action={selectFreePlan}><Button type="submit" className="button-glow h-12 w-full rounded-xl">Choose Beta Free <ArrowRight /></Button></form>
+              <aside className="setup-support"><Coffee /><div><b>Support stable updates</b><p>If Nexora helps your community, you can support future improvements through <Link href="https://www.roblox.com/catalog/17081871151/Nexora-Rank-Support" target="_blank" rel="noreferrer">Roblox</Link> or <Link href="https://ko-fi.com/obliviondev" target="_blank" rel="noreferrer">Ko-fi</Link>. Donations are optional and never unlock account access.</p></div></aside>
             </section>
           ) : null}
 
-          {activeStep === 4 ? (
+          {activeStep === workspaceStep ? (
             <section className="setup-card">
               <div className="setup-icon"><UsersRound /></div>
               <span className="setup-kicker">Create workspace</span>
               <h2>Name the control center for your community.</h2>
-              <p>Your workspace receives a permanent public ID used by server-side Roblox scripts, the API, webhooks, and the Discord bot.</p>
+              <p>Your workspace receives a permanent letters-and-numbers ID. It never changes, while the private 25-character API key can be replaced from the dashboard at any time.</p>
               <form action={createOnboardingWorkspace} className="setup-form">
                 <label><span>Workspace name</span><input name="name" required minLength={2} maxLength={64} placeholder="Nexora Community" /></label>
                 <label><span>Workspace URL</span><div className="setup-slug"><small>nexorarank.tech/w/</small><input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,46}[a-z0-9]" placeholder="nexora-community" /></div><small>Lowercase letters, numbers and hyphens only.</small></label>

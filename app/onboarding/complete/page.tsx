@@ -37,14 +37,13 @@ export default async function OnboardingCompletePage() {
         <div className="setup-success-mark"><Check /></div>
         <span className="setup-kicker">Workspace ready</span>
         <h1>{workspace.name} is live.</h1>
-        <p>Your account, free plan, and workspace are now connected. Save the workspace ID—it identifies your community across Nexora’s bot, API, and server-side Roblox tools.</p>
+        <p>Your account, free plan, and workspace are now connected. The letters-and-numbers workspace ID is permanent; your private API key can be created and replaced from the dashboard.</p>
         <div className="setup-copy-stack">
           <CopyField label="Workspace ID" value={workspace.public_id} />
-          <CopyField label="API base" value="https://api.nexorarank.tech/v1" />
         </div>
         <div className="setup-launch-grid">
           <article><Code2 /><div><b>Server scripts only</b><span>Keep API keys in ServerScriptService or a server secret. Never place them in LocalScripts.</span></div></article>
-          <article><ShieldCheck /><div><b>Scoped access</b><span>Keys will be limited to exact actions such as activity:write or ranks:write.</span></div></article>
+          <article><ShieldCheck /><div><b>Replaceable access</b><span>The readable 25-character key is shown once. Regenerating it disables the old key immediately.</span></div></article>
           <article className={robloxConnected ? "ready" : ""}><Gamepad2 /><div><b>{robloxConnected ? "Roblox connected" : "Roblox coming soon"}</b><span>{robloxConnected ? "Identity is ready for group setup." : "Your workspace is ready for testing. Roblox tools unlock after OAuth approval."}</span></div></article>
         </div>
         <div className="setup-complete-actions">

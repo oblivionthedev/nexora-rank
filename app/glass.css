@@ -663,6 +663,7 @@
 
 .chip[data-tone="live"] {
   color: #6ee7b7;
+  background: rgba(16, 92, 62, .2);
 }
 .chip[data-tone="brass"] {
   color: var(--brass-soft);
@@ -673,6 +674,10 @@
    ========================================================================== */
 
 @media (prefers-reduced-motion: no-preference) {
+  .chip[data-tone="live"] { animation: live-breathe 1.8s ease-in-out infinite; }
+  .chip[data-tone="live"] .chip-dot { animation: live-dot 1.8s ease-in-out infinite; }
+  @keyframes live-breathe { 0%,100% { color:#4fbf91; background:rgba(11,61,43,.2); box-shadow:inset 0 1px rgba(255,255,255,.06),0 0 0 rgba(52,211,153,0); transform:translateY(0) } 50% { color:#9af3cd; background:rgba(25,125,86,.3); box-shadow:inset 0 1px rgba(255,255,255,.1),0 0 18px rgba(52,211,153,.12); transform:translateY(-1px) } }
+  @keyframes live-dot { 0%,100% { opacity:.65; transform:scale(.85) } 50% { opacity:1; transform:scale(1.25) } }
   .rise {
     animation: rise 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
@@ -687,6 +692,8 @@
     }
   }
 }
+
+.api-key-control{display:grid;gap:13px;padding:16px;border:1px solid rgba(255,255,255,.075);border-radius:16px;background:rgba(255,255,255,.018)}.api-key-control form{display:flex;justify-content:flex-end}.api-key-control button svg{width:14px}.api-key-reveal{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:12px 12px 11px 14px;border:1px solid rgba(52,211,153,.18);border-radius:11px;background:rgba(52,211,153,.045)}.api-key-reveal span{display:block;color:#6ee7b7;font:600 8px var(--font-mono);letter-spacing:.07em;text-transform:uppercase}.api-key-reveal code{display:block;margin-top:6px;color:#fff;font:500 13px var(--font-mono);letter-spacing:.04em}.api-key-reveal button{display:flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:9px;background:rgba(255,255,255,.06)}.api-key-current{display:flex;align-items:center;gap:7px;color:rgba(247,243,236,.52);font-size:11px}.api-key-current svg{width:14px;color:#6ee7b7}.api-key-current code{color:#e8c489}.api-key-error{color:#fca5a5;font-size:10px}
 
 /* Content offset so the floating top island never overlaps page content. */
 .below-island {
