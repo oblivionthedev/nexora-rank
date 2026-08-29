@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { sendDiscordChannelMessage } from "@/lib/discord-messages";
 import { getRobloxGroupDetails } from "@/lib/roblox-groups";
 import { listRobloxGroups } from "@/lib/roblox-membership";
 
@@ -45,5 +46,20 @@ export async function createWorkspaceTask(formData:FormData){const publicId=valu
 export async function createKnowledgeEntry(formData:FormData){const publicId=value(formData,"public_id");const{supabase,user,state}=await context(publicId);const{error}=await supabase.from("knowledge_entries").insert({workspace_id:state.workspace.id,entry_type:value(formData,"entry_type"),title:value(formData,"title"),content:value(formData,"content"),visibility:value(formData,"visibility"),created_by:user.id});await finish(publicId,"knowledge",error)}
 export async function createAnnouncementTemplate(formData:FormData){const publicId=value(formData,"public_id");const{supabase,user,state}=await context(publicId);const{error}=await supabase.from("announcement_templates").insert({workspace_id:state.workspace.id,name:value(formData,"name"),announcement_type:value(formData,"announcement_type"),title_template:value(formData,"title_template"),body_template:value(formData,"body_template"),discord_channel_id:value(formData,"discord_channel_id")||null,created_by:user.id});await finish(publicId,"communications",error)}
 export async function saveCommunityMessaging(formData:FormData){const publicId=value(formData,"public_id");const{supabase,state}=await context(publicId);const{error}=await supabase.rpc("save_community_messaging",{target_workspace_id:state.workspace.id,requested_welcome_enabled:formData.get("welcome_enabled")==="on",requested_welcome_channel_id:value(formData,"welcome_channel_id"),requested_welcome_message:value(formData,"welcome_message"),requested_goodbye_enabled:formData.get("goodbye_enabled")==="on",requested_goodbye_channel_id:value(formData,"goodbye_channel_id"),requested_goodbye_message:value(formData,"goodbye_message"),requested_nickname_sync_enabled:formData.get("nickname_sync_enabled")==="on",requested_verification_dm_enabled:formData.get("verification_dm_enabled")==="on",requested_role_sync_enabled:formData.get("role_sync_enabled")==="on",requested_member_count_channel_id:value(formData,"member_count_channel_id")});await finish(publicId,"communications",error)}
+export async function sendDiscordMessage(formData:FormData){
+  const publicId=value(formData,"public_id");
+  const channelId=value(formData,"channel_id");
+  const content=value(formData,"message");
+  if(!/^\d{17,22}$/.test(channelId))redirect(`/dashboard/${publicId}/communications?error=discord_channel_invalid`);
+  if(!content||content.length>2000)redirect(`/dashboard/${publicId}/communications?error=discord_message_invalid`);
+  const{state}=await context(publicId);
+  if(!["owner","admin","operator"].includes(state.workspace.role))redirect(`/dashboard/${publicId}/communications?error=discord_send_forbidden`);
+  if(state.workspace.operational_status!=="active")redirect(`/dashboard/${publicId}/communications?error=workspace_restricted`);
+  if(!state.workspace.discord_guild_id)redirect(`/dashboard/${publicId}/communications?error=discord_not_connected`);
+  const result=await sendDiscordChannelMessage({token:process.env.DISCORD_BOT_TOKEN?.trim()||"",guildId:state.workspace.discord_guild_id,channelId,content});
+  if(!result.ok)redirect(`/dashboard/${publicId}/communications?error=${result.error}`);
+  revalidatePath(`/dashboard/${publicId}/communications`);
+  redirect(`/dashboard/${publicId}/communications?saved=discord_message`);
+}
 export async function addWorkspaceRobloxGroup(formData:FormData){const publicId=value(formData,"public_id");const groupId=value(formData,"group_id");if(!/^\d{1,20}$/.test(groupId))redirect(`/dashboard/${publicId}/connections?error=invalid_group`);const details=await getRobloxGroupDetails(groupId);if(!details)redirect(`/dashboard/${publicId}/connections?error=group_not_found`);const{supabase,state}=await context(publicId);const{error}=await supabase.from("workspace_roblox_groups").insert({workspace_id:state.workspace.id,group_id:details.id,group_name:details.name,purpose:value(formData,"purpose")||"community",is_primary:false});await finish(publicId,"connections",error)}
 export async function createDashboardRankRequest(formData:FormData){const publicId=value(formData,"public_id");const{supabase,user,state}=await context(publicId);const bindingId=value(formData,"binding_id");const{data:binding,error:bindingError}=await supabase.from("rank_bindings").select("roblox_role_id,roblox_role_name,requires_approval").eq("id",bindingId).eq("workspace_id",state.workspace.id).maybeSingle();if(bindingError||!binding)await finish(publicId,"ranking",bindingError||new Error("binding_missing"));const{error}=await supabase.from("rank_actions").insert({workspace_id:state.workspace.id,target_roblox_user_id:value(formData,"roblox_user_id"),target_username:value(formData,"roblox_username"),requested_by:user.id,to_role_id:binding!.roblox_role_id,to_role_name:binding!.roblox_role_name,reason:value(formData,"reason")||"Dashboard rank request",status:binding!.requires_approval?"pending":"approved",policy_snapshot:{source:"dashboard",requires_approval:binding!.requires_approval}});await finish(publicId,"ranking",error)}
