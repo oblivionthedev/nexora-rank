@@ -98,7 +98,7 @@ test("overview connection cards use provider marks and branded actions", async (
   );
   assert.match(overview, /src="\/discord\.svg"/);
   assert.match(overview, /src="\/roblox\.svg"/);
-  assert.match(overview, /workspace-connection-row/);
+  assert.match(overview, /workspace-home-connection/);
   assert.match(overview, /provider="discord"/);
   assert.match(overview, /provider="roblox"/);
   assert.match(
