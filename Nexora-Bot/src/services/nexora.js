@@ -517,6 +517,28 @@ export function createNexoraService(config, logger) {
     return data ?? [];
   }
 
+  async function getApplication(guildId, discordUserId, applicationId) {
+    const { workspace } = await context(guildId, discordUserId, ["operator"]);
+    const { data, error } = await database
+      .from("application_forms")
+      .select("id,name,description,target_role_name,status")
+      .eq("workspace_id", workspace.id)
+      .eq("id", applicationId)
+      .maybeSingle();
+    throwIfError(error, "Nexora could not load that application.");
+    if (!data)
+      throw new UserError(
+        "That Application ID does not belong to this workspace.",
+        "application_not_found",
+      );
+    if (data.status !== "open")
+      throw new UserError(
+        "Open the application in the dashboard before announcing it.",
+        "application_not_open",
+      );
+    return data;
+  }
+
   async function decideApplication(
     guildId,
     discordUserId,
@@ -537,7 +559,7 @@ export function createNexoraService(config, logger) {
       .eq("workspace_id", workspace.id)
       .eq("id", submissionId)
       .in("status", ["submitted", "in_review"])
-      .select("id, status")
+      .select("id, status, applicant_discord_user_id, application_forms(target_role_id, target_role_name)")
       .maybeSingle();
     throwIfError(error, "Nexora could not decide that application.");
     if (!data)
@@ -572,6 +594,7 @@ export function createNexoraService(config, logger) {
     activitySummary,
     listQuotas,
     listApplications,
+    getApplication,
     decideApplication,
   };
 }

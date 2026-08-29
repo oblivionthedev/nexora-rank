@@ -26,3 +26,8 @@ test("private platform commands are login and toggle", () => {
     .map((command) => command.data.name);
   assert.deepEqual(privateNames, ["login", "toggle"]);
 });
+
+test("applications supports listing, decisions, and announcements", () => {
+  const applications = commands.find((command) => command.data.name === "applications").data.toJSON();
+  assert.deepEqual(applications.options.map((option) => option.name), ["list", "decide", "announce"]);
+});

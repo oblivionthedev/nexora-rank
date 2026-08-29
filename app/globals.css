@@ -282,3 +282,11 @@ html{color-scheme:dark;background:#050303}
 @media(max-width:950px){.staff-login-grid{grid-template-columns:1fr}.staff-login-story{border-right:0;border-bottom:1px solid rgba(255,255,255,.08)}.staff-login-card{margin:70px auto}.staff-console-nav{display:none}.staff-profile-chip div{display:none}.staff-console-hero{padding:30px}}
 @media(max-width:600px){.staff-login-story{padding:55px 20px}.staff-login-story h1{font-size:4.2rem}.staff-login-card,.staff-authorize-page>section{width:100%;padding:30px 21px}.staff-authorize-page{padding:15px}.staff-login-trust{align-items:flex-start;flex-direction:column}.staff-console-header .pill:first-child{display:none}.staff-console-hero{padding:24px}.staff-console-hero h1{font-size:3.6rem!important}}
 .beta-data-notice{padding:17px 18px;border:1px solid rgba(255,255,255,.1);border-radius:13px;background:rgba(255,255,255,.025)}.beta-data-notice b{display:block;font-size:13px}.beta-data-notice p{margin-top:7px!important;color:rgba(255,255,255,.48)!important;font-size:12px!important;line-height:1.7!important}.beta-consent a{color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:3px}
+
+/* Site-wide readability: larger body text and stronger secondary contrast. */
+body{font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.home-page p,.bot-shell p,.beta-page p,.investor-page p,.legal-shell p,.signin-page p{color:rgba(255,255,255,.66)}
+.home-page small,.bot-shell small,.beta-page small,.investor-page small,.legal-shell small{color:rgba(255,255,255,.5)}
+.section-copy{font-size:17px;line-height:1.8;color:rgba(255,255,255,.7)}
+.feature-card p,.trust-item p,.price-card li{font-size:14px;line-height:1.7;color:rgba(255,255,255,.62)}
+.workspace-field::placeholder{color:rgba(255,255,255,.45)}

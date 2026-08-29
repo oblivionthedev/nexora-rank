@@ -224,6 +224,8 @@ export type Database = {
       }
       application_forms: {
         Row: {
+          announcement_channel_id: string | null
+          announcement_message_id: string | null
           closes_at: string | null
           created_at: string
           created_by: string | null
@@ -233,12 +235,15 @@ export type Database = {
           name: string
           opens_at: string | null
           status: string
+          submissions_channel_id: string | null
           target_role_id: string | null
           target_role_name: string | null
           updated_at: string
           workspace_id: string
         }
         Insert: {
+          announcement_channel_id?: string | null
+          announcement_message_id?: string | null
           closes_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -248,12 +253,15 @@ export type Database = {
           name: string
           opens_at?: string | null
           status?: string
+          submissions_channel_id?: string | null
           target_role_id?: string | null
           target_role_name?: string | null
           updated_at?: string
           workspace_id: string
         }
         Update: {
+          announcement_channel_id?: string | null
+          announcement_message_id?: string | null
           closes_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -263,6 +271,7 @@ export type Database = {
           name?: string
           opens_at?: string | null
           status?: string
+          submissions_channel_id?: string | null
           target_role_id?: string | null
           target_role_name?: string | null
           updated_at?: string
@@ -287,6 +296,9 @@ export type Database = {
       }
       application_submissions: {
         Row: {
+          applicant_discord_avatar_url: string | null
+          applicant_discord_name: string | null
+          applicant_discord_user_id: string | null
           applicant_id: string
           applicant_roblox_user_id: string | null
           form_id: string
@@ -302,6 +314,9 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          applicant_discord_avatar_url?: string | null
+          applicant_discord_name?: string | null
+          applicant_discord_user_id?: string | null
           applicant_id: string
           applicant_roblox_user_id?: string | null
           form_id: string
@@ -317,6 +332,9 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          applicant_discord_avatar_url?: string | null
+          applicant_discord_name?: string | null
+          applicant_discord_user_id?: string | null
           applicant_id?: string
           applicant_roblox_user_id?: string | null
           form_id?: string
