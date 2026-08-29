@@ -1,23 +1,23 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { Activity, Ban, BookOpen, Bot, Building2, ChevronRight, ClipboardList, FileClock, Gauge, GitBranch, LockKeyhole, LogOut, MessagesSquare, Settings, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
+import { Award, Ban, CalendarRange, ChevronRight, Files, Gauge, Library, LockKeyhole, LogOut, Megaphone, PlugZap, ScrollText, ShieldCheck, SlidersHorizontal, Timer, Users, Workflow } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { RestrictedRouteSync } from "@/components/restricted-route-sync";
 import { signOut } from "@/app/dashboard/actions";
 
 const items = [
   { label: "Overview", path: "", icon: Gauge },
-  { label: "Connections", path: "/connections", icon: Bot },
-  { label: "Ranking", path: "/ranking", icon: GitBranch },
-  { label: "Activity & quotas", path: "/activity", icon: Activity },
-  { label: "Applications", path: "/applications", icon: ClipboardList },
-  { label: "Automations", path: "/automations", icon: Sparkles },
-  { label: "Operations", path: "/operations", icon: Building2 },
-  { label: "Communications", path: "/communications", icon: MessagesSquare },
-  { label: "Knowledge", path: "/knowledge", icon: BookOpen },
-  { label: "Members", path: "/members", icon: UsersRound },
-  { label: "Logs", path: "/logs", icon: FileClock },
-  { label: "Settings & API", path: "/settings", icon: Settings },
+  { label: "Connections", path: "/connections", icon: PlugZap },
+  { label: "Ranking", path: "/ranking", icon: Award },
+  { label: "Activity & quotas", path: "/activity", icon: Timer },
+  { label: "Applications", path: "/applications", icon: Files },
+  { label: "Automations", path: "/automations", icon: Workflow },
+  { label: "Operations", path: "/operations", icon: CalendarRange },
+  { label: "Communications", path: "/communications", icon: Megaphone },
+  { label: "Knowledge", path: "/knowledge", icon: Library },
+  { label: "Members", path: "/members", icon: Users },
+  { label: "Logs", path: "/logs", icon: ScrollText },
+  { label: "Settings & API", path: "/settings", icon: SlidersHorizontal },
 ];
 
 type Workspace = {
@@ -36,15 +36,15 @@ export function WorkspaceShell({ workspace, settings, children }: { workspace: W
   if (workspace.operational_status !== "active") return <>{workspace.moderation_status === "banned" ? <RestrictedRouteSync canonicalPath={`/dashboard/${workspace.public_id}/not-approved`} /> : null}<WorkspaceLocked workspace={workspace} style={themeStyle} /></>;
 
   const base = `/dashboard/${workspace.public_id}`;
-  return <div style={themeStyle} className="workspace-theme min-h-screen bg-[#050303] text-white lg:grid lg:grid-cols-[270px_minmax(0,1fr)]">
-    <aside className="border-b border-white/8 bg-[#080505] p-5 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
-      <Link href="/" className="flex items-center gap-3 text-base font-bold"><BrandMark compact />Nexora Rank</Link>
-      <div className="workspace-theme-bar mt-7 h-1 rounded-full" />
-      <div className="mt-3 rounded-[22px] border border-white/10 bg-white/[.035] p-4"><p className="text-[11px] font-bold uppercase tracking-[.15em] text-white/38">Workspace</p><p className="mt-2 truncate text-base font-bold">{workspace.name}</p><code className="workspace-accent mt-2 block text-xs">{workspace.public_id}</code></div>
-      <nav className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1" aria-label="Workspace navigation">{items.map((item)=><Link key={item.label} href={`${base}${item.path}`} className="flex min-h-12 flex-none items-center gap-3 rounded-xl px-4 text-sm font-semibold text-white/58 transition hover:bg-white/6 hover:text-white lg:w-full"><item.icon className="size-4" />{item.label}<ChevronRight className="ml-auto hidden size-3.5 lg:block" /></Link>)}</nav>
-      <div className="mt-6 hidden rounded-2xl border border-white/7 bg-black/20 p-4 text-xs leading-6 text-white/42 lg:block"><ShieldCheck className="workspace-accent mb-3 size-5" />Signed in as <b className="text-white/70">{workspace.role}</b>. Workspace changes are recorded.</div>
+  return <div style={themeStyle} className="workspace-theme min-h-screen bg-[#050303] text-white lg:grid lg:grid-cols-[294px_minmax(0,1fr)]">
+    <aside className="workspace-sidebar border-b border-white/8 p-5 sm:p-6 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
+      <Link href="/" className="flex items-center gap-3.5 text-lg font-extrabold tracking-[-.02em]"><BrandMark />Nexora Rank</Link>
+      <div className="workspace-theme-bar mt-7 h-[2px]" />
+      <div className="workspace-identity mt-5"><span className="workspace-identity-mark">{workspace.name.slice(0,2).toUpperCase()}</span><div className="min-w-0"><p className="text-[12px] font-bold uppercase tracking-[.14em] text-white/42">Current workspace</p><p className="mt-1.5 truncate text-[17px] font-extrabold">{workspace.name}</p><code className="workspace-accent mt-1.5 block text-xs">{workspace.public_id}</code></div></div>
+      <nav className="mt-6 flex gap-2 overflow-x-auto pb-2 lg:block lg:space-y-1.5" aria-label="Workspace navigation">{items.map((item)=><Link key={item.label} href={`${base}${item.path}`} className="workspace-nav-link"><span className="workspace-nav-icon"><item.icon /></span><span>{item.label}</span><ChevronRight className="ml-auto hidden size-4 opacity-30 lg:block" /></Link>)}</nav>
+      <div className="mt-7 hidden border-t border-white/8 pt-5 text-[13px] leading-6 text-white/48 lg:block"><ShieldCheck className="workspace-accent mb-3 size-5" />Signed in as <b className="text-white/75">{workspace.role}</b>.<br/>Sensitive actions are protected.</div>
     </aside>
-    <div className="min-w-0"><header className="flex min-h-16 items-center border-b border-white/8 px-5 sm:px-8"><div className="flex items-center gap-2 text-sm"><span className="size-2 rounded-full" style={{background:"var(--workspace-accent)"}} /><b>Workspace online</b></div><form action={signOut} className="ml-auto"><button type="submit" className="flex items-center gap-2 rounded-full border border-white/9 px-4 py-2 text-sm text-white/60 hover:text-white"><LogOut className="size-4" />Sign out</button></form></header><main className="mx-auto max-w-[1380px] px-5 py-8 sm:px-8 sm:py-12">{children}</main></div>
+    <div className="min-w-0"><header className="workspace-topbar flex min-h-[76px] items-center border-b border-white/8 px-5 sm:px-10"><div className="flex items-center gap-3 text-[14px]"><span className="workspace-online-dot" /><span className="text-white/50">Status</span><b>Workspace online</b></div><form action={signOut} className="ml-auto"><button type="submit" className="flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[.025] px-4 text-sm font-bold text-white/65 transition hover:bg-white/[.06] hover:text-white"><LogOut className="size-4" />Sign out</button></form></header><main className="mx-auto max-w-[1440px] px-5 py-10 sm:px-10 sm:py-14">{children}</main></div>
   </div>;
 }
 
@@ -74,4 +74,4 @@ function LockDetail({ label, value }: { label: string; value: string }) { return
 function formatDate(value: string) { return new Date(value).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) + " UTC"; }
 function validColor(value?: string) { return Boolean(value && /^#[0-9a-f]{6}$/i.test(value)); }
 
-export function PageHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) { return <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="workspace-accent text-xs font-bold uppercase tracking-[.17em]">{eyebrow}</p><h1 className="mt-3 text-4xl font-extrabold tracking-[-.04em] sm:text-5xl">{title}</h1><p className="mt-3 max-w-2xl text-base leading-7 text-white/52">{description}</p></div>{action}</div>; }
+export function PageHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) { return <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"><div><p className="workspace-accent text-[13px] font-extrabold uppercase tracking-[.16em]">{eyebrow}</p><h1 className="mt-4 max-w-4xl text-[clamp(2.8rem,5vw,4.8rem)] font-black leading-[.94] tracking-[-.055em]">{title}</h1><p className="mt-5 max-w-3xl text-[17px] leading-8 text-white/58">{description}</p></div>{action}</div>; }

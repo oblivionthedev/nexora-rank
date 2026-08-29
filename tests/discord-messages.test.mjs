@@ -39,3 +39,19 @@ test("returns a clear permission error when Discord denies channel access", asyn
   });
   assert.deepEqual(result, { ok: false, error: "discord_permission_missing" });
 });
+
+test("sends a branded embed and updates the bot nickname when requested", async () => {
+  const calls = [];
+  const fetchImpl = async (url, options = {}) => {
+    calls.push({ url, options });
+    if (calls.length === 1) return Response.json({ guild_id: "11111111111111111", type: 0 });
+    if (calls.length === 2) return Response.json({ nick: "Nexora News" });
+    return Response.json({ id: "33333333333333333" });
+  };
+  const embed = { title: "Large header", description: "**Important message**", color: 5793266, author: { name: "Nexora Operations" }, footer: { text: "Powered by Nexora" } };
+  const result = await sendDiscordChannelMessage({ token: "secret", guildId: "11111111111111111", channelId: "22222222222222222", content: "Important message", embed, botNickname: "Nexora News", fetchImpl });
+  assert.equal(result.ok, true);
+  assert.equal(calls[1].url, "https://discord.com/api/v10/guilds/11111111111111111/members/@me");
+  assert.deepEqual(JSON.parse(calls[1].options.body), { nick: "Nexora News" });
+  assert.deepEqual(JSON.parse(calls[2].options.body), { embeds: [embed], allowed_mentions: { parse: [] } });
+});
