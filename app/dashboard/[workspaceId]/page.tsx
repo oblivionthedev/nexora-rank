@@ -100,9 +100,9 @@ export default async function WorkspaceOverview({
   return (
     <>
       <PageHeading
-        eyebrow="Command center"
-        title={`Welcome to ${w.name}`}
-        description="Monitor readiness, jump into daily operations, and see the latest workspace activity from one clear overview."
+        eyebrow="Overview"
+        title={w.name}
+        description="Your community at a glance. Review what needs attention, open everyday tools, and follow recent staff activity."
         action={
           <div className="workspace-overview-badges">
             <span>{w.role}</span>

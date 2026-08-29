@@ -10,6 +10,7 @@ type Workspace = {
   public_id: string; name: string; operational_status: string; role: string;
   moderation_status: string; moderation_reason: string | null; moderation_expires_at: string | null;
   appeal_allowed: boolean; appeal_note: string | null;
+  roblox_group_name: string | null; roblox_group_icon_url: string | null;
 };
 type ThemeSettings = { theme_mode?: "solid" | "gradient"; theme_color_start?: string; theme_color_end?: string };
 
@@ -22,15 +23,15 @@ export function WorkspaceShell({ workspace, settings, children }: { workspace: W
   if (workspace.operational_status !== "active") return <>{workspace.moderation_status === "banned" ? <RestrictedRouteSync canonicalPath={`/dashboard/${workspace.public_id}/not-approved`} /> : null}<WorkspaceLocked workspace={workspace} style={themeStyle} /></>;
 
   const base = `/dashboard/${workspace.public_id}`;
-  return <div style={themeStyle} className="workspace-theme min-h-screen bg-[#050303] text-white lg:grid lg:grid-cols-[294px_minmax(0,1fr)]">
-    <aside className="workspace-sidebar border-b border-white/8 p-5 sm:p-6 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
-      <Link href="/" className="flex items-center gap-3.5 text-lg font-extrabold tracking-[-.02em]"><BrandMark />Nexora Rank</Link>
-      <div className="workspace-theme-bar mt-7 h-[2px]" />
-      <div className="workspace-identity mt-5"><span className="workspace-identity-mark">{workspace.name.slice(0,2).toUpperCase()}</span><div className="min-w-0"><p className="text-[12px] font-bold uppercase tracking-[.14em] text-white/42">Current workspace</p><p className="mt-1.5 truncate text-[17px] font-extrabold">{workspace.name}</p><code className="workspace-accent mt-1.5 block text-xs">{workspace.public_id}</code></div></div>
+  const groupLogo = safeImageUrl(workspace.roblox_group_icon_url);
+  return <div style={themeStyle} className="workspace-theme min-h-screen bg-[#050303] text-white lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
+    <aside className="workspace-sidebar border-b border-white/8 px-4 py-5 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
+      <Link href="/" className="workspace-product-brand"><BrandMark /><span>Nexora</span><small>Rank</small></Link>
+      <div className="workspace-identity mt-6">{groupLogo ? <img className="workspace-identity-mark workspace-group-logo" src={groupLogo} alt={`${workspace.roblox_group_name || workspace.name} group logo`} /> : <span className="workspace-identity-mark">{workspace.name.slice(0,2).toUpperCase()}</span>}<div className="min-w-0"><p>Workspace</p><b>{workspace.name}</b><code>{workspace.public_id}</code></div></div>
       <WorkspaceNavigation base={base} />
-      <div className="mt-7 hidden border-t border-white/8 pt-5 text-[13px] leading-6 text-white/48 lg:block"><ShieldCheck className="workspace-accent mb-3 size-5" />Signed in as <b className="text-white/75">{workspace.role}</b>.<br/>Sensitive actions are protected.</div>
+      <div className="workspace-sidebar-footer"><ShieldCheck /><span><b>{workspace.role}</b> access<br/>Protected workspace</span></div>
     </aside>
-    <div className="min-w-0"><header className="workspace-topbar flex min-h-[76px] items-center border-b border-white/8 px-5 sm:px-10"><div className="flex items-center gap-3 text-[14px]"><span className="workspace-online-dot" /><span className="text-white/50">Status</span><b>Workspace online</b></div><form action={signOut} className="ml-auto"><button type="submit" className="flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[.025] px-4 text-sm font-bold text-white/65 transition hover:bg-white/[.06] hover:text-white"><LogOut className="size-4" />Sign out</button></form></header><main className="mx-auto max-w-[1440px] px-5 py-10 sm:px-10 sm:py-14">{children}</main></div>
+    <div className="min-w-0"><header className="workspace-topbar"><div className="workspace-topbar-context">{groupLogo ? <img src={groupLogo} alt="" /> : <span>{workspace.name.slice(0,2).toUpperCase()}</span>}<div><small>{workspace.roblox_group_name ? "Roblox community" : "Nexora workspace"}</small><b>{workspace.roblox_group_name || workspace.name}</b></div></div><div className="workspace-topbar-status"><span className="workspace-online-dot" />All systems normal</div><form action={signOut} className="ml-auto"><button type="submit" className="workspace-signout"><LogOut />Sign out</button></form></header><main className="workspace-main">{children}</main></div>
   </div>;
 }
 
@@ -59,5 +60,6 @@ function WorkspaceLocked({ workspace, style }: { workspace: Workspace; style: CS
 function LockDetail({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl border border-white/8 bg-black/25 p-4"><p className="text-xs font-bold uppercase tracking-wider text-white/35">{label}</p><p className="mt-2 text-sm font-semibold leading-6 text-white/78">{value}</p></div>; }
 function formatDate(value: string) { return new Date(value).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) + " UTC"; }
 function validColor(value?: string) { return Boolean(value && /^#[0-9a-f]{6}$/i.test(value)); }
+function safeImageUrl(value?: string | null) { return value && /^https:\/\//i.test(value) ? value : null; }
 
 export function PageHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) { return <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"><div><p className="workspace-accent text-[13px] font-extrabold uppercase tracking-[.16em]">{eyebrow}</p><h1 className="mt-4 max-w-4xl text-[clamp(2.8rem,5vw,4.8rem)] font-black leading-[.94] tracking-[-.055em]">{title}</h1><p className="mt-5 max-w-3xl text-[17px] leading-8 text-white/58">{description}</p></div>{action}</div>; }
