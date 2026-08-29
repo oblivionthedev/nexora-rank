@@ -32,7 +32,7 @@ export async function sendDiscordChannelMessage({
   fetchImpl = fetch,
 }: {
   token: string;
-  guildId: string;
+  guildId?: string;
   channelId: string;
   content: string;
   embed?: DiscordEmbed;
@@ -58,10 +58,10 @@ export async function sendDiscordChannelMessage({
   if (!channelResponse.ok) return { ok: false, error: "discord_unavailable" };
 
   const channel = await channelResponse.json() as DiscordChannel;
-  if (channel.guild_id !== guildId) return { ok: false, error: "discord_channel_wrong_server" };
+  if (guildId && channel.guild_id !== guildId) return { ok: false, error: "discord_channel_wrong_server" };
   if (!MESSAGE_CHANNEL_TYPES.has(channel.type ?? -1)) return { ok: false, error: "discord_channel_unsupported" };
 
-  if (botNickname) {
+  if (botNickname && guildId) {
     let nicknameResponse: Response;
     try {
       nicknameResponse = await fetchImpl(`${DISCORD_API}/guilds/${guildId}/members/@me`, {

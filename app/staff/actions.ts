@@ -14,7 +14,7 @@ function errorCode(message?: string) {
     "moderation_reason_required", "workspace_not_found", "staff_management_denied",
     "invalid_staff_role", "nexora_account_not_found", "owner_role_required",
     "owner_role_cannot_be_changed", "staff_member_not_found",
-    "invalid_suspension_days", "invalid_moderation_request",
+    "invalid_suspension_days", "invalid_moderation_request", "invalid_beta_status",
   ];
   return known.find((code) => message?.includes(code)) ?? "action_failed";
 }
@@ -74,4 +74,15 @@ export async function revokeStaffRole(formData: FormData) {
   if (error) redirect(`/staff?error=${errorCode(error.message)}`);
   revalidatePath("/staff");
   redirect("/staff?notice=staff_revoked");
+}
+
+export async function updateBetaApplication(formData: FormData) {
+  const applicationId = clean(formData.get("application_id"));
+  const status = clean(formData.get("status"));
+  if (!applicationId || !["submitted", "reviewing", "selected", "waitlisted", "declined"].includes(status)) redirect("/staff?error=invalid_beta_request");
+  const supabase = await authenticatedClient();
+  const { error } = await supabase.rpc("staff_update_beta_application", { application_id: applicationId, requested_status: status });
+  if (error) redirect(`/staff?error=${errorCode(error.message)}`);
+  revalidatePath("/staff");
+  redirect("/staff?notice=beta_updated#beta-applications");
 }

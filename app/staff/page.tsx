@@ -7,6 +7,7 @@ import {
 import { BrandMark } from "@/components/brand-mark";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { signOut } from "@/app/dashboard/actions";
+import { updateBetaApplication } from "@/app/staff/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,11 @@ type StaffRow = { user_id: string; role: Access["role"]; active: boolean; displa
 type ActionRow = { id: number; action_type: string; reason: string; workspace_name: string | null; actor_name: string; created_at: string };
 type GroupResult = { id:string; public_id:string; name:string; roblox_group_id:string|null; roblox_group_name:string|null; roblox_group_icon_url:string|null; moderation_status:string; operational_status:string };
 type ConsoleState = { access: Access; counts: { total: number; active: number; suspended: number; banned: number }; workspaces: WorkspaceRow[]; staff: StaffRow[]; recent_actions: ActionRow[] };
+type BetaRow = { id: string; full_name: string; email: string; age: number; status: string; discord_notified: boolean; created_at: string; updated_at: string };
 
 const notices: Record<string, string> = {
   workspace_suspend: "Workspace suspended.", workspace_restore: "Workspace moderation cleared.", workspace_ban: "Workspace banned.",
-  staff_updated: "Staff access updated.", staff_revoked: "Staff access revoked.",
+  staff_updated: "Staff access updated.", staff_revoked: "Staff access revoked.", beta_updated: "Beta application status updated.",
 };
 const errors: Record<string, string> = {
   invalid_moderation_request: "Choose a valid action and enter a reason of at least 4 characters.", staff_access_denied: "This account is not staff.",
@@ -27,7 +29,7 @@ const errors: Record<string, string> = {
   moderation_reason_required: "A reason between 4 and 500 characters is required.", workspace_not_found: "That workspace no longer exists.",
   staff_management_denied: "Your role cannot manage staff.", invalid_staff_role: "That staff role is invalid.",
   nexora_account_not_found: "No Nexora account uses that email yet. Ask them to sign in first.", owner_role_required: "Only the platform owner can change that role.",
-  owner_role_cannot_be_changed: "The platform owner role cannot be changed here.", staff_member_not_found: "That staff member was not found.",
+  owner_role_cannot_be_changed: "The platform owner role cannot be changed here.", staff_member_not_found: "That staff member was not found.", invalid_beta_request: "Choose a valid Beta application status.", invalid_beta_status: "Choose a valid Beta application status.",
   invalid_staff_request: "Enter a valid account email and role.", action_failed: "The action could not be completed.",
 };
 
@@ -38,13 +40,15 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/staff");
   const status = ["active", "suspended", "banned"].includes(params.status ?? "") ? params.status! : "all";
-  const [{ data, error }, { data: groupData }] = await Promise.all([
+  const [{ data, error }, { data: groupData }, { data: betaData }] = await Promise.all([
     supabase.rpc("staff_console_state", { search_query: params.q?.slice(0, 120) || undefined, status_filter: status }),
     params.group ? supabase.rpc("staff_find_workspaces", { group_query: params.group.slice(0, 120) }) : Promise.resolve({ data: [] }),
+    supabase.rpc("staff_beta_applications"),
   ]);
   if (error || !data) redirect("/staff/login");
   const state = data as unknown as ConsoleState;
   const groupResults = (groupData ?? []) as unknown as GroupResult[];
+  const betaApplications = (betaData ?? []) as unknown as BetaRow[];
 
   return (
     <div className="min-h-screen bg-[#050303] text-white">
@@ -72,6 +76,11 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
           <Metric label="Active" value={state.counts.active} icon={Activity} tone="green" />
           <Metric label="Suspended" value={state.counts.suspended} icon={LockKeyhole} tone="amber" />
           <Metric label="Banned" value={state.counts.banned} icon={Ban} tone="red" />
+        </section>
+
+        <section id="beta-applications" className="mt-8 rounded-[28px] border border-white/9 bg-white/[.025] p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="microlabel">Beta program</p><h2 className="mt-3 text-2xl font-extrabold">Applications</h2><p className="mt-2 text-sm text-white/45">Review applicants, confirm the Discord notification, and publish the status they can check privately.</p></div><span className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-white/45">{betaApplications.length} total</span></div>
+          <div className="mt-6 grid gap-3">{betaApplications.length ? betaApplications.map(application => <article key={application.id} className="grid gap-4 rounded-2xl border border-white/8 bg-black/20 p-4 lg:grid-cols-[1fr_auto] lg:items-center"><div><div className="flex flex-wrap items-center gap-2"><b className="text-base">{application.full_name}</b><span className="rounded-full bg-white/6 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white/50">{application.status}</span><span className={`rounded-full px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider ${application.discord_notified ? "bg-emerald-300/8 text-emerald-200" : "bg-amber-300/8 text-amber-100"}`}>{application.discord_notified ? "Discord sent" : "Discord pending"}</span></div><p className="mt-2 text-sm text-white/52">{application.email} · age {application.age}</p><time className="mt-1 block text-xs text-white/28">Applied {formatDate(application.created_at)}</time></div><form action={updateBetaApplication} className="flex gap-2"><input type="hidden" name="application_id" value={application.id}/><select name="status" defaultValue={application.status} className="min-h-11 rounded-xl border border-white/10 bg-[#0e0909] px-3 text-sm"><option value="submitted">Submitted</option><option value="reviewing">Reviewing</option><option value="selected">Selected</option><option value="waitlisted">Waitlisted</option><option value="declined">Declined</option></select><button className="min-h-11 rounded-xl bg-white px-4 text-sm font-extrabold text-black">Save</button></form></article>) : <p className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/40">No Beta applications yet.</p>}</div>
         </section>
 
         <section className="mt-8 rounded-[28px] border border-white/9 bg-white/[.025] p-4 sm:p-6">

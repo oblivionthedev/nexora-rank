@@ -1150,6 +1150,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      submit_beta_application: {
+        Args: { applicant_name: string; applicant_email: string; applicant_age: number }
+        Returns: Json
+      }
+      check_beta_application: {
+        Args: { applicant_email: string; lookup_code: string }
+        Returns: Json
+      }
+      record_beta_notification: {
+        Args: { application_id: string; lookup_code: string; delivered: boolean; message_id?: string }
+        Returns: boolean
+      }
+      staff_beta_applications: { Args: never; Returns: Json }
+      staff_update_beta_application: {
+        Args: { application_id: string; requested_status: string }
+        Returns: boolean
+      }
       staff_access_state: { Args: never; Returns: Json }
       staff_console_state: {
         Args: { search_query?: string; status_filter?: string }

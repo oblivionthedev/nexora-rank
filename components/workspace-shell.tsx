@@ -1,24 +1,10 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { Award, Ban, CalendarRange, ChevronRight, Files, Gauge, Library, LockKeyhole, LogOut, Megaphone, PlugZap, ScrollText, ShieldCheck, SlidersHorizontal, Timer, Users, Workflow } from "lucide-react";
+import { Ban, LockKeyhole, LogOut, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { RestrictedRouteSync } from "@/components/restricted-route-sync";
 import { signOut } from "@/app/dashboard/actions";
-
-const items = [
-  { label: "Overview", path: "", icon: Gauge },
-  { label: "Connections", path: "/connections", icon: PlugZap },
-  { label: "Ranking", path: "/ranking", icon: Award },
-  { label: "Activity & quotas", path: "/activity", icon: Timer },
-  { label: "Applications", path: "/applications", icon: Files },
-  { label: "Automations", path: "/automations", icon: Workflow },
-  { label: "Operations", path: "/operations", icon: CalendarRange },
-  { label: "Communications", path: "/communications", icon: Megaphone },
-  { label: "Knowledge", path: "/knowledge", icon: Library },
-  { label: "Members", path: "/members", icon: Users },
-  { label: "Logs", path: "/logs", icon: ScrollText },
-  { label: "Settings & API", path: "/settings", icon: SlidersHorizontal },
-];
+import { WorkspaceNavigation } from "@/components/workspace-navigation";
 
 type Workspace = {
   public_id: string; name: string; operational_status: string; role: string;
@@ -41,7 +27,7 @@ export function WorkspaceShell({ workspace, settings, children }: { workspace: W
       <Link href="/" className="flex items-center gap-3.5 text-lg font-extrabold tracking-[-.02em]"><BrandMark />Nexora Rank</Link>
       <div className="workspace-theme-bar mt-7 h-[2px]" />
       <div className="workspace-identity mt-5"><span className="workspace-identity-mark">{workspace.name.slice(0,2).toUpperCase()}</span><div className="min-w-0"><p className="text-[12px] font-bold uppercase tracking-[.14em] text-white/42">Current workspace</p><p className="mt-1.5 truncate text-[17px] font-extrabold">{workspace.name}</p><code className="workspace-accent mt-1.5 block text-xs">{workspace.public_id}</code></div></div>
-      <nav className="mt-6 flex gap-2 overflow-x-auto pb-2 lg:block lg:space-y-1.5" aria-label="Workspace navigation">{items.map((item)=><Link key={item.label} href={`${base}${item.path}`} className="workspace-nav-link"><span className="workspace-nav-icon"><item.icon /></span><span>{item.label}</span><ChevronRight className="ml-auto hidden size-4 opacity-30 lg:block" /></Link>)}</nav>
+      <WorkspaceNavigation base={base} />
       <div className="mt-7 hidden border-t border-white/8 pt-5 text-[13px] leading-6 text-white/48 lg:block"><ShieldCheck className="workspace-accent mb-3 size-5" />Signed in as <b className="text-white/75">{workspace.role}</b>.<br/>Sensitive actions are protected.</div>
     </aside>
     <div className="min-w-0"><header className="workspace-topbar flex min-h-[76px] items-center border-b border-white/8 px-5 sm:px-10"><div className="flex items-center gap-3 text-[14px]"><span className="workspace-online-dot" /><span className="text-white/50">Status</span><b>Workspace online</b></div><form action={signOut} className="ml-auto"><button type="submit" className="flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[.025] px-4 text-sm font-bold text-white/65 transition hover:bg-white/[.06] hover:text-white"><LogOut className="size-4" />Sign out</button></form></header><main className="mx-auto max-w-[1440px] px-5 py-10 sm:px-10 sm:py-14">{children}</main></div>
