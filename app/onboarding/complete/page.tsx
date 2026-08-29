@@ -23,32 +23,90 @@ export default async function OnboardingCompletePage() {
   if (!membership) redirect("/onboarding");
 
   const [{ data: workspace }, { data: links }] = await Promise.all([
-    supabase.from("workspaces").select("name, slug, public_id").eq("id", membership.workspace_id).single(),
+    supabase
+      .from("workspaces")
+      .select("name, slug, public_id")
+      .eq("id", membership.workspace_id)
+      .single(),
     supabase.from("account_links").select("provider").eq("user_id", user.id),
   ]);
   if (!workspace) redirect("/onboarding");
 
-  const robloxConnected = (links ?? []).some((link) => link.provider === "roblox");
+  const robloxConnected = (links ?? []).some(
+    (link) => link.provider === "roblox",
+  );
 
   return (
     <main className="setup-complete-page">
-      <header className="setup-topbar"><Link href="/" className="setup-brand"><BrandMark /><span>Nexora Rank</span></Link><div className="setup-topbar-actions"><Link href="/status">System status</Link></div></header>
+      <header className="setup-topbar">
+        <Link href="/" className="setup-brand">
+          <BrandMark />
+          <span>Nexora Rank</span>
+        </Link>
+        <div className="setup-topbar-actions">
+          <Link href="/status">System status</Link>
+        </div>
+      </header>
       <section className="setup-complete-card">
-        <div className="setup-success-mark"><Check /></div>
+        <div className="setup-success-mark">
+          <Check />
+        </div>
         <span className="setup-kicker">Workspace ready</span>
         <h1>{workspace.name} is live.</h1>
-        <p>Your account, free plan, and workspace are now connected. The letters-and-numbers workspace ID is permanent; your private API key can be created and replaced from the dashboard.</p>
+        <p>
+          Your account, free plan, and workspace are now connected. The
+          letters-and-numbers workspace ID is permanent; your private API key
+          can be created and replaced from the dashboard.
+        </p>
         <div className="setup-copy-stack">
           <CopyField label="Workspace ID" value={workspace.public_id} />
         </div>
         <div className="setup-launch-grid">
-          <article><Code2 /><div><b>Server scripts only</b><span>Keep API keys in ServerScriptService or a server secret. Never place them in LocalScripts.</span></div></article>
-          <article><ShieldCheck /><div><b>Replaceable access</b><span>The readable 25-character key is shown once. Regenerating it disables the old key immediately.</span></div></article>
-          <article className={robloxConnected ? "ready" : ""}><Gamepad2 /><div><b>{robloxConnected ? "Roblox connected" : "Roblox coming soon"}</b><span>{robloxConnected ? "Identity is ready for group setup." : "Your workspace is ready for testing. Roblox tools unlock after OAuth approval."}</span></div></article>
+          <article>
+            <Code2 />
+            <div>
+              <b>Server scripts only</b>
+              <span>
+                Keep API keys in ServerScriptService or a server secret. Never
+                place them in LocalScripts.
+              </span>
+            </div>
+          </article>
+          <article>
+            <ShieldCheck />
+            <div>
+              <b>Replaceable access</b>
+              <span>
+                The readable 25-character key is shown once. Regenerating it
+                disables the old key immediately.
+              </span>
+            </div>
+          </article>
+          <article className={robloxConnected ? "ready" : ""}>
+            <Gamepad2 />
+            <div>
+              <b>
+                {robloxConnected ? "Roblox connected" : "Roblox coming soon"}
+              </b>
+              <span>
+                {robloxConnected
+                  ? "Account is ready for group setup."
+                  : "Your workspace is ready for testing. Roblox tools unlock after OAuth approval."}
+              </span>
+            </div>
+          </article>
         </div>
         <div className="setup-complete-actions">
-          <Link href="/dashboard"><Button className="button-glow h-12 rounded-xl">Open dashboard <ArrowRight /></Button></Link>
-          {!robloxConnected ? <span className="setup-secondary-link">Roblox is optional during private beta</span> : null}
+          <Link href="/dashboard">
+            <Button className="button-glow h-12 rounded-xl">
+              Open dashboard <ArrowRight />
+            </Button>
+          </Link>
+          {!robloxConnected ? (
+            <span className="setup-secondary-link">
+              Roblox is optional during private beta
+            </span>
+          ) : null}
         </div>
       </section>
     </main>

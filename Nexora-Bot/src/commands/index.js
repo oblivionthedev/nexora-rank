@@ -13,6 +13,8 @@ import { diagnosticsCommand } from "./diagnostics.js";
 import { unlinkCommand } from "./unlink.js";
 import { setrankCommand } from "./setrank.js";
 import { userCommand } from "./user.js";
+import { staffCodeCommand } from "./staff-code.js";
+import { supportCommand } from "./support.js";
 
-export const commands = [helpCommand, setupCommand, diagnosticsCommand, unlinkCommand, pingCommand, linkCommand, statusCommand, workspaceCommand, userCommand, auditCommand, rankCommand, setrankCommand, activityCommand, quotaCommand, applicationsCommand];
+export const commands = [helpCommand, setupCommand, diagnosticsCommand, unlinkCommand, pingCommand, linkCommand, statusCommand, workspaceCommand, userCommand, auditCommand, rankCommand, setrankCommand, activityCommand, quotaCommand, applicationsCommand, staffCodeCommand, supportCommand];
 export const commandMap = new Map(commands.map((command) => [command.data.name, command]));

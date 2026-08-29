@@ -1,0 +1,39 @@
+import { randomInt } from "node:crypto";
+import { SlashCommandBuilder } from "discord.js";
+import { UserError } from "../lib/errors.js";
+import { colors, embed, relativeTime } from "../lib/response.js";
+
+const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function generateCode() {
+  return Array.from({ length: 25 }, () => alphabet[randomInt(alphabet.length)]).join("");
+}
+
+export const staffCodeCommand = {
+  staffOnly: true,
+  data: new SlashCommandBuilder()
+    .setName("staff-code")
+    .setDescription("Create a one-time Nexora Staff sign-in code")
+    .setDMPermission(false)
+    .addStringOption((option) => option.setName("role").setDescription("Access level for this session").setRequired(true)
+      .addChoices(
+        { name: "Support", value: "support" },
+        { name: "Moderator", value: "moderator" },
+        { name: "Administrator", value: "admin" },
+      )),
+  async execute(interaction, { config, nexora }) {
+    if (interaction.guildId !== config.staffGuildId) throw new UserError("This command exists only in the private Nexora Staff server.", "staff_guild_required");
+    if (interaction.user.id !== interaction.guild.ownerId) throw new UserError("Only the owner of the Nexora Staff server can create sign-in codes.", "staff_owner_required");
+
+    const role = interaction.options.getString("role", true);
+    const code = generateCode();
+    const result = await nexora.createStaffAccessCode({ code, guildId: interaction.guildId, creatorDiscordId: interaction.user.id, role });
+    const response = embed("One-time Staff access", `Use this code at [nexorarank.tech/staff/login](${config.siteUrl}/staff/login).\n\n\`${code}\``, colors.neutral)
+      .addFields(
+        { name: "Access", value: role[0].toUpperCase() + role.slice(1), inline: true },
+        { name: "Expires", value: relativeTime(result.expires_at), inline: true },
+        { name: "Security", value: "One use only. After the code, Discord authorization is still required." },
+      );
+    await interaction.editReply({ embeds: [response] });
+  },
+};

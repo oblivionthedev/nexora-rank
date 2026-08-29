@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 function clean(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -74,6 +75,25 @@ export async function revokeStaffRole(formData: FormData) {
   if (error) redirect(`/staff?error=${errorCode(error.message)}`);
   revalidatePath("/staff");
   redirect("/staff?notice=staff_revoked");
+}
+
+export type StaffCodeState = { error?: string };
+
+export async function beginStaffSignIn(_state: StaffCodeState, formData: FormData): Promise<StaffCodeState> {
+  const code = clean(formData.get("staff_code")).toUpperCase();
+  if (!/^[A-Z0-9]{25}$/.test(code)) return { error: "Enter the complete 25-character code from the Nexora bot." };
+  const cookieStore = await cookies();
+  cookieStore.set("nexora_staff_code", code, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 10 * 60 });
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/staff/authorize");
+}
+
+export async function staffSignOut() {
+  const supabase = await createClient();
+  await supabase.rpc("revoke_current_staff_session");
+  await supabase.auth.signOut();
+  redirect("/staff/login");
 }
 
 export async function updateBetaApplication(formData: FormData) {

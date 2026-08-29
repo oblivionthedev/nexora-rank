@@ -6,7 +6,7 @@ The official Node.js Discord bot for Nexora Rank. It uses slash commands, the ex
 
 - `/link code` — connects the Discord server to a workspace. The caller needs Discord **Manage Server** permission.
 - `/help`, `/ping`, `/status`, `/workspace` — help and workspace health.
-- `/user` — inspect a member's linked Discord, Roblox, and workspace identity.
+- `/user` — inspect a member's connected Discord and Roblox accounts plus workspace access.
 - `/setrank` — request a configured rank with Discord autocomplete and an optional reason.
 - `/rank request`, `/rank approve`, `/rank cancel`, `/rank roles`, `/rank history` — configured rank request flow.
 - `/activity` — activity totals for the caller or a Roblox username.

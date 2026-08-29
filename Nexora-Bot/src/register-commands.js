@@ -4,12 +4,17 @@ import { commands } from "./commands/index.js";
 
 const config = loadConfig();
 const rest = new REST({ version: "10" }).setToken(config.discordToken);
-const body = commands.map((command) => command.data.toJSON());
+const publicBody = commands.filter((command) => !command.staffOnly).map((command) => command.data.toJSON());
+const staffBody = commands.filter((command) => command.staffOnly).map((command) => command.data.toJSON());
 
 if (config.discordGuildId) {
-  await rest.put(Routes.applicationGuildCommands(config.discordClientId, config.discordGuildId), { body });
-  console.log(`Registered ${body.length} commands in development server ${config.discordGuildId}.`);
+  await rest.put(Routes.applicationGuildCommands(config.discordClientId, config.discordGuildId), { body: config.discordGuildId === config.staffGuildId ? [...publicBody, ...staffBody] : publicBody });
+  console.log(`Registered ${publicBody.length} public commands in development server ${config.discordGuildId}.`);
 } else {
-  await rest.put(Routes.applicationCommands(config.discordClientId), { body });
-  console.log(`Registered ${body.length} global commands.`);
+  await rest.put(Routes.applicationCommands(config.discordClientId), { body: publicBody });
+  console.log(`Registered ${publicBody.length} global commands.`);
+}
+if (config.discordGuildId !== config.staffGuildId) {
+  await rest.put(Routes.applicationGuildCommands(config.discordClientId, config.staffGuildId), { body: staffBody });
+  console.log(`Registered ${staffBody.length} private commands in the Nexora Staff server.`);
 }

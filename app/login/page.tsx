@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, LoaderCircle, ShieldCheck, TriangleAlert } from "lucide-react";
+import {
+  ArrowLeft,
+  LoaderCircle,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -12,23 +17,45 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
  * landed back on a pristine login page with no idea what went wrong.
  */
 const authErrors: Record<string, string> = {
-  authorization_declined: "Discord sign-in was cancelled. You can try again whenever you're ready.",
-  oauth_not_ready: "Discord sign-in is not available right now. Please try again in a moment.",
+  authorization_declined:
+    "Discord sign-in was cancelled. You can try again whenever you're ready.",
+  oauth_not_ready:
+    "Discord sign-in is not available right now. Please try again in a moment.",
   oauth_failed: "We could not complete the Discord sign-in. Please try again.",
-  identity_link_failed: "You signed in, but we could not save your Discord identity. Please try again.",
-  discord_already_linked: "This Discord account is already linked to another Nexora Rank user.",
-  roblox_not_ready: "Roblox sign-in is not configured yet. Please try again shortly.",
-  roblox_already_linked: "This Roblox account is already linked to another Nexora Rank user.",
+  identity_link_failed:
+    "You signed in, but we could not save your Discord account connection. Please try again.",
+  discord_already_linked:
+    "This Discord account is already linked to another Nexora Rank user.",
+  roblox_not_ready:
+    "Roblox sign-in is not configured yet. Please try again shortly.",
+  roblox_already_linked:
+    "This Roblox account is already linked to another Nexora Rank user.",
 };
 
 const setupSteps = [
-  { step: "01", title: "Connect both identities", explanation: "Start with Discord or Roblox, then securely connect the other account." },
-  { step: "02", title: "Set up your owner profile", explanation: "Add your account details and activate the complete Beta Free plan." },
-  { step: "03", title: "Launch your workspace", explanation: "Choose its name and receive your permanent Workspace ID and API base." },
+  {
+    step: "01",
+    title: "Connect your accounts",
+    explanation:
+      "Start with Discord or Roblox, then securely connect the other account.",
+  },
+  {
+    step: "02",
+    title: "Set up your owner profile",
+    explanation:
+      "Add your account details and activate the complete Beta Free plan.",
+  },
+  {
+    step: "03",
+    title: "Launch your workspace",
+    explanation:
+      "Choose its name and receive your permanent Workspace ID and API base.",
+  },
 ];
 
 function safeNextPath(raw: string | null): string {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/onboarding";
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//"))
+    return "/onboarding";
   return raw;
 }
 
@@ -41,7 +68,9 @@ function DiscordMark() {
 }
 
 export default function LoginPage() {
-  const [busyProvider, setBusyProvider] = useState<"discord" | "custom:roblox" | null>(null);
+  const [busyProvider, setBusyProvider] = useState<
+    "discord" | "custom:roblox" | null
+  >(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   // Read straight from location rather than useSearchParams so this page never
@@ -49,7 +78,9 @@ export default function LoginPage() {
   useEffect(() => {
     const reason = new URLSearchParams(window.location.search).get("error");
     if (reason) {
-      const message = authErrors[reason] ?? "Sign-in could not be completed. Please try again.";
+      const message =
+        authErrors[reason] ??
+        "Sign-in could not be completed. Please try again.";
       window.setTimeout(() => setAuthMessage(message), 0);
     }
   }, []);
@@ -58,25 +89,34 @@ export default function LoginPage() {
     setAuthMessage(null);
 
     if (!isSupabaseConfigured()) {
-      setAuthMessage("Sign-in is not configured yet. Please try again shortly.");
+      setAuthMessage(
+        "Sign-in is not configured yet. Please try again shortly.",
+      );
       return;
     }
 
     setBusyProvider(provider);
     const supabase = createClient();
-    const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+    const next = safeNextPath(
+      new URLSearchParams(window.location.search).get("next"),
+    );
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo,
-        scopes: provider === "discord" ? "identify email guilds guilds.members.read" : "openid profile",
+        scopes:
+          provider === "discord"
+            ? "identify email guilds guilds.members.read"
+            : "openid profile",
       },
     });
 
     if (error) {
       setBusyProvider(null);
-      setAuthMessage(`${provider === "discord" ? "Discord" : "Roblox"} sign-in could not start. Please try again in a moment.`);
+      setAuthMessage(
+        `${provider === "discord" ? "Discord" : "Roblox"} sign-in could not start. Please try again in a moment.`,
+      );
     }
   }
 
@@ -92,8 +132,8 @@ export default function LoginPage() {
           <em>your community already knows.</em>
         </h1>
         <p className="signin-lede">
-          Nexora Rank uses official Discord and Roblox OAuth. Your password never reaches us, and we
-          will never ask for a Roblox security cookie.
+          Nexora Rank uses official Discord and Roblox OAuth. Your password
+          never reaches us, and we will never ask for a Roblox security cookie.
         </p>
 
         <div className="signin-scopes">
@@ -102,7 +142,11 @@ export default function LoginPage() {
             {setupSteps.map(({ step, title, explanation }) => (
               <li key={step}>
                 <code>{step}</code>
-                <p><strong>{title}</strong><br />{explanation}</p>
+                <p>
+                  <strong>{title}</strong>
+                  <br />
+                  {explanation}
+                </p>
               </li>
             ))}
           </ul>
@@ -121,7 +165,11 @@ export default function LoginPage() {
           <div className="signin-action-top">
             {/* The brand shows here on phones, where the editorial column is
                 reordered below the action; on desktop the editorial one is used. */}
-            <Link href="/" className="signin-brand signin-brand-mobile" aria-label="Nexora Rank home">
+            <Link
+              href="/"
+              className="signin-brand signin-brand-mobile"
+              aria-label="Nexora Rank home"
+            >
               <BrandMark compact /> Nexora Rank
             </Link>
             <Link href="/" className="signin-back">
@@ -132,17 +180,39 @@ export default function LoginPage() {
           <span className="signin-eyebrow">Sign in</span>
           <h2>Choose how to begin</h2>
           <p className="signin-action-lede">
-            Start with either identity. Setup will guide you through connecting the second one.
+            Start with Discord. Setup will guide you through any optional account connections.
           </p>
 
-          <button className="discord-button pill" onClick={() => continueWith("discord")} disabled={busyProvider !== null}>
-            {busyProvider === "discord" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <DiscordMark />}
-            {busyProvider === "discord" ? "Opening Discord…" : "Continue with Discord"}
+          <button
+            className="discord-button pill"
+            onClick={() => continueWith("discord")}
+            disabled={busyProvider !== null}
+          >
+            {busyProvider === "discord" ? (
+              <LoaderCircle className="animate-spin" aria-hidden="true" />
+            ) : (
+              <DiscordMark />
+            )}
+            {busyProvider === "discord"
+              ? "Opening Discord…"
+              : "Continue with Discord"}
           </button>
 
-          <button className="roblox-pending pill" onClick={() => continueWith("custom:roblox")} disabled={busyProvider !== null}>
-            {busyProvider === "custom:roblox" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <RobloxMark />}
-            <b>{busyProvider === "custom:roblox" ? "Opening Roblox…" : "Continue with Roblox"}</b>
+          <button
+            className="roblox-pending pill"
+            onClick={() => continueWith("custom:roblox")}
+            disabled={busyProvider !== null}
+          >
+            {busyProvider === "custom:roblox" ? (
+              <LoaderCircle className="animate-spin" aria-hidden="true" />
+            ) : (
+              <RobloxMark />
+            )}
+            <b>
+              {busyProvider === "custom:roblox"
+                ? "Opening Roblox…"
+                : "Continue with Roblox"}
+            </b>
           </button>
 
           {authMessage && (
@@ -154,8 +224,8 @@ export default function LoginPage() {
 
           <p className="signin-legal">
             By continuing you agree to the{" "}
-            <Link href="/legal/terms-of-service">Terms of Service</Link> and acknowledge the{" "}
-            <Link href="/legal/privacy">Privacy Policy</Link>.
+            <Link href="/legal/terms-of-service">Terms of Service</Link> and
+            acknowledge the <Link href="/legal/privacy">Privacy Policy</Link>.
           </p>
         </div>
       </section>
@@ -165,7 +235,12 @@ export default function LoginPage() {
 
 function RobloxMark() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ width: 18, height: 18, flex: "0 0 18px" }}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      style={{ width: 18, height: 18, flex: "0 0 18px" }}
+    >
       <path d="M5.164 2 2 18.836 18.836 22 22 5.164 5.164 2Zm8.09 12.67-3.924-.738.738-3.924 3.924.738-.738 3.924Z" />
     </svg>
   );

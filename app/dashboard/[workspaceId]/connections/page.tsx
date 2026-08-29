@@ -3,11 +3,268 @@ import { PageHeading } from "@/components/workspace-shell";
 import { DiscordLinkCode } from "@/components/discord-link-code";
 import { getWorkspaceControl } from "@/lib/workspace-control";
 import { listRobloxGroups } from "@/lib/roblox-membership";
-import { addWorkspaceRobloxGroup, connectRobloxGroup, deleteRecord, disconnectIntegration } from "../actions";
-export const dynamic="force-dynamic";
-const errors:Record<string,string>={invalid_group:"Enter a valid Roblox group ID.",group_not_found:"That Roblox group could not be found.",group_owner_required:"Your connected Roblox account must own that group.",manager_required:"Only owners and admins can change connections.",save_failed:"The connection could not be saved."};
-const discordBotInvite="https://discord.com/oauth2/authorize?client_id=1542533178554585099&permissions=581652858399878&integration_type=0&scope=bot%20applications.commands";
-export default async function Connections({params,searchParams}:{params:Promise<{workspaceId:string}>;searchParams:Promise<{error?:string;saved?:string}>}){const[{workspaceId},query]=await Promise.all([params,searchParams]);const{supabase,user,state}=await getWorkspaceControl(workspaceId);const w=state.workspace;const[{data:roblox},{data:extraGroups}]=await Promise.all([supabase.from("account_links").select("provider_user_id").eq("user_id",user.id).eq("provider","roblox").maybeSingle(),supabase.from("workspace_roblox_groups").select("*").eq("workspace_id",state.workspace.id).order("created_at")]);const groups=roblox?await listRobloxGroups(roblox.provider_user_id):null;const owned=groups?.ok?groups.groups.filter(g=>g.roleRank===255):[];const canManage=["owner","admin"].includes(w.role);return <><PageHeading eyebrow="Connections" title="Connect your community" description="Install the Discord bot, link it with a one-time code, and configure primary and division groups."/>{query.error?<p className="mt-6 rounded-2xl border border-red-300/20 bg-red-300/8 p-4 text-sm text-red-100">{errors[query.error]||errors.save_failed}</p>:null}{query.saved?<p className="mt-6 rounded-2xl border border-emerald-300/20 bg-emerald-300/8 p-4 text-sm text-emerald-100">Connection updated.</p>:null}<div className="mt-8 grid gap-5 xl:grid-cols-2"><Connection icon={Bot} title="Discord server"><p className="text-sm leading-7 text-white/48">Add the bot, create a code here, then run <code>/link CODE</code>. Installation is separate from website sign-in.</p><a href={discordBotInvite} target="_blank" rel="noreferrer" className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#5865f2] px-5 text-sm font-bold">Add Nexora to Discord <ExternalLink className="size-4"/></a><Current label="Current server" name={w.discord_guild_name||"Not linked"} id={w.discord_guild_id}/>{canManage&&w.discord_guild_id?<Disconnect publicId={w.public_id} provider="discord" label="Disconnect Discord server"/>:null}{canManage?<DiscordLinkCode publicId={w.public_id} disabled={w.operational_status!=="active"}/>:null}</Connection><Connection icon={Gamepad2} title="Primary Roblox group"><p className="text-sm leading-7 text-white/48">{roblox?"Only groups owned by your connected Roblox account are available.":"Roblox authentication is deferred. Public group configuration works, but live ranking remains disabled until ownership verification is approved."}</p><form action={connectRobloxGroup} className="mt-5 space-y-3"><input type="hidden" name="public_id" value={w.public_id}/>{owned.length?<select name="group_id" required defaultValue={w.roblox_group_id||""} className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0e0909] px-4"><option value="" disabled>Select a group you own</option>{owned.map(g=><option key={g.id} value={g.id}>{g.name} · {g.id}</option>)}</select>:<input name="group_id" required inputMode="numeric" pattern="[0-9]+" defaultValue={w.roblox_group_id||""} placeholder="Roblox group ID" className="min-h-12 w-full rounded-xl border border-white/10 bg-black/20 px-4"/>}<button disabled={!canManage} className="min-h-12 w-full rounded-xl bg-white px-5 text-sm font-bold text-black disabled:opacity-40">Save primary group</button></form><Current label="Current group" name={w.roblox_group_name||"Not linked"} id={w.roblox_group_id}/>{canManage&&w.roblox_group_id?<Disconnect publicId={w.public_id} provider="roblox" label="Disconnect Roblox group"/>:null}</Connection><Connection icon={Gamepad2} title="Additional groups"><p className="text-sm leading-7 text-white/48">Add division, department, or training groups to the same workspace.</p><form action={addWorkspaceRobloxGroup} className="mt-5 grid gap-3"><input type="hidden" name="public_id" value={w.public_id}/><input name="group_id" required inputMode="numeric" pattern="[0-9]+" placeholder="Roblox group ID" className="min-h-12 rounded-xl border border-white/10 bg-black/20 px-4"/><select name="purpose" className="min-h-12 rounded-xl border border-white/10 bg-[#0e0909] px-4"><option value="community">Community</option><option value="department">Department</option><option value="division">Division</option><option value="training">Training</option></select><button disabled={!canManage} className="min-h-12 rounded-xl bg-white px-5 text-sm font-bold text-black disabled:opacity-40">Add group</button></form><div className="mt-5 space-y-3">{extraGroups?.map(group=><div key={group.id} className="rounded-2xl border border-white/8 bg-black/20 p-4"><p className="font-bold">{group.group_name}</p><p className="mt-1 text-xs text-white/40">{group.group_id} · {group.purpose}</p><form action={deleteRecord} className="mt-2"><input type="hidden" name="public_id" value={w.public_id}/><input type="hidden" name="path" value="connections"/><input type="hidden" name="table" value="workspace_roblox_groups"/><input type="hidden" name="id" value={group.id}/><button className="text-sm text-red-200/70">Remove</button></form></div>)}</div></Connection></div></>}
-function Connection({icon:Icon,title,children}:{icon:typeof Bot;title:string;children:React.ReactNode}){return <section className="rounded-[28px] border border-white/10 bg-white/[.025] p-6 sm:p-8"><Icon className="workspace-accent size-6"/><h2 className="mt-6 text-2xl font-bold">{title}</h2><div className="mt-2">{children}</div></section>}
-function Current({label,name,id}:{label:string;name:string;id:string|null}){return <div className="mt-4 rounded-2xl border border-white/8 bg-black/20 p-4"><p className="text-xs font-bold uppercase tracking-wider text-white/35">{label}</p><p className="mt-2 font-bold">{name}</p>{id?<code className="mt-1 block text-xs text-white/35">{id}</code>:null}</div>}
-function Disconnect({publicId,provider,label}:{publicId:string;provider:string;label:string}){return <form action={disconnectIntegration} className="mt-3"><input type="hidden" name="public_id" value={publicId}/><input type="hidden" name="provider" value={provider}/><button className="text-sm font-bold text-red-200/70">{label}</button></form>}
+import {
+  addWorkspaceRobloxGroup,
+  connectRobloxGroup,
+  deleteRecord,
+  disconnectIntegration,
+} from "../actions";
+export const dynamic = "force-dynamic";
+const errors: Record<string, string> = {
+  invalid_group: "Enter a valid Roblox group ID.",
+  group_not_found: "That Roblox group could not be found.",
+  group_owner_required: "Your connected Roblox account must own that group.",
+  manager_required: "Only owners and admins can change connections.",
+  save_failed: "The connection could not be saved.",
+};
+const discordBotInvite =
+  "https://discord.com/oauth2/authorize?client_id=1542533178554585099&permissions=581652858399894&integration_type=0&scope=bot%20applications.commands";
+export default async function Connections({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ workspaceId: string }>;
+  searchParams: Promise<{ error?: string; saved?: string }>;
+}) {
+  const [{ workspaceId }, query] = await Promise.all([params, searchParams]);
+  const { supabase, user, state } = await getWorkspaceControl(workspaceId);
+  const w = state.workspace;
+  const [{ data: roblox }, { data: extraGroups }] = await Promise.all([
+    supabase
+      .from("account_links")
+      .select("provider_user_id")
+      .eq("user_id", user.id)
+      .eq("provider", "roblox")
+      .maybeSingle(),
+    supabase
+      .from("workspace_roblox_groups")
+      .select("*")
+      .eq("workspace_id", state.workspace.id)
+      .order("created_at"),
+  ]);
+  const groups = roblox
+    ? await listRobloxGroups(roblox.provider_user_id)
+    : null;
+  const owned = groups?.ok
+    ? groups.groups.filter((g) => g.roleRank === 255)
+    : [];
+  const canManage = ["owner", "admin"].includes(w.role);
+  return (
+    <>
+      <PageHeading
+        eyebrow="Connections"
+        title="Connect your community"
+        description="Install the Discord bot, link it with a one-time code, and configure primary and division groups."
+      />
+      {query.error ? (
+        <p className="mt-6 rounded-2xl border border-red-300/20 bg-red-300/8 p-4 text-sm text-red-100">
+          {errors[query.error] || errors.save_failed}
+        </p>
+      ) : null}
+      {query.saved ? (
+        <p className="mt-6 rounded-2xl border border-emerald-300/20 bg-emerald-300/8 p-4 text-sm text-emerald-100">
+          Connection updated.
+        </p>
+      ) : null}
+      <div className="mt-8 grid gap-5 xl:grid-cols-2">
+        <Connection icon={Bot} title="Discord server">
+          <p className="text-sm leading-7 text-white/48">
+            Add the bot, create a code here, then run <code>/link CODE</code>.
+            Installation is separate from website sign-in.
+          </p>
+          <a
+            href={discordBotInvite}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#5865f2] px-5 text-sm font-bold"
+          >
+            Add Nexora to Discord <ExternalLink className="size-4" />
+          </a>
+          <Current
+            label="Current server"
+            name={w.discord_guild_name || "Not linked"}
+            id={w.discord_guild_id}
+          />
+          {canManage && w.discord_guild_id ? (
+            <Disconnect
+              publicId={w.public_id}
+              provider="discord"
+              label="Disconnect Discord server"
+            />
+          ) : null}
+          {canManage ? (
+            <DiscordLinkCode
+              publicId={w.public_id}
+              disabled={w.operational_status !== "active"}
+            />
+          ) : null}
+        </Connection>
+        <Connection icon={Gamepad2} title="Primary Roblox group">
+          <p className="text-sm leading-7 text-white/48">
+            {roblox
+              ? "Only groups owned by your connected Roblox account are available."
+              : "Roblox authentication is deferred. Public group configuration works, but live ranking remains disabled until ownership verification is approved."}
+          </p>
+          <form action={connectRobloxGroup} className="mt-5 space-y-3">
+            <input type="hidden" name="public_id" value={w.public_id} />
+            {owned.length ? (
+              <select
+                name="group_id"
+                required
+                defaultValue={w.roblox_group_id || ""}
+                className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0e0909] px-4"
+              >
+                <option value="" disabled>
+                  Select a group you own
+                </option>
+                {owned.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name} · {g.id}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                name="group_id"
+                required
+                inputMode="numeric"
+                pattern="[0-9]+"
+                defaultValue={w.roblox_group_id || ""}
+                placeholder="Roblox group ID"
+                className="min-h-12 w-full rounded-xl border border-white/10 bg-black/20 px-4"
+              />
+            )}
+            <button
+              disabled={!canManage}
+              className="min-h-12 w-full rounded-xl bg-white px-5 text-sm font-bold text-black disabled:opacity-40"
+            >
+              Save primary group
+            </button>
+          </form>
+          <Current
+            label="Current group"
+            name={w.roblox_group_name || "Not linked"}
+            id={w.roblox_group_id}
+          />
+          {canManage && w.roblox_group_id ? (
+            <Disconnect
+              publicId={w.public_id}
+              provider="roblox"
+              label="Disconnect Roblox group"
+            />
+          ) : null}
+        </Connection>
+        <Connection icon={Gamepad2} title="Additional groups">
+          <p className="text-sm leading-7 text-white/48">
+            Add division, department, or training groups to the same workspace.
+          </p>
+          <form action={addWorkspaceRobloxGroup} className="mt-5 grid gap-3">
+            <input type="hidden" name="public_id" value={w.public_id} />
+            <input
+              name="group_id"
+              required
+              inputMode="numeric"
+              pattern="[0-9]+"
+              placeholder="Roblox group ID"
+              className="min-h-12 rounded-xl border border-white/10 bg-black/20 px-4"
+            />
+            <select
+              name="purpose"
+              className="min-h-12 rounded-xl border border-white/10 bg-[#0e0909] px-4"
+            >
+              <option value="community">Community</option>
+              <option value="department">Department</option>
+              <option value="division">Division</option>
+              <option value="training">Training</option>
+            </select>
+            <button
+              disabled={!canManage}
+              className="min-h-12 rounded-xl bg-white px-5 text-sm font-bold text-black disabled:opacity-40"
+            >
+              Add group
+            </button>
+          </form>
+          <div className="mt-5 space-y-3">
+            {extraGroups?.map((group) => (
+              <div
+                key={group.id}
+                className="rounded-2xl border border-white/8 bg-black/20 p-4"
+              >
+                <p className="font-bold">{group.group_name}</p>
+                <p className="mt-1 text-xs text-white/40">
+                  {group.group_id} · {group.purpose}
+                </p>
+                <form action={deleteRecord} className="mt-2">
+                  <input type="hidden" name="public_id" value={w.public_id} />
+                  <input type="hidden" name="path" value="connections" />
+                  <input
+                    type="hidden"
+                    name="table"
+                    value="workspace_roblox_groups"
+                  />
+                  <input type="hidden" name="id" value={group.id} />
+                  <button className="text-sm text-red-200/70">Remove</button>
+                </form>
+              </div>
+            ))}
+          </div>
+        </Connection>
+      </div>
+    </>
+  );
+}
+function Connection({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: typeof Bot;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-[28px] border border-white/10 bg-white/[.025] p-6 sm:p-8">
+      <Icon className="workspace-accent size-6" />
+      <h2 className="mt-6 text-2xl font-bold">{title}</h2>
+      <div className="mt-2">{children}</div>
+    </section>
+  );
+}
+function Current({
+  label,
+  name,
+  id,
+}: {
+  label: string;
+  name: string;
+  id: string | null;
+}) {
+  return (
+    <div className="mt-4 rounded-2xl border border-white/8 bg-black/20 p-4">
+      <p className="text-xs font-bold uppercase tracking-wider text-white/35">
+        {label}
+      </p>
+      <p className="mt-2 font-bold">{name}</p>
+      {id ? (
+        <code className="mt-1 block text-xs text-white/35">{id}</code>
+      ) : null}
+    </div>
+  );
+}
+function Disconnect({
+  publicId,
+  provider,
+  label,
+}: {
+  publicId: string;
+  provider: string;
+  label: string;
+}) {
+  return (
+    <form action={disconnectIntegration} className="mt-3">
+      <input type="hidden" name="public_id" value={publicId} />
+      <input type="hidden" name="provider" value={provider} />
+      <button className="text-sm font-bold text-red-200/70">{label}</button>
+    </form>
+  );
+}

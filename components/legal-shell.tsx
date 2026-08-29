@@ -3,27 +3,98 @@ import { ArrowLeft, ArrowRight, FileText, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { legalDocuments } from "@/lib/legal-documents";
 
-export function LegalShell({ children, active }: { children: React.ReactNode; active?: string }) {
+export function LegalShell({
+  children,
+  active,
+}: {
+  children: React.ReactNode;
+  active?: string;
+}) {
   return (
     <main className="site-shell legal-shell">
       <nav className="legal-nav">
-        <Link href="/" className="flex items-center gap-2.5"><BrandMark /><span>Nexora Rank</span></Link>
-        <div className="flex items-center gap-2"><Link href="/pricing" className="legal-nav-link">Pricing</Link><Link href="/dashboard" className="legal-nav-cta">Open app <ArrowRight className="size-3.5" /></Link></div>
+        <Link href="/" className="flex items-center gap-2.5">
+          <BrandMark />
+          <span>Nexora Rank</span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/pricing" className="legal-nav-link">
+            Pricing
+          </Link>
+          <Link href="/dashboard" className="legal-nav-cta">
+            Open app <ArrowRight className="size-3.5" />
+          </Link>
+        </div>
       </nav>
-      <div className="legal-banner"><ShieldCheck className="size-4" /><span><b>Private-beta policies.</b> These pages describe the live beta and its safeguards; operator identity, jurisdiction, and final paid-service terms still require qualified legal review before public billing.</span></div>
+      <div className="legal-banner">
+        <ShieldCheck className="size-4" />
+        <span>
+          <b>Private-beta policies.</b> These pages describe the live beta and
+          its safeguards; operator identity, jurisdiction, and final
+          paid-service terms still require qualified legal review before public
+          billing.
+        </span>
+      </div>
       <div className="legal-frame">
         <aside className="legal-sidebar">
-          <Link href="/legal" className={!active ? "active" : ""}><FileText className="size-3.5" /> Legal center</Link>
-          {legalDocuments.map((document) => <Link key={document.slug} href={`/legal/${document.slug}`} className={active === document.slug ? "active" : ""}>{document.shortTitle}</Link>)}
-          <Link href="/security" className={active === "security" ? "active" : ""}>Security</Link>
+          <Link href="/legal" className={!active ? "active" : ""}>
+            <FileText className="size-3.5" /> Legal center
+          </Link>
+          {legalDocuments.map((document) => (
+            <Link
+              key={document.slug}
+              href={`/legal/${document.slug}`}
+              className={active === document.slug ? "active" : ""}
+            >
+              {document.shortTitle}
+            </Link>
+          ))}
+          <Link
+            href="/security"
+            className={active === "security" ? "active" : ""}
+          >
+            Security
+          </Link>
         </aside>
         <div className="legal-content">{children}</div>
       </div>
-      <footer className="legal-footer"><div><BrandMark compact /><span>© 2026 Nexora Rank · Private beta</span></div><div><Link href="/">Home</Link><Link href="/team">Team</Link><Link href="/pricing">Pricing</Link></div></footer>
+      <footer className="legal-footer">
+        <div>
+          <BrandMark compact />
+          <span>© 2026 Nexora Rank · Private beta</span>
+        </div>
+        <div>
+          <Link href="/">Home</Link>
+          <Link href="/team">Team</Link>
+          <Link href="/pricing">Pricing</Link>
+        </div>
+      </footer>
     </main>
   );
 }
 
-export function LegalHeader({ eyebrow, title, summary }: { eyebrow: string; title: string; summary: string }) {
-  return <header className="legal-header"><Link href="/legal"><ArrowLeft className="size-3.5" /> Legal center</Link><p>{eyebrow}</p><h1>{title}</h1><div className="legal-meta"><span>Version 0.2</span><span>Last updated August 28, 2026</span><span>Private beta</span></div><p className="legal-summary">{summary}</p></header>;
+export function LegalHeader({
+  eyebrow,
+  title,
+  summary,
+}: {
+  eyebrow: string;
+  title: string;
+  summary: string;
+}) {
+  return (
+    <header className="legal-header">
+      <Link href="/legal">
+        <ArrowLeft className="size-3.5" /> Legal center
+      </Link>
+      <p>{eyebrow}</p>
+      <h1>{title}</h1>
+      <div className="legal-meta">
+        <span>Version 0.3</span>
+        <span>Last updated August 29, 2026</span>
+        <span>Public beta</span>
+      </div>
+      <p className="legal-summary">{summary}</p>
+    </header>
+  );
 }

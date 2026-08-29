@@ -1,4 +1,4 @@
-import { ActivityType, Client, Events, GatewayIntentBits, MessageFlags, REST, Routes } from "discord.js";
+import { ActivityType, Client, Events, GatewayIntentBits, MessageFlags, Partials, REST, Routes } from "discord.js";
 import { loadConfig } from "../config/index.js";
 import { commands, commandMap } from "./commands/index.js";
 import { UserError } from "./lib/errors.js";
@@ -7,32 +7,41 @@ import { startHealthServer } from "./lib/health-server.js";
 import { createLogger } from "./lib/logger.js";
 import { colors, embed } from "./lib/response.js";
 import { createNexoraService } from "./services/nexora.js";
+import { createSupportService } from "./services/support.js";
 
 const config = loadConfig();
 const logger = createLogger(config.logLevel);
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent],
+  partials: [Partials.Channel],
+});
 const nexora = createNexoraService(config, logger);
+const support = createSupportService(client, config, logger);
 const healthServer = startHealthServer({ port: config.port, client, logger });
 
 async function registerCommands(guildId = config.discordGuildId) {
   const rest = new REST({ version: "10" }).setToken(config.discordToken);
-  const body = commands.map((command) => command.data.toJSON());
+  const publicBody = commands.filter((command) => !command.staffOnly).map((command) => command.data.toJSON());
+  const staffBody = commands.filter((command) => command.staffOnly).map((command) => command.data.toJSON());
 
   if (guildId) {
     await rest.put(
       Routes.applicationGuildCommands(config.discordClientId, guildId),
-      { body },
+      { body: guildId === config.staffGuildId ? [...publicBody, ...staffBody] : publicBody },
     );
     logger.info("Discord commands registered", {
-      count: body.length,
+      count: publicBody.length,
       scope: "server",
       guildId,
     });
-    return;
+  } else {
+    await rest.put(Routes.applicationCommands(config.discordClientId), { body: publicBody });
+    logger.info("Discord commands registered", { count: publicBody.length, scope: "global" });
   }
-
-  await rest.put(Routes.applicationCommands(config.discordClientId), { body });
-  logger.info("Discord commands registered", { count: body.length, scope: "global" });
+  if (guildId !== config.staffGuildId) {
+    await rest.put(Routes.applicationGuildCommands(config.discordClientId, config.staffGuildId), { body: staffBody });
+    logger.info("Private Staff commands registered", { count: staffBody.length, guildId: config.staffGuildId });
+  }
 }
 
 client.once(Events.ClientReady, async (readyClient) => {
@@ -62,7 +71,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
-    await command.execute(interaction, { config, nexora, logger });
+    await command.execute(interaction, { config, nexora, support, logger });
     logger.info("Command completed", { command: interaction.commandName, guildId: interaction.guildId, userId: interaction.user.id });
   } catch (error) {
     const isUserError = error instanceof UserError;
@@ -75,6 +84,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
     const response = embed(isUserError ? "Request unavailable" : "Something went wrong", isUserError ? error.message : "Nexora could not complete that request. The error was logged.", isUserError ? colors.warning : colors.danger);
     await interaction.editReply({ embeds: [response] }).catch(() => undefined);
+  }
+});
+
+client.on(Events.MessageCreate, async (message) => {
+  try {
+    if (message.author.bot) return;
+    if (!message.guild) await support.receiveDirectMessage(message);
+    else if (message.guild.id === config.staffGuildId) await support.relayStaffMessage(message);
+  } catch (error) {
+    logger.error("Support relay failed", { userId: message.author.id, channelId: message.channelId, error: error?.stack || String(error) });
+    if (!message.guild) await message.reply("Nexora Support could not receive that message right now. Please try again shortly.").catch(() => undefined);
   }
 });
 

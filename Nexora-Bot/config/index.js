@@ -7,6 +7,7 @@ const configDirectory = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(configDirectory, ".env"), quiet: true });
 
 const NEXORA_DISCORD_CLIENT_ID = "1542533178554585099";
+const NEXORA_STAFF_GUILD_ID = "1542617161825255474";
 const discordId = z.string().regex(/^\d{17,22}$/);
 
 const schema = z.object({
@@ -33,6 +34,7 @@ export function loadConfig(environment = process.env) {
     discordToken: result.data.DISCORD_TOKEN,
     discordClientId: NEXORA_DISCORD_CLIENT_ID,
     discordGuildId: result.data.DISCORD_GUILD_ID || null,
+    staffGuildId: NEXORA_STAFF_GUILD_ID,
     supabaseUrl: result.data.SUPABASE_URL.replace(/\/$/, ""),
     supabaseServiceRoleKey: result.data.SUPABASE_SERVICE_ROLE_KEY,
     siteUrl: result.data.NEXORA_SITE_URL.replace(/\/$/, ""),

@@ -41,15 +41,15 @@ function WorkspaceLocked({ workspace, style }: { workspace: Workspace; style: CS
       <div className="workspace-theme-bar h-1 rounded-t-[32px]" />
       <section className="rounded-b-[32px] border border-t-0 border-white/10 bg-[#0b0707] p-7 text-center shadow-2xl sm:p-12">
         <div className={`mx-auto flex size-16 items-center justify-center rounded-2xl border ${banned ? "border-red-300/25 bg-red-300/8 text-red-200" : "border-amber-300/25 bg-amber-300/8 text-amber-100"}`}>{banned ? <Ban className="size-7" /> : <LockKeyhole className="size-7" />}</div>
-        <p className="workspace-accent mt-7 text-xs font-bold uppercase tracking-[.18em]">Nexora workspace restricted</p>
-        <h1 className="mt-3 text-4xl font-extrabold tracking-[-.04em] sm:text-5xl">Workspace {banned ? "banned" : "suspended"}</h1>
+        <p className="workspace-accent mt-7 text-xs font-bold uppercase tracking-[.18em]">Nexora access notice</p>
+        <h1 className="mt-3 text-4xl font-extrabold tracking-[-.04em] sm:text-5xl">{banned ? "Workspace terminated" : "Operations temporarily paused"}</h1>
         <p className="mx-auto mt-5 max-w-xl text-base leading-8 text-white/58">{workspace.moderation_reason || "This workspace has been restricted by Nexora."}</p>
         <div className="mt-7 grid gap-3 text-left sm:grid-cols-2">
           <LockDetail label="Workspace" value={`${workspace.name} · ${workspace.public_id}`} />
-          <LockDetail label={banned ? "Duration" : "Scheduled end"} value={banned ? "Permanent" : workspace.moderation_expires_at ? formatDate(workspace.moderation_expires_at) : "No automatic end date"} />
+          <LockDetail label={banned ? "Decision" : "Scheduled review"} value={banned ? "Permanent termination" : workspace.moderation_expires_at ? formatDate(workspace.moderation_expires_at) : "Manual review required"} />
         </div>
         <div className="mt-4 rounded-2xl border border-white/8 bg-black/25 p-5 text-left"><p className="text-xs font-bold uppercase tracking-wider text-white/35">Appeal</p><p className="mt-2 text-sm leading-7 text-white/58">{workspace.appeal_allowed ? workspace.appeal_note || "You may appeal this action through the Nexora Discord server." : "This action is not eligible for appeal."}</p></div>
-        <p className="mt-6 text-sm leading-7 text-white/40">Dashboard controls, Discord bot actions, API keys, and in-game requests are disabled until this restriction is removed.</p>
+        <p className="mt-6 text-sm leading-7 text-white/40">Dashboard controls, Discord bot actions, API keys, and in-game requests are unavailable while this decision is active.</p>
         <form action={signOut} className="mt-7"><button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-black"><LogOut className="size-4" />Sign out</button></form>
       </section>
     </div>

@@ -1,51 +1,122 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, LockKeyhole, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Clock3,
+  LockKeyhole,
+  ShieldCheck,
+} from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { StaffCodeForm } from "@/components/staff-code-form";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { signOut } from "@/app/dashboard/actions";
-
 export const dynamic = "force-dynamic";
-
-export default async function StaffLoginPage() {
-  let signedIn = false;
+export default async function StaffLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const query = await searchParams;
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    signedIn = Boolean(user);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
       const { data } = await supabase.rpc("staff_access_state");
-      const access = data as { authorized?: boolean } | null;
-      if (access?.authorized) redirect("/staff");
+      if ((data as { authorized?: boolean } | null)?.authorized)
+        redirect("/staff");
     }
   }
-
   return (
-    <main className="min-h-screen bg-[#050303] px-5 py-10 text-white">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-xl items-center">
-        <section className="glass-strong w-full overflow-hidden rounded-[32px] border border-white/10 p-7 sm:p-10">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/55 hover:text-white">
-            <ArrowLeft className="size-4" /> Back to Nexora
+    <main className="staff-login-page">
+      <div className="staff-login-brand">
+        <Link href="/">
+          <BrandMark />
+          Nexora
+        </Link>
+        <span>Private operations</span>
+      </div>
+      <div className="staff-login-grid">
+        <section className="staff-login-story">
+          <Link href="/" className="staff-login-back">
+            <ArrowLeft />
+            Back to Nexora
           </Link>
-          <div className="mt-10 flex size-14 items-center justify-center rounded-2xl bg-[#d79a9a]/12 text-[#d79a9a] ring-1 ring-[#d79a9a]/25">
-            <LockKeyhole className="size-6" />
-          </div>
-          <p className="microlabel mt-7">Oblivion · platform owner</p>
-          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.035em]">Owner sign-in</h1>
-          <p className="mt-4 text-sm leading-7 text-white/58">
-            Only the Nexora platform owner can enter. Authorization is verified by the database on every request.
+          <p className="staff-login-kicker">Staff authorization</p>
+          <h1>
+            Private access.
+            <br />
+            <em>Two checks.</em>
+          </h1>
+          <p>
+            A one-time bot code proves you were invited. Discord then confirms
+            which staff member is entering.
           </p>
-          {signedIn ? (
-            <div className="mt-8 rounded-2xl border border-red-400/25 bg-red-400/8 p-5">
-              <div className="flex gap-3"><ShieldCheck className="mt-0.5 size-5 text-red-300" /><div><b className="text-sm">Owner access required</b><p className="mt-1 text-xs leading-6 text-white/55">This signed-in account is not the platform owner.</p></div></div>
-              <form action={signOut} className="mt-4"><button className="pill pill-ghost" type="submit">Sign out</button></form>
+          <ol>
+            <li>
+              <span>01</span>
+              <div>
+                <b>Generate a private code</b>
+                <small>
+                  The Nexora Staff server owner runs <code>/staff-code</code>.
+                  Codes expire after ten minutes.
+                </small>
+              </div>
+            </li>
+            <li>
+              <span>02</span>
+              <div>
+                <b>Authorize with Discord</b>
+                <small>
+                  Your Discord display name and avatar become your Staff
+                  profile.
+                </small>
+              </div>
+            </li>
+            <li>
+              <span>03</span>
+              <div>
+                <b>Enter the operations room</b>
+                <small>
+                  Access lasts twelve hours and every sensitive action stays
+                  audited.
+                </small>
+              </div>
+            </li>
+          </ol>
+        </section>
+        <section className="staff-login-card">
+          <div className="staff-login-card-icon">
+            <LockKeyhole />
+          </div>
+          <p>Step 1 of 2</p>
+          <h2>Enter your access code</h2>
+          <small>
+            The command is available only in the private Nexora Staff Discord
+            server and only its owner can generate a code.
+          </small>
+          {query.error ? (
+            <div className="staff-login-error">
+              That code could not be used. It may be invalid, expired, already
+              used, or the Discord authorization did not match.
             </div>
-          ) : (
-            <Link href="/login?next=/staff" className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#ffffff] px-6 text-sm font-bold text-[#050303] transition hover:bg-white">
-              Continue with secure sign-in
-            </Link>
-          )}
-          <div className="mt-8 flex items-center gap-3 border-t border-white/8 pt-6 text-xs text-white/38"><BrandMark compact /><span>No separate admin password is stored.</span></div>
+          ) : null}
+          <StaffCodeForm />
+          <div className="staff-login-trust">
+            <span>
+              <BadgeCheck />
+              One use
+            </span>
+            <span>
+              <Clock3 />
+              10 minutes
+            </span>
+            <span>
+              <ShieldCheck />
+              Discord verified
+            </span>
+          </div>
         </section>
       </div>
     </main>

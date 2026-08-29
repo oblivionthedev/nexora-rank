@@ -97,6 +97,17 @@ export function createNexoraService(config, logger) {
     return payload.workspace;
   }
 
+  async function createStaffAccessCode({ code, guildId, creatorDiscordId, role }) {
+    const { data, error } = await database.rpc("bot_create_staff_access_code", {
+      raw_code: code,
+      guild_id: guildId,
+      creator_discord_id: creatorDiscordId,
+      requested_role: role,
+    });
+    throwIfError(error, "Nexora could not create a Staff access code.");
+    return data;
+  }
+
   async function workspaceSummary(guildId, discordUserId) {
     const workspace = await getWorkspace(guildId, { allowRestricted: true });
     const actor = await getActor(workspace.id, discordUserId);
@@ -272,6 +283,7 @@ export function createNexoraService(config, logger) {
 
   return {
     claimLink,
+    createStaffAccessCode,
     getWorkspace,
     workspaceSummary,
     disconnectGuild,

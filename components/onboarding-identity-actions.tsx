@@ -19,7 +19,9 @@ export function OnboardingIdentityAction({ provider }: { provider: Provider }) {
       provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
-        scopes: isRoblox ? "openid profile" : "identify email guilds guilds.members.read",
+        scopes: isRoblox
+          ? "openid profile"
+          : "identify email guilds guilds.members.read",
       },
     });
 
@@ -28,7 +30,7 @@ export function OnboardingIdentityAction({ provider }: { provider: Provider }) {
       setMessage(
         isRoblox
           ? "Roblox sign-in could not start. The approved OAuth provider must be enabled in Supabase."
-          : "Discord linking could not start. Manual identity linking may need to be enabled in Supabase.",
+          : "Discord linking could not start. Manual account linking may need to be enabled in Supabase.",
       );
     }
   }
@@ -36,11 +38,26 @@ export function OnboardingIdentityAction({ provider }: { provider: Provider }) {
   const Icon = isRoblox ? Gamepad2 : Bot;
   return (
     <div>
-      <button type="button" className="onboarding-provider-button" onClick={connect} disabled={busy}>
-        {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Icon className="size-4" />}
-        {busy ? `Opening ${isRoblox ? "Roblox" : "Discord"}…` : `Connect ${isRoblox ? "Roblox" : "Discord"}`}
+      <button
+        type="button"
+        className="onboarding-provider-button"
+        onClick={connect}
+        disabled={busy}
+      >
+        {busy ? (
+          <LoaderCircle className="size-4 animate-spin" />
+        ) : (
+          <Icon className="size-4" />
+        )}
+        {busy
+          ? `Opening ${isRoblox ? "Roblox" : "Discord"}…`
+          : `Connect ${isRoblox ? "Roblox" : "Discord"}`}
       </button>
-      {message ? <p className="onboarding-inline-error" role="status">{message}</p> : null}
+      {message ? (
+        <p className="onboarding-inline-error" role="status">
+          {message}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -1,27 +1,328 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Bot, Building2, Check, CircleDollarSign, Gauge, Globe2, Layers3, LockKeyhole, Network, Rocket, ShieldCheck, Sparkles, Target, UsersRound, Workflow } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bot,
+  Building2,
+  Check,
+  CircleDollarSign,
+  Gauge,
+  Globe2,
+  Layers3,
+  LockKeyhole,
+  Network,
+  Rocket,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  UsersRound,
+  Workflow,
+} from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 
-export const metadata: Metadata = { title: "Investors", description: "The Nexora Rank product thesis, market, business model, roadmap, and investment overview." };
+export const metadata: Metadata = {
+  title: "Investors",
+  description:
+    "The Nexora Rank product thesis, market, business model, roadmap, and investment overview.",
+};
 
 const pillars = [
-  { icon: Network, title: "Fragmented operations", text: "Roblox communities often coordinate through disconnected bots, forms, spreadsheets, manual messages, and undocumented staff decisions." },
-  { icon: Layers3, title: "One operating layer", text: "Nexora unifies identity, policy, activity, applications, communications, automations, and audit history around one workspace." },
-  { icon: ShieldCheck, title: "Trust as infrastructure", text: "Permission checks and durable records make high-impact community actions understandable to owners, staff, and members." },
+  {
+    icon: Network,
+    title: "Fragmented operations",
+    text: "Roblox communities often coordinate through disconnected bots, forms, spreadsheets, manual messages, and undocumented staff decisions.",
+  },
+  {
+    icon: Layers3,
+    title: "One operating layer",
+    text: "Nexora unifies connected accounts, policy, activity, applications, communications, automations, and audit history around one workspace.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Trust as infrastructure",
+    text: "Permission checks and durable records make high-impact community actions understandable to owners, staff, and members.",
+  },
 ];
 
 export default function InvestorsPage() {
-  return <main className="investor-page">
-    <nav className="investor-nav"><Link href="/" className="home-brand"><BrandMark /><span>Nexora Rank</span></Link><div><Link href="/"><ArrowLeft />Home</Link><Link href="/beta">Beta</Link><Link href="/login?next=/dashboard" className="investor-nav-cta">Open product <ArrowRight /></Link></div></nav>
-    <header className="investor-hero"><div className="investor-grid" aria-hidden="true"/><div className="home-section-label"><Building2 /> Investor overview · 2026</div><h1>The operating layer for<br /><em>Roblox communities.</em></h1><p>Nexora is building the system that connects people, policy, and operations across Roblox and Discord—giving serious communities infrastructure that is currently fragmented across manual tools.</p><div className="investor-hero-actions"><Link href="/beta">View Beta program <ArrowRight /></Link><a href="#thesis">Read the thesis</a></div><div className="investor-disclosure"><LockKeyhole /><span>Nexora is currently privately operated. No public funding round, securities offering, or financial return is being advertised on this page.</span></div></header>
-    <section className="investor-thesis" id="thesis"><div className="investor-section-head"><div><div className="home-section-label"><Target /> The thesis</div><h2>Communities become organizations. Their tools have not caught up.</h2></div><p>Large Roblox groups manage real teams, structured ranks, training, applications, events, and member communications. Nexora treats that work as an operational system, not a collection of isolated commands.</p></div><div className="investor-pillar-grid">{pillars.map(({ icon: Icon, title, text }, index) => <article key={title}><span>0{index + 1}</span><Icon /><h3>{title}</h3><p>{text}</p></article>)}</div></section>
-    <section className="investor-product"><div><div className="home-section-label"><Gauge /> Product system</div><h2>One workspace. Multiple operational surfaces.</h2><p>The dashboard holds configuration, permissions, queues, history, and management. Discord provides the fast conversational surface. Game servers connect through scoped API access.</p></div><div className="investor-product-map"><article><span><Globe2 /></span><b>Dashboard</b><small>Control, review and reporting</small></article><i>+</i><article><span className="discord"><Bot /></span><b>Discord bot</b><small>Commands and communications</small></article><i>+</i><article><span><Workflow /></span><b>Game/API</b><small>Activity and operational requests</small></article></div></section>
-    <section className="investor-model"><div className="investor-section-head"><div><div className="home-section-label"><CircleDollarSign /> Business model</div><h2>Free adoption. Paid operational depth.</h2></div><p>Billing is not active today. The intended model gives growing communities a useful free foundation and charges established teams for advanced controls, higher limits, longer history, and deeper customization.</p></div><div className="investor-model-grid"><article><small>Entry</small><h3>Free</h3><p>Core workspace, identity, rank workflows, activity, applications, and limited history.</p></article><article className="featured"><small>Growth</small><h3>Plus</h3><p>Advanced automations, longer retention, richer branding, and priority operations.</p></article><article><small>Scale</small><h3>Pro</h3><p>Multi-team controls, deeper policies, reporting, integrations, and priority support.</p></article></div></section>
-    <section className="investor-progress"><div><div className="home-section-label"><Rocket /> Built so far</div><h2>Beyond a concept.</h2><p>Nexora already has a functioning production product and the core infrastructure needed to learn from real community use.</p></div><ul>{["Production workspace and role management", "Discord installation, connection and diagnostics", "Rich Discord messaging and custom bot branding", "Rank policy and request history", "Activity sessions and quota controls", "Application forms and submissions", "Automations with run history", "Auditable workspace operations", "Public Beta intake and selection workflow", "Security, legal, status and staff control surfaces"].map(item => <li key={item}><Check />{item}</li>)}</ul></section>
-    <section className="investor-roadmap"><div className="home-section-label"><Sparkles /> Product roadmap</div><h2>Prove utility, deepen the moat, then scale distribution.</h2><div><article><span>Now</span><h3>Beta learning</h3><p>Onboard selected communities, improve core workflows, and measure repeat operational use.</p></article><article><span>Next</span><h3>Verified Roblox layer</h3><p>Complete approved OAuth and Open Cloud integrations for live identity and ranking.</p></article><article><span>Then</span><h3>Commercial expansion</h3><p>Introduce transparent paid plans, richer reporting, deeper automations, and scalable support.</p></article></div></section>
-    <section className="investor-risk"><div><div className="home-section-label"><ShieldCheck /> Clear-eyed execution</div><h2>What must be proven.</h2></div><div><p><b>Platform dependency.</b> Nexora depends on Discord and Roblox APIs, policies, approvals, and uptime.</p><p><b>Community adoption.</b> The product must become part of recurring staff work, not a one-time setup tool.</p><p><b>Trust and safety.</b> Ranking and identity operations require strong permissions, reliability, and support practices.</p><p><b>Commercial fit.</b> Willingness to pay and plan boundaries have not yet been validated through active billing.</p></div></section>
-    <section className="investor-cta"><BrandMark /><div className="home-section-label"><UsersRound /> Follow the build</div><h2>See the product before the pitch.</h2><p>Explore Nexora, review the Beta program, and follow progress as real communities begin operating on the platform.</p><div><Link href="/beta">Explore the Beta <ArrowRight /></Link><Link href="/">View the platform</Link></div></section>
-    <footer className="beta-footer"><Link href="/" className="home-brand"><BrandMark compact/><span>Nexora Rank</span></Link><p>Investor information is descriptive only and is not an offer of securities.</p><div><Link href="/beta">Beta</Link><Link href="/legal">Legal</Link><Link href="/security">Security</Link></div></footer>
-  </main>;
+  return (
+    <main className="investor-page">
+      <nav className="investor-nav">
+        <Link href="/" className="home-brand">
+          <BrandMark />
+          <span>Nexora Rank</span>
+        </Link>
+        <div>
+          <Link href="/">
+            <ArrowLeft />
+            Home
+          </Link>
+          <Link href="/beta">Beta</Link>
+          <Link href="/login?next=/dashboard" className="investor-nav-cta">
+            Open product <ArrowRight />
+          </Link>
+        </div>
+      </nav>
+      <header className="investor-hero">
+        <div className="investor-grid" aria-hidden="true" />
+        <div className="home-section-label">
+          <Building2 /> Investor overview · 2026
+        </div>
+        <h1>
+          The operating layer for
+          <br />
+          <em>Roblox communities.</em>
+        </h1>
+        <p>
+          Nexora is building the system that connects people, policy, and
+          operations across Roblox and Discord—giving serious communities
+          infrastructure that is currently fragmented across manual tools.
+        </p>
+        <div className="investor-hero-actions">
+          <Link href="/beta">
+            View Beta program <ArrowRight />
+          </Link>
+          <a href="#thesis">Read the thesis</a>
+        </div>
+        <div className="investor-disclosure">
+          <LockKeyhole />
+          <span>
+            Nexora is currently privately operated. No public funding round,
+            securities offering, or financial return is being advertised on this
+            page.
+          </span>
+        </div>
+      </header>
+      <section className="investor-thesis" id="thesis">
+        <div className="investor-section-head">
+          <div>
+            <div className="home-section-label">
+              <Target /> The thesis
+            </div>
+            <h2>
+              Communities become organizations. Their tools have not caught up.
+            </h2>
+          </div>
+          <p>
+            Large Roblox groups manage real teams, structured ranks, training,
+            applications, events, and member communications. Nexora treats that
+            work as an operational system, not a collection of isolated
+            commands.
+          </p>
+        </div>
+        <div className="investor-pillar-grid">
+          {pillars.map(({ icon: Icon, title, text }, index) => (
+            <article key={title}>
+              <span>0{index + 1}</span>
+              <Icon />
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="investor-product">
+        <div>
+          <div className="home-section-label">
+            <Gauge /> Product system
+          </div>
+          <h2>One workspace. Multiple operational surfaces.</h2>
+          <p>
+            The dashboard holds configuration, permissions, queues, history, and
+            management. Discord provides the fast conversational surface. Game
+            servers connect through scoped API access.
+          </p>
+        </div>
+        <div className="investor-product-map">
+          <article>
+            <span>
+              <Globe2 />
+            </span>
+            <b>Dashboard</b>
+            <small>Control, review and reporting</small>
+          </article>
+          <i>+</i>
+          <article>
+            <span className="discord">
+              <Bot />
+            </span>
+            <b>Discord bot</b>
+            <small>Commands and communications</small>
+          </article>
+          <i>+</i>
+          <article>
+            <span>
+              <Workflow />
+            </span>
+            <b>Game/API</b>
+            <small>Activity and operational requests</small>
+          </article>
+        </div>
+      </section>
+      <section className="investor-model">
+        <div className="investor-section-head">
+          <div>
+            <div className="home-section-label">
+              <CircleDollarSign /> Business model
+            </div>
+            <h2>Free adoption. Paid operational depth.</h2>
+          </div>
+          <p>
+            Billing is not active today. The intended model gives growing
+            communities a useful free foundation and charges established teams
+            for advanced controls, higher limits, longer history, and deeper
+            customization.
+          </p>
+        </div>
+        <div className="investor-model-grid">
+          <article>
+            <small>Entry</small>
+            <h3>Free</h3>
+            <p>
+              Core workspace, account connections, rank workflows, activity, applications,
+              and limited history.
+            </p>
+          </article>
+          <article className="featured">
+            <small>Growth</small>
+            <h3>Plus</h3>
+            <p>
+              Advanced automations, longer retention, richer branding, and
+              priority operations.
+            </p>
+          </article>
+          <article>
+            <small>Scale</small>
+            <h3>Pro</h3>
+            <p>
+              Multi-team controls, deeper policies, reporting, integrations, and
+              priority support.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section className="investor-progress">
+        <div>
+          <div className="home-section-label">
+            <Rocket /> Built so far
+          </div>
+          <h2>Beyond a concept.</h2>
+          <p>
+            Nexora already has a functioning production product and the core
+            infrastructure needed to learn from real community use.
+          </p>
+        </div>
+        <ul>
+          {[
+            "Production workspace and role management",
+            "Discord installation, connection and diagnostics",
+            "Rich Discord messaging and custom bot branding",
+            "Rank policy and request history",
+            "Activity sessions and quota controls",
+            "Application forms and submissions",
+            "Automations with run history",
+            "Auditable workspace operations",
+            "Public Beta intake and selection workflow",
+            "Security, legal, status and staff control surfaces",
+          ].map((item) => (
+            <li key={item}>
+              <Check />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="investor-roadmap">
+        <div className="home-section-label">
+          <Sparkles /> Product roadmap
+        </div>
+        <h2>Prove utility, deepen the moat, then scale distribution.</h2>
+        <div>
+          <article>
+            <span>Now</span>
+            <h3>Beta learning</h3>
+            <p>
+              Onboard selected communities, improve core workflows, and measure
+              repeat operational use.
+            </p>
+          </article>
+          <article>
+            <span>Next</span>
+            <h3>Verified Roblox layer</h3>
+            <p>
+              Complete approved OAuth and Open Cloud integrations for live
+              connected accounts and ranking.
+            </p>
+          </article>
+          <article>
+            <span>Then</span>
+            <h3>Commercial expansion</h3>
+            <p>
+              Introduce transparent paid plans, richer reporting, deeper
+              automations, and scalable support.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section className="investor-risk">
+        <div>
+          <div className="home-section-label">
+            <ShieldCheck /> Clear-eyed execution
+          </div>
+          <h2>What must be proven.</h2>
+        </div>
+        <div>
+          <p>
+            <b>Platform dependency.</b> Nexora depends on Discord and Roblox
+            APIs, policies, approvals, and uptime.
+          </p>
+          <p>
+            <b>Community adoption.</b> The product must become part of recurring
+            staff work, not a one-time setup tool.
+          </p>
+          <p>
+            <b>Trust and safety.</b> Ranking and account operations require
+            strong permissions, reliability, and support practices.
+          </p>
+          <p>
+            <b>Commercial fit.</b> Willingness to pay and plan boundaries have
+            not yet been validated through active billing.
+          </p>
+        </div>
+      </section>
+      <section className="investor-cta">
+        <BrandMark />
+        <div className="home-section-label">
+          <UsersRound /> Follow the build
+        </div>
+        <h2>See the product before the pitch.</h2>
+        <p>
+          Explore Nexora, review the Beta program, and follow progress as real
+          communities begin operating on the platform.
+        </p>
+        <div>
+          <Link href="/beta">
+            Explore the Beta <ArrowRight />
+          </Link>
+          <Link href="/">View the platform</Link>
+        </div>
+      </section>
+      <footer className="beta-footer">
+        <Link href="/" className="home-brand">
+          <BrandMark compact />
+          <span>Nexora Rank</span>
+        </Link>
+        <p>
+          Investor information is descriptive only and is not an offer of
+          securities.
+        </p>
+        <div>
+          <Link href="/beta">Beta</Link>
+          <Link href="/legal">Legal</Link>
+          <Link href="/security">Security</Link>
+        </div>
+      </footer>
+    </main>
+  );
 }

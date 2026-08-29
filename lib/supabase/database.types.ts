@@ -1150,6 +1150,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      redeem_staff_access_code: { Args: { raw_code: string }; Returns: Json }
+      revoke_current_staff_session: { Args: never; Returns: boolean }
+      bot_create_staff_access_code: { Args: { raw_code: string; guild_id: string; creator_discord_id: string; requested_role?: string }; Returns: Json }
       submit_beta_application: {
         Args: { applicant_name: string; applicant_email: string; applicant_age: number }
         Returns: Json
