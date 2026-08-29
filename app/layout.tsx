@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./home.css";
 import "./onboarding.css";
 import "./status.css";
 import { ThemeProvider } from "@/components/theme-provider";
