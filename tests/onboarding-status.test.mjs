@@ -6,11 +6,15 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-test("requires Roblox only when the OAuth feature is enabled", async () => {
+test("keeps Roblox optional until OAuth and membership enforcement are enabled", async () => {
   const onboarding = await readFile(path.join(root, "app/onboarding/page.tsx"), "utf8");
 
-  assert.match(onboarding, /const robloxAvailable = process\.env\.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED !== "false";/);
-  assert.match(onboarding, /const identityReady = discordConnected && \(!robloxAvailable \|\| robloxConnected\);/);
+  assert.match(onboarding, /const robloxAvailable = process\.env\.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";/);
+  assert.match(onboarding, /const robloxRequired = membershipEnforced && robloxAvailable;/);
+  assert.match(onboarding, /const identityReady = discordConnected && \(!robloxRequired \|\| robloxConnected\);/);
+  assert.match(onboarding, /state=\{robloxConnected \? "connected" : robloxRequired \? "required" : "optional"\}/);
+  assert.match(onboarding, /brand="discord"/);
+  assert.match(onboarding, /brand="roblox"/);
   assert.match(onboarding, /robloxAvailable \? <OnboardingIdentityAction provider="custom:roblox"/);
 });
 

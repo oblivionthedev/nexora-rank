@@ -1,8 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import {
   ArrowRight,
-  Bot,
   Check,
   CircleDollarSign,
   Coffee,
@@ -75,10 +75,11 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const ownedRobloxGroups = robloxGroups.filter((group) => group.roleRank === 255);
   const membershipPolicy = policy as { enabled?: boolean; group_id?: string; grace_hours?: number } | null;
   const membershipEnforced = Boolean(membershipPolicy?.enabled);
-  const robloxAvailable = process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED !== "false";
-  // During provider review the policy remains disabled, so Discord-only testing
-  // stays available. Enabling the database policy also enables the Roblox step.
-  const identityReady = discordConnected && (!robloxAvailable || robloxConnected);
+  const robloxAvailable = process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
+  // Roblox remains optional while the live membership policy is disabled.
+  // Once approval is complete, enabling that policy restores the required gate.
+  const robloxRequired = membershipEnforced && robloxAvailable;
+  const identityReady = discordConnected && (!robloxRequired || robloxConnected);
   if (membership && params.manage !== "identities") redirect(identityReady ? "/dashboard" : "/onboarding?manage=identities");
   const profileReady = Boolean(profile?.first_name && profile?.last_name && profile?.contact_email);
   const planReady = profile?.plan_key === "free" && Boolean(profile.plan_selected_at);
@@ -126,14 +127,14 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <section className="setup-card">
               <div className="setup-icon"><LockKeyhole /></div>
               <span className="setup-kicker">Identity foundation</span>
-              <h2>{robloxAvailable ? "Connect both owner identities." : "Start with Discord."}</h2>
-              <p>{robloxAvailable ? "Discord powers server access while Roblox verifies the account and groups used for ranking." : "Discord is available while Roblox OAuth is temporarily disabled."}</p>
+              <h2>Connect Discord to continue.</h2>
+              <p>Discord powers server access. Roblox is optional for now and can be connected later when OAuth approval is ready.</p>
               <div className="provider-stack">
-                <ProviderStatus icon={Bot} name="Discord" description="Required for sign-in, server access, membership and role sync" state={discordConnected ? "connected" : "required"} username={providerMap.get("discord")?.display_name ?? providerMap.get("discord")?.username}>
+                <ProviderStatus brand="discord" name="Discord" description="Required for sign-in, server access, membership and role sync" state={discordConnected ? "connected" : "required"} username={providerMap.get("discord")?.display_name ?? providerMap.get("discord")?.username}>
                   {!discordConnected ? <OnboardingIdentityAction provider="discord" /> : null}
                 </ProviderStatus>
-                <ProviderStatus icon={Gamepad2} name="Roblox" description={robloxAvailable ? "Required for groups, ranking and in-game activity" : "Temporarily unavailable"} state={robloxConnected ? "connected" : robloxAvailable ? "required" : "pending"} username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}>
-                  {!robloxConnected ? (robloxAvailable ? <OnboardingIdentityAction provider="custom:roblox" /> : <span className="provider-availability">Temporarily unavailable</span>) : null}
+                <ProviderStatus brand="roblox" name="Roblox" description={robloxRequired ? "Required for groups, ranking and in-game activity" : "Optional for now — connect later when OAuth approval is ready"} state={robloxConnected ? "connected" : robloxRequired ? "required" : "optional"} username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}>
+                  {!robloxConnected ? (robloxAvailable ? <OnboardingIdentityAction provider="custom:roblox" /> : <span className="provider-availability">OAuth approval pending</span>) : null}
                 </ProviderStatus>
               </div>
               {identityReady && membership ? <Button asChild className="button-glow h-12 rounded-xl"><Link href="/dashboard">Return to dashboard <ArrowRight /></Link></Button> : null}
@@ -229,8 +230,8 @@ function SetupRailStep({ number, label, active, done }: { number: number; label:
   return <li className={active ? "active" : done ? "done" : ""}><span>{done ? <Check /> : number}</span><b>{label}</b></li>;
 }
 
-function ProviderStatus({ icon: Icon, name, description, state, username, children }: { icon: typeof Bot; name: string; description: string; state: "connected" | "required" | "pending"; username?: string | null; children?: React.ReactNode }) {
+function ProviderStatus({ brand, name, description, state, username, children }: { brand: "discord" | "roblox"; name: string; description: string; state: "connected" | "required" | "optional"; username?: string | null; children?: React.ReactNode }) {
   const connected = state === "connected";
-  const statusLabel = connected ? "Connected" : state === "required" ? "Required" : "Coming soon";
-  return <article className={state}><span className="provider-icon"><Icon /></span><div><div className="flex items-center gap-2"><b>{name}</b><span className={`provider-pill ${state}`}>{statusLabel}</span></div><p>{connected && username ? username : description}</p></div><div className="provider-action">{children ?? (connected ? <Check /> : null)}</div></article>;
+  const statusLabel = connected ? "Connected" : state === "required" ? "Required" : "Optional";
+  return <article className={`${state} ${brand}`}><span className={`provider-icon ${brand}`}><Image src={`/${brand}.svg`} alt="" width={22} height={22} /></span><div><div className="flex items-center gap-2"><b>{name}</b><span className={`provider-pill ${state}`}>{statusLabel}</span></div><p>{connected && username ? username : description}</p></div><div className="provider-action">{children ?? (connected ? <Check /> : null)}</div></article>;
 }
