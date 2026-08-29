@@ -7,7 +7,7 @@ import { getRobloxGroupDetails } from "@/lib/roblox-groups";
 import { listRobloxGroups } from "@/lib/roblox-membership";
 
 export type LinkCodeState={code?:string;expiresAt?:string;error?:string};
-async function context(publicId:string){const supabase=await createClient();const{data:{user}}=await supabase.auth.getUser();if(!user)redirect(`/login?next=/dashboard/${publicId}`);const{data,error}=await supabase.rpc("workspace_control_state",{target_public_id:publicId});if(error||!data)redirect("/dashboard");return{supabase,user,state:data as unknown as {workspace:{id:string;role:string;operational_status:string}}}}
+async function context(publicId:string){const supabase=await createClient();const{data:{user}}=await supabase.auth.getUser();if(!user)redirect(`/login?next=/dashboard/${publicId}`);const{data,error}=await supabase.rpc("workspace_control_state",{target_public_id:publicId});if(error||!data)redirect("/dashboard");return{supabase,user,state:data as unknown as {workspace:{id:string;role:string;operational_status:string;discord_guild_id:string|null}}}}
 
 export async function createDiscordCode(_state:LinkCodeState,formData:FormData):Promise<LinkCodeState>{const publicId=String(formData.get("public_id")||"");const{supabase,state}=await context(publicId);const{data,error}=await supabase.rpc("create_discord_link_code",{target_workspace_id:state.workspace.id});if(error)return{error:error.message.includes("suspended")?"Workspace connections are locked while restricted.":"Could not create a link code."};const result=data as {code?:string;expires_at?:string}|null;return result?.code?{code:result.code,expiresAt:result.expires_at}:{error:"Could not create a link code."}}
 
