@@ -21,12 +21,27 @@ test("configuration normalizes URLs and numeric port", () => {
 });
 
 test("configuration rejects missing private keys", () => {
-  assert.throws(() => loadConfig({ ...valid, DISCORD_TOKEN: "" }), /DISCORD_TOKEN/);
-  assert.throws(() => loadConfig({ ...valid, SUPABASE_SERVICE_ROLE_KEY: "" }), /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.throws(
+    () => loadConfig({ ...valid, DISCORD_TOKEN: "" }),
+    /DISCORD_TOKEN/,
+  );
+  assert.throws(
+    () => loadConfig({ ...valid, SUPABASE_SERVICE_ROLE_KEY: "" }),
+    /SUPABASE_SERVICE_ROLE_KEY/,
+  );
 });
 
 test("configuration ignores an invalid optional test server ID", () => {
-  const config = loadConfig({ ...valid, DISCORD_CLIENT_ID: "wrong-value", DISCORD_GUILD_ID: "your_test_server_id" });
+  const config = loadConfig({
+    ...valid,
+    DISCORD_CLIENT_ID: "wrong-value",
+    DISCORD_GUILD_ID: "your_test_server_id",
+  });
   assert.equal(config.discordClientId, "1542533178554585099");
   assert.equal(config.discordGuildId, null);
+});
+
+test("configuration pins the only authorization-code owner", () => {
+  const config = loadConfig(valid);
+  assert.equal(config.authorizationOwnerId, "1515743540259328202");
 });

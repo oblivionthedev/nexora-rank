@@ -35,7 +35,7 @@ const statusCopy: Record<string, { label: string; text: string }> = {
   },
 };
 
-export function BetaApplicationForm() {
+export function BetaApplicationForm({ betaEnabled }: { betaEnabled: boolean }) {
   const [applyState, applyAction, applying] = useActionState(
     submitBetaApplication,
     applyInitial,
@@ -55,7 +55,15 @@ export function BetaApplicationForm() {
           Applications are reviewed personally. Use an email address where the
           Nexora team can contact you.
         </p>
-        {applyState.success && applyState.code ? (
+        {!betaEnabled ? (
+          <div className="beta-data-notice" role="status">
+            <b>Applications are currently closed</b>
+            <p>
+              Nexora is not accepting new Beta applications right now. Existing
+              applicants can still check their selection status below.
+            </p>
+          </div>
+        ) : applyState.success && applyState.code ? (
           <div className="beta-confirmation">
             <span>
               <Check />

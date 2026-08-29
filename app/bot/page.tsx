@@ -24,7 +24,7 @@ const inviteUrl =
 export const metadata: Metadata = {
   title: "Discord Bot",
   description:
-    "Invite Nexora to connect Discord operations, support, ranking, activity, applications, and workspace controls.",
+    "Invite Nexora for Discord operations, ranking, activity, applications, and controlled workspace actions.",
 };
 const commands: Array<{ name: string; detail: string; icon: typeof Bot }> = [
   {
@@ -93,9 +93,9 @@ export default function BotPage() {
               <span className="text-white/34">Every operation.</span>
             </h1>
             <p className="mt-8 max-w-2xl text-balance text-base leading-8 text-white/52 sm:text-lg">
-              Nexora brings workspace commands, support conversations, rankings,
-              activity checks, applications, and audit history into the Discord
-              server your team already uses.
+              Nexora brings workspace commands, rankings, activity checks,
+              applications, and audit history into the Discord server your team
+              already uses. Support runs through its own focused companion bot.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <a
@@ -157,8 +157,8 @@ export default function BotPage() {
                     What it does
                   </p>
                   <p className="mt-3 text-sm leading-6 text-white/64">
-                    Community operations, member connections, support, activity,
-                    and controlled staff actions.
+                    Community operations, member connections, activity, and
+                    controlled staff actions.
                   </p>
                 </div>
                 <div className="mt-5 rounded-xl border border-white/[.07] bg-white/[.025] p-4">
@@ -221,10 +221,10 @@ export default function BotPage() {
               Support starts with a DM.
             </h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-white/44">
-              Members message Nexora privately. The bot opens a protected
-              conversation inside the Nexora Staff server, relays replies back
-              to the member, preserves attachments, and lets authorized agents
-              close the ticket.
+              Nexora Support is a separate bot and service. Members contact it
+              privately from a Support panel; it opens an organized ticket,
+              relays agent replies, preserves attachments, and archives a
+              transcript when the conversation closes.
             </p>
           </div>
           <div className="bot-permission-list">
@@ -241,7 +241,7 @@ export default function BotPage() {
             <SupportRow
               icon={KeyRound}
               title="Controlled access"
-              text="Only the server owner and configured Nexora Support role can see the inbox."
+              text="Only people with the configured Nexora Support role can see and manage tickets."
             />
           </div>
         </div>

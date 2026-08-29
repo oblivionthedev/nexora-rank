@@ -13,6 +13,8 @@ The official Node.js Discord bot for Nexora Rank. It uses slash commands, the ex
 - `/quota` — configured workspace quotas.
 - `/applications list`, `/applications decide` — application review.
 - `/audit` — filtered workspace, Roblox, bot, and in-game logs.
+- `/login create` — owner-only Staff authorization code delivered privately by DM.
+- `/toggle beta` — owner-only live Beta application switch.
 
 All replies are private. Every command reads the workspace status before doing work. A suspended or banned workspace cannot use operational bot commands.
 
@@ -77,6 +79,9 @@ Hoster settings:
 - Workspace membership and Nexora role are checked server-side for every operation.
 - Suspended and banned workspaces are blocked before mutations.
 - Important bot operations write to `workspace_logs` with source `discord`.
+- Authorization and Beta controls are available only to Discord user `1515743540259328202` inside the private Staff server.
+
+Nexora Support now runs from the separate `Nexora-Support` folder with its own Discord application, token, and host.
 
 ## Ranking execution
 

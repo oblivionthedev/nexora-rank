@@ -996,63 +996,408 @@ export type Database = {
         ]
       }
       workspace_logs: {
-        Row: { id: number; workspace_id: string; source: string; severity: string; event_type: string; summary: string; actor_user_id: string | null; metadata: Json; created_at: string }
-        Insert: { id?: never; workspace_id: string; source: string; severity?: string; event_type: string; summary: string; actor_user_id?: string | null; metadata?: Json; created_at?: string }
-        Update: { id?: never; workspace_id?: string; source?: string; severity?: string; event_type?: string; summary?: string; actor_user_id?: string | null; metadata?: Json; created_at?: string }
+        Row: {
+          id: number
+          workspace_id: string
+          source: string
+          severity: string
+          event_type: string
+          summary: string
+          actor_user_id: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: never
+          workspace_id: string
+          source: string
+          severity?: string
+          event_type: string
+          summary: string
+          actor_user_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: never
+          workspace_id?: string
+          source?: string
+          severity?: string
+          event_type?: string
+          summary?: string
+          actor_user_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
         Relationships: []
       }
       workspace_roblox_groups: {
-        Row: { id: string; workspace_id: string; group_id: string; group_name: string; purpose: string; is_primary: boolean; created_at: string }
-        Insert: { id?: string; workspace_id: string; group_id: string; group_name: string; purpose?: string; is_primary?: boolean; created_at?: string }
-        Update: { id?: string; workspace_id?: string; group_id?: string; group_name?: string; purpose?: string; is_primary?: boolean; created_at?: string }
+        Row: {
+          id: string
+          workspace_id: string
+          group_id: string
+          group_name: string
+          purpose: string
+          is_primary: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          group_id: string
+          group_name: string
+          purpose?: string
+          is_primary?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          group_id?: string
+          group_name?: string
+          purpose?: string
+          is_primary?: boolean
+          created_at?: string
+        }
         Relationships: []
       }
       departments: {
-        Row: { id: string; workspace_id: string; name: string; description: string | null; discord_role_id: string | null; roblox_group_id: string | null; active: boolean; created_at: string; updated_at: string }
-        Insert: { id?: string; workspace_id: string; name: string; description?: string | null; discord_role_id?: string | null; roblox_group_id?: string | null; active?: boolean; created_at?: string; updated_at?: string }
-        Update: { id?: string; workspace_id?: string; name?: string; description?: string | null; discord_role_id?: string | null; roblox_group_id?: string | null; active?: boolean; created_at?: string; updated_at?: string }
+        Row: {
+          id: string
+          workspace_id: string
+          name: string
+          description: string | null
+          discord_role_id: string | null
+          roblox_group_id: string | null
+          active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          name: string
+          description?: string | null
+          discord_role_id?: string | null
+          roblox_group_id?: string | null
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          name?: string
+          description?: string | null
+          discord_role_id?: string | null
+          roblox_group_id?: string | null
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
         Relationships: []
       }
       community_sessions: {
-        Row: { id: string; workspace_id: string; department_id: string | null; session_type: string; title: string; status: string; starts_at: string; ends_at: string | null; host_user_id: string | null; discord_channel_id: string | null; notes: string | null; created_at: string; updated_at: string }
-        Insert: { id?: string; workspace_id: string; department_id?: string | null; session_type: string; title: string; status?: string; starts_at: string; ends_at?: string | null; host_user_id?: string | null; discord_channel_id?: string | null; notes?: string | null; created_at?: string; updated_at?: string }
-        Update: { id?: string; workspace_id?: string; department_id?: string | null; session_type?: string; title?: string; status?: string; starts_at?: string; ends_at?: string | null; host_user_id?: string | null; discord_channel_id?: string | null; notes?: string | null; created_at?: string; updated_at?: string }
+        Row: {
+          id: string
+          workspace_id: string
+          department_id: string | null
+          session_type: string
+          title: string
+          status: string
+          starts_at: string
+          ends_at: string | null
+          host_user_id: string | null
+          discord_channel_id: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          department_id?: string | null
+          session_type: string
+          title: string
+          status?: string
+          starts_at: string
+          ends_at?: string | null
+          host_user_id?: string | null
+          discord_channel_id?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          department_id?: string | null
+          session_type?: string
+          title?: string
+          status?: string
+          starts_at?: string
+          ends_at?: string | null
+          host_user_id?: string | null
+          discord_channel_id?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
         Relationships: []
       }
       leave_requests: {
-        Row: { id: string; workspace_id: string; member_user_id: string | null; member_name: string; starts_on: string; ends_on: string; reason: string; status: string; reviewed_by: string | null; reviewed_at: string | null; created_at: string }
-        Insert: { id?: string; workspace_id: string; member_user_id?: string | null; member_name: string; starts_on: string; ends_on: string; reason: string; status?: string; reviewed_by?: string | null; reviewed_at?: string | null; created_at?: string }
-        Update: { id?: string; workspace_id?: string; member_user_id?: string | null; member_name?: string; starts_on?: string; ends_on?: string; reason?: string; status?: string; reviewed_by?: string | null; reviewed_at?: string | null; created_at?: string }
+        Row: {
+          id: string
+          workspace_id: string
+          member_user_id: string | null
+          member_name: string
+          starts_on: string
+          ends_on: string
+          reason: string
+          status: string
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          member_user_id?: string | null
+          member_name: string
+          starts_on: string
+          ends_on: string
+          reason: string
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          member_user_id?: string | null
+          member_name?: string
+          starts_on?: string
+          ends_on?: string
+          reason?: string
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_at?: string
+        }
         Relationships: []
       }
       workspace_tasks: {
-        Row: { id: string; workspace_id: string; department_id: string | null; title: string; description: string | null; assigned_to: string | null; status: string; priority: string; due_at: string | null; created_by: string | null; created_at: string; updated_at: string }
-        Insert: { id?: string; workspace_id: string; department_id?: string | null; title: string; description?: string | null; assigned_to?: string | null; status?: string; priority?: string; due_at?: string | null; created_by?: string | null; created_at?: string; updated_at?: string }
-        Update: { id?: string; workspace_id?: string; department_id?: string | null; title?: string; description?: string | null; assigned_to?: string | null; status?: string; priority?: string; due_at?: string | null; created_by?: string | null; created_at?: string; updated_at?: string }
+        Row: {
+          id: string
+          workspace_id: string
+          department_id: string | null
+          title: string
+          description: string | null
+          assigned_to: string | null
+          status: string
+          priority: string
+          due_at: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          department_id?: string | null
+          title: string
+          description?: string | null
+          assigned_to?: string | null
+          status?: string
+          priority?: string
+          due_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          department_id?: string | null
+          title?: string
+          description?: string | null
+          assigned_to?: string | null
+          status?: string
+          priority?: string
+          due_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
         Relationships: []
       }
       knowledge_entries: {
-        Row: { id: string; workspace_id: string; entry_type: string; title: string; content: string; visibility: string; created_by: string | null; created_at: string; updated_at: string }
-        Insert: { id?: string; workspace_id: string; entry_type?: string; title: string; content: string; visibility?: string; created_by?: string | null; created_at?: string; updated_at?: string }
-        Update: { id?: string; workspace_id?: string; entry_type?: string; title?: string; content?: string; visibility?: string; created_by?: string | null; created_at?: string; updated_at?: string }
+        Row: {
+          id: string
+          workspace_id: string
+          entry_type: string
+          title: string
+          content: string
+          visibility: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          entry_type?: string
+          title: string
+          content: string
+          visibility?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          entry_type?: string
+          title?: string
+          content?: string
+          visibility?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
         Relationships: []
       }
       announcement_templates: {
-        Row: { id: string; workspace_id: string; name: string; announcement_type: string; title_template: string; body_template: string; discord_channel_id: string | null; enabled: boolean; created_by: string | null; created_at: string; updated_at: string }
-        Insert: { id?: string; workspace_id: string; name: string; announcement_type: string; title_template: string; body_template: string; discord_channel_id?: string | null; enabled?: boolean; created_by?: string | null; created_at?: string; updated_at?: string }
-        Update: { id?: string; workspace_id?: string; name?: string; announcement_type?: string; title_template?: string; body_template?: string; discord_channel_id?: string | null; enabled?: boolean; created_by?: string | null; created_at?: string; updated_at?: string }
+        Row: {
+          id: string
+          workspace_id: string
+          name: string
+          announcement_type: string
+          title_template: string
+          body_template: string
+          discord_channel_id: string | null
+          enabled: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          name: string
+          announcement_type: string
+          title_template: string
+          body_template: string
+          discord_channel_id?: string | null
+          enabled?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          name?: string
+          announcement_type?: string
+          title_template?: string
+          body_template?: string
+          discord_channel_id?: string | null
+          enabled?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
         Relationships: []
       }
       community_snapshots: {
-        Row: { id: number; workspace_id: string; roblox_group_id: string | null; member_count: number; online_count: number | null; recorded_at: string }
-        Insert: { id?: never; workspace_id: string; roblox_group_id?: string | null; member_count: number; online_count?: number | null; recorded_at?: string }
-        Update: { id?: never; workspace_id?: string; roblox_group_id?: string | null; member_count?: number; online_count?: number | null; recorded_at?: string }
+        Row: {
+          id: number
+          workspace_id: string
+          roblox_group_id: string | null
+          member_count: number
+          online_count: number | null
+          recorded_at: string
+        }
+        Insert: {
+          id?: never
+          workspace_id: string
+          roblox_group_id?: string | null
+          member_count: number
+          online_count?: number | null
+          recorded_at?: string
+        }
+        Update: {
+          id?: never
+          workspace_id?: string
+          roblox_group_id?: string | null
+          member_count?: number
+          online_count?: number | null
+          recorded_at?: string
+        }
         Relationships: []
       }
       workspace_settings: {
-        Row: { workspace_id: string; allowed_roblox_rank_min: number; allowed_roblox_role_ids: string[]; theme_mode: string; theme_color_start: string; theme_color_end: string; welcome_enabled: boolean; welcome_channel_id: string | null; welcome_message: string; goodbye_enabled: boolean; goodbye_channel_id: string | null; goodbye_message: string; nickname_sync_enabled: boolean; verification_dm_enabled: boolean; role_sync_enabled: boolean; member_count_channel_id: string | null; updated_by: string | null; updated_at: string }
-        Insert: { workspace_id: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; theme_mode?: string; theme_color_start?: string; theme_color_end?: string; welcome_enabled?: boolean; welcome_channel_id?: string | null; welcome_message?: string; goodbye_enabled?: boolean; goodbye_channel_id?: string | null; goodbye_message?: string; nickname_sync_enabled?: boolean; verification_dm_enabled?: boolean; role_sync_enabled?: boolean; member_count_channel_id?: string | null; updated_by?: string | null; updated_at?: string }
-        Update: { workspace_id?: string; allowed_roblox_rank_min?: number; allowed_roblox_role_ids?: string[]; theme_mode?: string; theme_color_start?: string; theme_color_end?: string; welcome_enabled?: boolean; welcome_channel_id?: string | null; welcome_message?: string; goodbye_enabled?: boolean; goodbye_channel_id?: string | null; goodbye_message?: string; nickname_sync_enabled?: boolean; verification_dm_enabled?: boolean; role_sync_enabled?: boolean; member_count_channel_id?: string | null; updated_by?: string | null; updated_at?: string }
+        Row: {
+          workspace_id: string
+          allowed_roblox_rank_min: number
+          allowed_roblox_role_ids: string[]
+          theme_mode: string
+          theme_color_start: string
+          theme_color_end: string
+          welcome_enabled: boolean
+          welcome_channel_id: string | null
+          welcome_message: string
+          goodbye_enabled: boolean
+          goodbye_channel_id: string | null
+          goodbye_message: string
+          nickname_sync_enabled: boolean
+          verification_dm_enabled: boolean
+          role_sync_enabled: boolean
+          member_count_channel_id: string | null
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          workspace_id: string
+          allowed_roblox_rank_min?: number
+          allowed_roblox_role_ids?: string[]
+          theme_mode?: string
+          theme_color_start?: string
+          theme_color_end?: string
+          welcome_enabled?: boolean
+          welcome_channel_id?: string | null
+          welcome_message?: string
+          goodbye_enabled?: boolean
+          goodbye_channel_id?: string | null
+          goodbye_message?: string
+          nickname_sync_enabled?: boolean
+          verification_dm_enabled?: boolean
+          role_sync_enabled?: boolean
+          member_count_channel_id?: string | null
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          workspace_id?: string
+          allowed_roblox_rank_min?: number
+          allowed_roblox_role_ids?: string[]
+          theme_mode?: string
+          theme_color_start?: string
+          theme_color_end?: string
+          welcome_enabled?: boolean
+          welcome_channel_id?: string | null
+          welcome_message?: string
+          goodbye_enabled?: boolean
+          goodbye_channel_id?: string | null
+          goodbye_message?: string
+          nickname_sync_enabled?: boolean
+          verification_dm_enabled?: boolean
+          role_sync_enabled?: boolean
+          member_count_channel_id?: string | null
+          updated_by?: string | null
+          updated_at?: string
+        }
         Relationships: []
       }
       workspaces: {
@@ -1150,11 +1495,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_platform_settings: { Args: never; Returns: Json }
+      bot_set_beta_enabled: {
+        Args: { requested_enabled: boolean; actor_discord_id: string }
+        Returns: Json
+      }
       redeem_staff_access_code: { Args: { raw_code: string }; Returns: Json }
       revoke_current_staff_session: { Args: never; Returns: boolean }
-      bot_create_staff_access_code: { Args: { raw_code: string; guild_id: string; creator_discord_id: string; requested_role?: string }; Returns: Json }
+      bot_create_staff_access_code: {
+        Args: {
+          raw_code: string
+          guild_id: string
+          creator_discord_id: string
+          requested_role?: string
+        }
+        Returns: Json
+      }
       submit_beta_application: {
-        Args: { applicant_name: string; applicant_email: string; applicant_age: number }
+        Args: {
+          applicant_name: string
+          applicant_email: string
+          applicant_age: number
+        }
         Returns: Json
       }
       check_beta_application: {
@@ -1162,7 +1524,12 @@ export type Database = {
         Returns: Json
       }
       record_beta_notification: {
-        Args: { application_id: string; lookup_code: string; delivered: boolean; message_id?: string }
+        Args: {
+          application_id: string
+          lookup_code: string
+          delivered: boolean
+          message_id?: string
+        }
         Returns: boolean
       }
       staff_beta_applications: { Args: never; Returns: Json }
@@ -1195,21 +1562,111 @@ export type Database = {
         Returns: boolean
       }
       staff_find_workspaces: { Args: { group_query: string }; Returns: Json }
-      workspace_control_state: { Args: { target_public_id: string }; Returns: Json }
-      update_workspace_profile: { Args: { target_workspace_id: string; requested_name: string }; Returns: boolean }
-      invite_workspace_member: { Args: { target_workspace_id: string; target_email: string; requested_role: string }; Returns: Json }
-      manage_workspace_member: { Args: { target_workspace_id: string; target_user_id: string; requested_role: string; requested_action: string }; Returns: boolean }
-      transfer_workspace_ownership: { Args: { target_workspace_id: string; target_user_id: string }; Returns: boolean }
-      set_workspace_lifecycle: { Args: { target_workspace_id: string; requested_action: string; confirmation_name: string }; Returns: Json }
-      disconnect_workspace_integration: { Args: { target_workspace_id: string; target_provider: string }; Returns: boolean }
-      save_community_messaging: { Args: { target_workspace_id: string; requested_welcome_enabled: boolean; requested_welcome_channel_id: string; requested_welcome_message: string; requested_goodbye_enabled: boolean; requested_goodbye_channel_id: string; requested_goodbye_message: string; requested_nickname_sync_enabled: boolean; requested_verification_dm_enabled: boolean; requested_role_sync_enabled: boolean; requested_member_count_channel_id: string }; Returns: boolean }
-      save_workspace_settings: { Args: { target_workspace_id: string; rank_min: number; role_ids: string[] }; Returns: boolean }
-      save_workspace_theme: { Args: { target_workspace_id: string; requested_theme_mode: string; requested_color_start: string; requested_color_end: string }; Returns: boolean }
-      set_workspace_roblox_group: { Args: { target_workspace_id: string; group_id: string; group_name: string; icon_url: string; oauth_verified: boolean }; Returns: boolean }
-      create_discord_link_code: { Args: { target_workspace_id: string }; Returns: Json }
-      claim_discord_link_code: { Args: { raw_code: string; guild_id: string; guild_name: string; discord_user_id: string }; Returns: Json }
-      authenticate_workspace_api_key: { Args: { raw_key: string }; Returns: Json }
-      release_expired_staff_suspensions: { Args: { candidate_secret: string }; Returns: number }
+      workspace_control_state: {
+        Args: { target_public_id: string }
+        Returns: Json
+      }
+      update_workspace_profile: {
+        Args: { target_workspace_id: string; requested_name: string }
+        Returns: boolean
+      }
+      invite_workspace_member: {
+        Args: {
+          target_workspace_id: string
+          target_email: string
+          requested_role: string
+        }
+        Returns: Json
+      }
+      manage_workspace_member: {
+        Args: {
+          target_workspace_id: string
+          target_user_id: string
+          requested_role: string
+          requested_action: string
+        }
+        Returns: boolean
+      }
+      transfer_workspace_ownership: {
+        Args: { target_workspace_id: string; target_user_id: string }
+        Returns: boolean
+      }
+      set_workspace_lifecycle: {
+        Args: {
+          target_workspace_id: string
+          requested_action: string
+          confirmation_name: string
+        }
+        Returns: Json
+      }
+      disconnect_workspace_integration: {
+        Args: { target_workspace_id: string; target_provider: string }
+        Returns: boolean
+      }
+      save_community_messaging: {
+        Args: {
+          target_workspace_id: string
+          requested_welcome_enabled: boolean
+          requested_welcome_channel_id: string
+          requested_welcome_message: string
+          requested_goodbye_enabled: boolean
+          requested_goodbye_channel_id: string
+          requested_goodbye_message: string
+          requested_nickname_sync_enabled: boolean
+          requested_verification_dm_enabled: boolean
+          requested_role_sync_enabled: boolean
+          requested_member_count_channel_id: string
+        }
+        Returns: boolean
+      }
+      save_workspace_settings: {
+        Args: {
+          target_workspace_id: string
+          rank_min: number
+          role_ids: string[]
+        }
+        Returns: boolean
+      }
+      save_workspace_theme: {
+        Args: {
+          target_workspace_id: string
+          requested_theme_mode: string
+          requested_color_start: string
+          requested_color_end: string
+        }
+        Returns: boolean
+      }
+      set_workspace_roblox_group: {
+        Args: {
+          target_workspace_id: string
+          group_id: string
+          group_name: string
+          icon_url: string
+          oauth_verified: boolean
+        }
+        Returns: boolean
+      }
+      create_discord_link_code: {
+        Args: { target_workspace_id: string }
+        Returns: Json
+      }
+      claim_discord_link_code: {
+        Args: {
+          raw_code: string
+          guild_id: string
+          guild_name: string
+          discord_user_id: string
+        }
+        Returns: Json
+      }
+      authenticate_workspace_api_key: {
+        Args: { raw_key: string }
+        Returns: Json
+      }
+      release_expired_staff_suspensions: {
+        Args: { candidate_secret: string }
+        Returns: number
+      }
       claim_free_membership_checks: {
         Args: { batch_size?: number; candidate_secret: string }
         Returns: {
@@ -1274,7 +1731,11 @@ export type Database = {
         Returns: undefined
       }
       select_onboarding_roblox_group: {
-        Args: { p_group_id: string; p_group_name: string; p_group_role: string }
+        Args: {
+          p_group_id: string
+          p_group_name: string
+          p_group_role: string
+        }
         Returns: undefined
       }
       set_roblox_link_deferred: {
@@ -1301,12 +1762,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1328,13 +1789,12 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1353,13 +1813,12 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1378,13 +1837,12 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1397,11 +1855,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

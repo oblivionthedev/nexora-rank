@@ -59,7 +59,7 @@ export default async function StaffLoginPage({
               <div>
                 <b>Generate a private code</b>
                 <small>
-                  The Nexora Staff server owner runs <code>/staff-code</code>.
+                  The Nexora owner runs <code>/login create</code> in the private Staff server.
                   Codes expire after ten minutes.
                 </small>
               </div>

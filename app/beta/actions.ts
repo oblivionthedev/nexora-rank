@@ -2,8 +2,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { sendDiscordChannelMessage } from "@/lib/discord-messages";
+import { NEXORA_LOG_CHANNELS, nexoraLogBrand } from "@/lib/operational-logs";
 
-const BETA_CHANNEL_ID = "1543327164118728704";
+const BETA_CHANNEL_ID = NEXORA_LOG_CHANNELS.betaSubmissions;
 
 export type BetaApplyState = {
   success?: boolean;
@@ -65,9 +66,11 @@ export async function submitBetaApplication(
   if (!result.ok)
     return {
       error:
-        result.error === "already_registered"
-          ? "That email already has a Beta application. Use your saved code to check it below."
-          : "Check your information and try again.",
+        result.error === "beta_closed"
+          ? "Beta applications are currently closed. You can still check an existing application below."
+          : result.error === "already_registered"
+            ? "That email already has a Beta application. Use your saved code to check it below."
+            : "Check your information and try again.",
     };
   if (!result.application_id || !result.lookup_code)
     return {
@@ -84,13 +87,11 @@ export async function submitBetaApplication(
       title: "New Nexora Beta application",
       description: `**Name**\n${name}\n\n**Email address**\n${email}\n\n**Age**\n${age}`,
       color: 0x000000,
-      author: {
-        name: "Nexora Beta",
-        icon_url: "https://www.nexorarank.tech/nexora-discord-logo.png",
-      },
+      author: nexoraLogBrand("Nexora Beta"),
       footer: {
         text: `Application ${result.application_id.slice(0, 8)} · Review in Nexora Staff`,
       },
+      timestamp: new Date().toISOString(),
     },
   });
   await supabase.rpc("record_beta_notification", {

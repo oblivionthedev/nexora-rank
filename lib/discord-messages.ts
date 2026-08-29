@@ -20,6 +20,8 @@ export type DiscordEmbed = {
   author?: { name: string; icon_url?: string };
   footer?: { text: string };
   thumbnail?: { url: string };
+  fields?: Array<{ name: string; value: string; inline?: boolean }>;
+  timestamp?: string;
 };
 
 export async function sendDiscordChannelMessage({
@@ -38,7 +40,10 @@ export async function sendDiscordChannelMessage({
   embed?: DiscordEmbed;
   botNickname?: string;
   fetchImpl?: typeof fetch;
-}): Promise<{ ok: true; messageId: string | null } | { ok: false; error: DiscordMessageError }> {
+}): Promise<
+  | { ok: true; messageId: string | null }
+  | { ok: false; error: DiscordMessageError }
+> {
   if (!token) return { ok: false, error: "bot_not_configured" };
 
   const headers = { Authorization: `Bot ${token}` };
@@ -53,50 +58,65 @@ export async function sendDiscordChannelMessage({
     return { ok: false, error: "discord_unavailable" };
   }
 
-  if (channelResponse.status === 404) return { ok: false, error: "discord_channel_not_found" };
-  if (channelResponse.status === 401 || channelResponse.status === 403) return { ok: false, error: "discord_permission_missing" };
+  if (channelResponse.status === 404)
+    return { ok: false, error: "discord_channel_not_found" };
+  if (channelResponse.status === 401 || channelResponse.status === 403)
+    return { ok: false, error: "discord_permission_missing" };
   if (!channelResponse.ok) return { ok: false, error: "discord_unavailable" };
 
-  const channel = await channelResponse.json() as DiscordChannel;
-  if (guildId && channel.guild_id !== guildId) return { ok: false, error: "discord_channel_wrong_server" };
-  if (!MESSAGE_CHANNEL_TYPES.has(channel.type ?? -1)) return { ok: false, error: "discord_channel_unsupported" };
+  const channel = (await channelResponse.json()) as DiscordChannel;
+  if (guildId && channel.guild_id !== guildId)
+    return { ok: false, error: "discord_channel_wrong_server" };
+  if (!MESSAGE_CHANNEL_TYPES.has(channel.type ?? -1))
+    return { ok: false, error: "discord_channel_unsupported" };
 
   if (botNickname && guildId) {
     let nicknameResponse: Response;
     try {
-      nicknameResponse = await fetchImpl(`${DISCORD_API}/guilds/${guildId}/members/@me`, {
-        method: "PATCH",
-        headers: { ...headers, "content-type": "application/json" },
-        body: JSON.stringify({ nick: botNickname }),
-        cache: "no-store",
-        signal: AbortSignal.timeout(10_000),
-      });
+      nicknameResponse = await fetchImpl(
+        `${DISCORD_API}/guilds/${guildId}/members/@me`,
+        {
+          method: "PATCH",
+          headers: { ...headers, "content-type": "application/json" },
+          body: JSON.stringify({ nick: botNickname }),
+          cache: "no-store",
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
     } catch {
       return { ok: false, error: "discord_unavailable" };
     }
-    if (nicknameResponse.status === 401 || nicknameResponse.status === 403) return { ok: false, error: "discord_branding_permission_missing" };
-    if (!nicknameResponse.ok) return { ok: false, error: "discord_send_failed" };
+    if (nicknameResponse.status === 401 || nicknameResponse.status === 403)
+      return { ok: false, error: "discord_branding_permission_missing" };
+    if (!nicknameResponse.ok)
+      return { ok: false, error: "discord_send_failed" };
   }
 
   let messageResponse: Response;
   try {
-    messageResponse = await fetchImpl(`${DISCORD_API}/channels/${channelId}/messages`, {
-      method: "POST",
-      headers: { ...headers, "content-type": "application/json" },
-      body: JSON.stringify({
-        content: embed ? undefined : content,
-        embeds: embed ? [embed] : undefined,
-        allowed_mentions: { parse: [] },
-      }),
-      cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
-    });
+    messageResponse = await fetchImpl(
+      `${DISCORD_API}/channels/${channelId}/messages`,
+      {
+        method: "POST",
+        headers: { ...headers, "content-type": "application/json" },
+        body: JSON.stringify({
+          content: embed ? undefined : content,
+          embeds: embed ? [embed] : undefined,
+          allowed_mentions: { parse: [] },
+        }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
   } catch {
     return { ok: false, error: "discord_unavailable" };
   }
 
-  if (messageResponse.status === 401 || messageResponse.status === 403) return { ok: false, error: "discord_permission_missing" };
+  if (messageResponse.status === 401 || messageResponse.status === 403)
+    return { ok: false, error: "discord_permission_missing" };
   if (!messageResponse.ok) return { ok: false, error: "discord_send_failed" };
-  const message = await messageResponse.json().catch(() => null) as DiscordMessage | null;
+  const message = (await messageResponse
+    .json()
+    .catch(() => null)) as DiscordMessage | null;
   return { ok: true, messageId: message?.id ?? null };
 }

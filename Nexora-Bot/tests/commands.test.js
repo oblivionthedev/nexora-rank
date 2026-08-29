@@ -12,7 +12,17 @@ test("all command names are unique and valid", () => {
 test("commands serialize to valid guild-only definitions", () => {
   for (const command of commands) {
     const definition = command.data.toJSON();
-    assert.ok(definition.description.length >= 1 && definition.description.length <= 100);
+    assert.ok(
+      definition.description.length >= 1 &&
+        definition.description.length <= 100,
+    );
     assert.equal(definition.dm_permission, false);
   }
+});
+
+test("private platform commands are login and toggle", () => {
+  const privateNames = commands
+    .filter((command) => command.staffOnly)
+    .map((command) => command.data.name);
+  assert.deepEqual(privateNames, ["login", "toggle"]);
 });

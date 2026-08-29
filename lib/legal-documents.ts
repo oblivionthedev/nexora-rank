@@ -257,7 +257,7 @@ export const legalDocuments: LegalDocument[] = [
       {
         heading: "11. Discord support conversations",
         paragraphs: [
-          "When you DM the Nexora bot for support, the message content, attachments, Discord account ID, display name, avatar, timestamps, and staff replies are relayed to a protected ticket channel in the private Nexora Staff server. Authorized support agents can view and answer the conversation. Closed channels may be removed from Discord, while limited security or audit records may remain where necessary.",
+          "When you DM the separate Nexora Support bot, the message content, attachments, Discord account ID, display name, avatar, timestamps, and staff replies are relayed to a protected ticket channel in the private Nexora Staff server. Authorized support agents can view and answer the conversation. When a ticket closes, Nexora creates an HTML transcript in a restricted transcript archive before removing the live channel. Transcripts and limited security records are retained only as reasonably needed for support continuity, safety, disputes, and legal obligations.",
         ],
       },
       {
