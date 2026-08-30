@@ -48,8 +48,8 @@ export default async function WorkspaceOverview({
         .eq("user_id", user.id),
     ]);
   const profile =
-    accountLinks?.find((link) => link.provider === "roblox") ||
-    accountLinks?.find((link) => link.provider === "discord");
+    accountLinks?.find((link) => link.provider === "discord") ||
+    accountLinks?.find((link) => link.provider === "roblox");
   const welcomeName =
     profile?.display_name ||
     profile?.username ||
