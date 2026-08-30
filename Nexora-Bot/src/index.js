@@ -15,6 +15,7 @@ import { startHealthServer } from "./lib/health-server.js";
 import { createLogger } from "./lib/logger.js";
 import { colors, embed } from "./lib/response.js";
 import { createNexoraService } from "./services/nexora.js";
+import { VERIFY_BUTTON_ID } from "./commands/verifypanel.js";
 
 const config = loadConfig();
 const logger = createLogger(config.logLevel);
@@ -63,7 +64,7 @@ async function registerCommands(guildId = config.discordGuildId) {
         config.discordClientId,
         config.staffGuildId,
       ),
-      { body: staffBody },
+      { body: [...publicBody, ...staffBody] },
     );
     logger.info("Private Staff commands registered", {
       count: staffBody.length,
@@ -94,6 +95,35 @@ client.on(Events.GuildCreate, (guild) =>
 );
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (interaction.isButton() && interaction.customId === VERIFY_BUTTON_ID) {
+    try {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      if (interaction.guildId !== config.staffGuildId)
+        throw new UserError("This verification button only works in the official Nexora server.", "official_server_required");
+      const identity = await nexora.getDiscordIdentity(interaction.user.id);
+      if (!identity) {
+        await interaction.editReply({
+          embeds: [embed("Connect Discord first", `Sign in at [Nexora](${config.siteUrl}/login?next=/dashboard), then return and press **Verify with Nexora** again.`, colors.warning)],
+        });
+        return;
+      }
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+      await member.roles.add(config.verifiedRoleId, "Nexora identity verified");
+      await interaction.editReply({
+        embeds: [embed("You are verified", `Welcome, **${identity.display_name || identity.username || interaction.user.displayName}**. Your official Nexora Verified role is now active.`, colors.success)],
+      });
+    } catch (error) {
+      logger.error("Verification button failed", { userId: interaction.user.id, error: error?.stack || String(error) });
+      const message = error instanceof UserError
+        ? error.message
+        : "Nexora could not assign the Verified role. Make sure the bot has Manage Roles and is above the Verified role.";
+      if (interaction.deferred || interaction.replied)
+        await interaction.editReply({ embeds: [embed("Verification unavailable", message, colors.danger)] }).catch(() => undefined);
+      else
+        await interaction.reply({ embeds: [embed("Verification unavailable", message, colors.danger)], flags: MessageFlags.Ephemeral }).catch(() => undefined);
+    }
+    return;
+  }
   if (interaction.isAutocomplete()) {
     const command = commandMap.get(interaction.commandName);
     if (!command?.autocomplete) return;
@@ -123,8 +153,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   try {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     await command.execute(interaction, { config, nexora, logger });
     logger.info("Command completed", {
       command: interaction.commandName,
@@ -147,7 +177,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         : "Nexora could not complete that request. The error was logged.",
       isUserError ? colors.warning : colors.danger,
     );
-    await interaction.editReply({ embeds: [response] }).catch(() => undefined);
+    if (interaction.deferred || interaction.replied)
+      await interaction.editReply({ embeds: [response] }).catch(() => undefined);
+    else
+      await interaction.reply({ embeds: [response], flags: MessageFlags.Ephemeral }).catch(() => undefined);
   }
 });
 

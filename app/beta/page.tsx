@@ -23,7 +23,18 @@ export const dynamic = "force-dynamic";
 
 export default async function BetaPage() {
   const supabase = await createClient();
-  const { data } = await supabase.rpc("get_public_platform_settings");
+  const [{ data }, { data: auth }] = await Promise.all([
+    supabase.rpc("get_public_platform_settings"),
+    supabase.auth.getUser(),
+  ]);
+  const { data: discordLink } = auth.user
+    ? await supabase
+        .from("account_links")
+        .select("display_name,username")
+        .eq("user_id", auth.user.id)
+        .eq("provider", "discord")
+        .maybeSingle()
+    : { data: null };
   const betaEnabled = Boolean(
     data &&
     typeof data === "object" &&
@@ -125,7 +136,12 @@ export default async function BetaPage() {
             </li>
           </ul>
         </div>
-        <BetaApplicationForm betaEnabled={betaEnabled} />
+        <BetaApplicationForm
+          betaEnabled={betaEnabled}
+          discordIdentity={
+            discordLink?.display_name || discordLink?.username || null
+          }
+        />
       </section>
       <footer className="beta-footer">
         <Link href="/" className="home-brand">

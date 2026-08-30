@@ -4,6 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
+import {
+  assignDiscordGuildRole,
+  removeDiscordGuildRole,
+} from "@/lib/discord-resources";
+import {
+  NEXORA_BETA_ROLE_ID,
+  NEXORA_DISCORD_GUILD_ID,
+} from "@/lib/nexora-discord";
 
 function clean(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -101,8 +109,26 @@ export async function updateBetaApplication(formData: FormData) {
   const status = clean(formData.get("status"));
   if (!applicationId || !["submitted", "reviewing", "selected", "waitlisted", "declined"].includes(status)) redirect("/staff?error=invalid_beta_request");
   const supabase = await authenticatedClient();
-  const { error } = await supabase.rpc("staff_update_beta_application", { application_id: applicationId, requested_status: status });
+  const { data, error } = await supabase.rpc("staff_update_beta_application", { application_id: applicationId, requested_status: status });
   if (error) redirect(`/staff?error=${errorCode(error.message)}`);
+  const result = data as unknown as {
+    ok?: boolean;
+    discord_user_id?: string | null;
+  };
+  if (result.discord_user_id) {
+    const roleResult = status === "selected"
+      ? await assignDiscordGuildRole({
+          guildId: NEXORA_DISCORD_GUILD_ID,
+          userId: result.discord_user_id,
+          roleId: NEXORA_BETA_ROLE_ID,
+        })
+      : await removeDiscordGuildRole({
+          guildId: NEXORA_DISCORD_GUILD_ID,
+          userId: result.discord_user_id,
+          roleId: NEXORA_BETA_ROLE_ID,
+        });
+    if (!roleResult.ok) redirect("/staff?error=beta_role_sync_failed#beta-applications");
+  }
   revalidatePath("/staff");
   redirect("/staff?notice=beta_updated#beta-applications");
 }

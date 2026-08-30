@@ -15,6 +15,7 @@ import { setrankCommand } from "./setrank.js";
 import { userCommand } from "./user.js";
 import { loginCommand } from "./login.js";
 import { toggleCommand } from "./toggle.js";
+import { verifyPanelCommand } from "./verifypanel.js";
 
 export const commands = [
   helpCommand,
@@ -34,6 +35,7 @@ export const commands = [
   applicationsCommand,
   loginCommand,
   toggleCommand,
+  verifyPanelCommand,
 ];
 export const commandMap = new Map(
   commands.map((command) => [command.data.name, command]),

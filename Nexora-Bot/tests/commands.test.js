@@ -20,11 +20,17 @@ test("commands serialize to valid guild-only definitions", () => {
   }
 });
 
-test("private platform commands are login and toggle", () => {
+test("private platform commands include login, switches, and verification", () => {
   const privateNames = commands
     .filter((command) => command.staffOnly)
     .map((command) => command.data.name);
-  assert.deepEqual(privateNames, ["login", "toggle"]);
+  assert.deepEqual(privateNames, ["login", "toggle", "verifypanel"]);
+});
+
+test("verification panel exposes an interactive account check", () => {
+  const panel = commands.find((command) => command.data.name === "verifypanel");
+  assert.ok(panel);
+  assert.equal(panel.data.toJSON().dm_permission, false);
 });
 
 test("applications supports listing, decisions, and announcements", () => {

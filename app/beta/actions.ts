@@ -70,6 +70,8 @@ export async function submitBetaApplication(
           ? "Beta applications are currently closed. You can still check an existing application below."
           : result.error === "already_registered"
             ? "That email already has a Beta application. Use your saved code to check it below."
+            : result.error === "discord_required"
+              ? "Sign in with Discord before submitting a Beta application."
             : "Check your information and try again.",
     };
   if (!result.application_id || !result.lookup_code)
@@ -85,7 +87,7 @@ export async function submitBetaApplication(
     content: "",
     embed: {
       title: "New Nexora Beta application",
-      description: `**Name**\n${name}\n\n**Email address**\n${email}\n\n**Age**\n${age}`,
+      description: `**Name**\n${name}\n\n**Email address**\n${email}\n\n**Age**\n${age}\n\n**Discord**\nVerified with Nexora`,
       color: 0x000000,
       author: nexoraLogBrand("Nexora Beta"),
       footer: {

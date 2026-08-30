@@ -83,6 +83,8 @@ type BetaRow = {
   age: number;
   status: string;
   discord_notified: boolean;
+  discord_user_id: string | null;
+  discord_name: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -96,6 +98,8 @@ const notices: Record<string, string> = {
   beta_updated: "Beta application status updated.",
 };
 const errors: Record<string, string> = {
+  beta_role_sync_failed:
+    "The status changed, but Discord could not update the Beta role. Confirm the member is in the Nexora server and the bot role is above the Beta role.",
   invalid_moderation_request:
     "Choose a valid action and enter a reason of at least 4 characters.",
   staff_access_denied: "This account is not staff.",
@@ -363,6 +367,12 @@ export default async function StaffPage({
                     </div>
                     <p className="mt-2 text-sm text-white/52">
                       {application.email} · age {application.age}
+                    </p>
+                    <p className="mt-1 text-xs text-white/38">
+                      Discord: {application.discord_name || "Not linked"}
+                      {application.discord_user_id
+                        ? ` · ${application.discord_user_id}`
+                        : ""}
                     </p>
                     <time className="mt-1 block text-xs text-white/28">
                       Applied {formatDate(application.created_at)}

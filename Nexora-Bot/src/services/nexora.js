@@ -24,6 +24,17 @@ export function createNexoraService(config, logger) {
     },
   );
 
+  async function getDiscordIdentity(discordUserId) {
+    const { data, error } = await database
+      .from("account_links")
+      .select("user_id, username, display_name, verified_at")
+      .eq("provider", "discord")
+      .eq("provider_user_id", discordUserId)
+      .maybeSingle();
+    throwIfError(error, "Nexora could not check your connected Discord identity.");
+    return data;
+  }
+
   async function getWorkspace(guildId, { allowRestricted = false } = {}) {
     const { data, error } = await database
       .from("workspaces")
@@ -579,6 +590,7 @@ export function createNexoraService(config, logger) {
   }
 
   return {
+    getDiscordIdentity,
     claimLink,
     createStaffAccessCode,
     setBetaEnabled,

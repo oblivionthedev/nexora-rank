@@ -1553,7 +1553,7 @@ export type Database = {
       staff_beta_applications: { Args: never; Returns: Json }
       staff_update_beta_application: {
         Args: { application_id: string; requested_status: string }
-        Returns: boolean
+        Returns: Json
       }
       staff_access_state: { Args: never; Returns: Json }
       staff_console_state: {

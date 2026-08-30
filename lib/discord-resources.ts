@@ -85,3 +85,35 @@ export async function assignDiscordGuildRole({
     return { ok: false as const, error: "discord_unavailable" };
   }
 }
+
+export async function removeDiscordGuildRole({
+  guildId,
+  userId,
+  roleId,
+}: {
+  guildId: string;
+  userId: string;
+  roleId: string;
+}) {
+  const token = process.env.DISCORD_BOT_TOKEN?.trim();
+  if (!token) return { ok: false as const, error: "bot_not_configured" };
+  try {
+    const response = await fetch(
+      `${DISCORD_API}/guilds/${guildId}/members/${userId}/roles/${roleId}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bot ${token}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
+    if (response.status === 404) return { ok: true as const };
+    if (response.status === 401 || response.status === 403)
+      return { ok: false as const, error: "discord_role_permission_missing" };
+    return response.ok
+      ? { ok: true as const }
+      : { ok: false as const, error: "discord_role_failed" };
+  } catch {
+    return { ok: false as const, error: "discord_unavailable" };
+  }
+}

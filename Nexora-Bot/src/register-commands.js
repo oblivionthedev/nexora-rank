@@ -15,6 +15,6 @@ if (config.discordGuildId) {
   console.log(`Registered ${publicBody.length} global commands.`);
 }
 if (config.discordGuildId !== config.staffGuildId) {
-  await rest.put(Routes.applicationGuildCommands(config.discordClientId, config.staffGuildId), { body: staffBody });
-  console.log(`Registered ${staffBody.length} private commands in the Nexora Staff server.`);
+  await rest.put(Routes.applicationGuildCommands(config.discordClientId, config.staffGuildId), { body: [...publicBody, ...staffBody] });
+  console.log(`Registered ${publicBody.length + staffBody.length} commands in the Nexora Staff server.`);
 }

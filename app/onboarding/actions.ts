@@ -12,6 +12,11 @@ import {
   nexoraLogBrand,
   sendNexoraOperationalLog,
 } from "@/lib/operational-logs";
+import { assignDiscordGuildRole } from "@/lib/discord-resources";
+import {
+  NEXORA_DISCORD_GUILD_ID,
+  NEXORA_WORKSPACE_OWNER_ROLE_ID,
+} from "@/lib/nexora-discord";
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,46}[a-z0-9]$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -193,6 +198,19 @@ export async function createOnboardingWorkspace(formData: FormData) {
     .limit(1)
     .maybeSingle();
   if (workspace) {
+    const { data: discordLink } = await supabase
+      .from("account_links")
+      .select("provider_user_id")
+      .eq("user_id", user.id)
+      .eq("provider", "discord")
+      .maybeSingle();
+    if (discordLink?.provider_user_id) {
+      await assignDiscordGuildRole({
+        guildId: NEXORA_DISCORD_GUILD_ID,
+        userId: discordLink.provider_user_id,
+        roleId: NEXORA_WORKSPACE_OWNER_ROLE_ID,
+      });
+    }
     await sendNexoraOperationalLog(NEXORA_LOG_CHANNELS.workspacesCreated, {
       title: "Workspace created",
       description: `**${workspace.name}** is now live on Nexora.`,

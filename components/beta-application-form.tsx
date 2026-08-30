@@ -35,7 +35,13 @@ const statusCopy: Record<string, { label: string; text: string }> = {
   },
 };
 
-export function BetaApplicationForm({ betaEnabled }: { betaEnabled: boolean }) {
+export function BetaApplicationForm({
+  betaEnabled,
+  discordIdentity,
+}: {
+  betaEnabled: boolean;
+  discordIdentity: string | null;
+}) {
   const [applyState, applyAction, applying] = useActionState(
     submitBetaApplication,
     applyInitial,
@@ -62,6 +68,17 @@ export function BetaApplicationForm({ betaEnabled }: { betaEnabled: boolean }) {
               Nexora is not accepting new Beta applications right now. Existing
               applicants can still check their selection status below.
             </p>
+          </div>
+        ) : !discordIdentity ? (
+          <div className="beta-data-notice" role="status">
+            <b>Connect Discord before applying</b>
+            <p>
+              Your Discord account is used to prevent duplicate applications
+              and to grant the Beta role automatically if you are selected.
+            </p>
+            <Link href="/login?next=/beta" className="beta-inline-action">
+              Continue with Discord
+            </Link>
           </div>
         ) : applyState.success && applyState.code ? (
           <div className="beta-confirmation">
@@ -134,6 +151,7 @@ export function BetaApplicationForm({ betaEnabled }: { betaEnabled: boolean }) {
                 selected applicants. Your review status and submission time are
                 also stored.
               </p>
+              <p>Signed in as <b>{discordIdentity}</b>.</p>
             </div>
             <label className="beta-consent">
               <input type="checkbox" name="accept_beta_privacy" required />
