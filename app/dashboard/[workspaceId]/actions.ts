@@ -8,7 +8,10 @@ import {
   listDiscordWorkspaceResources,
 } from "@/lib/discord-resources";
 import { nexoraSiteUrl } from "@/lib/site-url";
-import { getRobloxGroupDetails } from "@/lib/roblox-groups";
+import {
+  getRobloxGroupDetails,
+  getRobloxGroupRoles,
+} from "@/lib/roblox-groups";
 import { listRobloxGroups } from "@/lib/roblox-membership";
 
 export type LinkCodeState = {
@@ -37,6 +40,7 @@ async function context(publicId: string) {
         role: string;
         operational_status: string;
         discord_guild_id: string | null;
+        roblox_group_id: string | null;
       };
     },
   };
@@ -103,9 +107,9 @@ export async function connectRobloxGroup(formData: FormData) {
 export async function saveWorkspaceAccess(formData: FormData) {
   const publicId = String(formData.get("public_id") || "");
   const rankMin = Number(formData.get("rank_min"));
-  const roleIds = String(formData.get("role_ids") || "")
-    .split(",")
-    .map((v) => v.trim())
+  const roleIds = formData
+    .getAll("role_ids")
+    .map(String)
     .filter((v) => /^\d+$/.test(v));
   const { supabase, state } = await context(publicId);
   const { error } = await supabase.rpc("save_workspace_settings", {
@@ -219,12 +223,21 @@ export async function saveRankBinding(formData: FormData) {
   const publicId = value(formData, "public_id");
   const { supabase, state } = await context(publicId);
   const discordRoleId = value(formData, "discord_role_id");
-  const resources = await listDiscordWorkspaceResources(state.workspace.discord_guild_id);
-  const discordRole = discordRoleId ? resources.roles.find((role) => role.id === discordRoleId) : null;
+  const robloxRoleId = value(formData, "roblox_role_id");
+  const [resources, robloxRoles] = await Promise.all([
+    listDiscordWorkspaceResources(state.workspace.discord_guild_id),
+    getRobloxGroupRoles(state.workspace.roblox_group_id),
+  ]);
+  const discordRole = discordRoleId
+    ? resources.roles.find((role) => role.id === discordRoleId)
+    : null;
+  const robloxRole = robloxRoles.find((role) => role.id === robloxRoleId);
+  if (!robloxRole)
+    redirect(`/dashboard/${publicId}/ranking?error=invalid_roblox_role`);
   const payload = {
     workspace_id: state.workspace.id,
-    roblox_role_id: value(formData, "roblox_role_id"),
-    roblox_role_name: value(formData, "roblox_role_name"),
+    roblox_role_id: robloxRole.id,
+    roblox_role_name: robloxRole.name,
     discord_role_id: discordRole?.id || null,
     discord_role_name: discordRole?.name || null,
     minimum_activity_minutes: Number(
@@ -250,9 +263,15 @@ export async function deleteRankBinding(formData: FormData) {
 export async function saveQuota(formData: FormData) {
   const publicId = value(formData, "public_id");
   const { supabase, state } = await context(publicId);
+  const robloxRoleId = value(formData, "roblox_role_id");
+  const robloxRoles = await getRobloxGroupRoles(
+    state.workspace.roblox_group_id,
+  );
+  if (!robloxRoles.some((role) => role.id === robloxRoleId))
+    redirect(`/dashboard/${publicId}/activity?error=invalid_roblox_role`);
   const payload = {
     workspace_id: state.workspace.id,
-    roblox_role_id: value(formData, "roblox_role_id"),
+    roblox_role_id: robloxRoleId,
     period: value(formData, "period"),
     minutes_required: Number(value(formData, "minutes_required")),
     grace_minutes: Number(value(formData, "grace_minutes") || 0),
@@ -268,17 +287,15 @@ export async function addManualActivity(formData: FormData) {
   const minutes = Math.max(1, Number(value(formData, "minutes") || 0));
   const ended = new Date();
   const started = new Date(ended.getTime() - minutes * 60000);
-  const { error } = await supabase
-    .from("activity_sessions")
-    .insert({
-      workspace_id: state.workspace.id,
-      roblox_user_id: value(formData, "roblox_user_id"),
-      roblox_username: value(formData, "roblox_username"),
-      started_at: started.toISOString(),
-      ended_at: ended.toISOString(),
-      duration_seconds: minutes * 60,
-      source: "manual",
-    });
+  const { error } = await supabase.from("activity_sessions").insert({
+    workspace_id: state.workspace.id,
+    roblox_user_id: value(formData, "roblox_user_id"),
+    roblox_username: value(formData, "roblox_username"),
+    started_at: started.toISOString(),
+    ended_at: ended.toISOString(),
+    duration_seconds: minutes * 60,
+    source: "manual",
+  });
   await finish(publicId, "activity", error);
 }
 type ApplicationField = {
@@ -353,19 +370,17 @@ export async function createApplicationForm(formData: FormData) {
   const status = ["draft", "open", "paused"].includes(value(formData, "status"))
     ? value(formData, "status")
     : "draft";
-  const { error } = await supabase
-    .from("application_forms")
-    .insert({
-      workspace_id: state.workspace.id,
-      name: value(formData, "name").slice(0, 80),
-      description: value(formData, "description").slice(0, 1200),
-      target_role_id: role.id,
-      target_role_name: role.name,
-      status,
-      fields,
-      submissions_channel_id: channel?.id || null,
-      created_by: user.id,
-    });
+  const { error } = await supabase.from("application_forms").insert({
+    workspace_id: state.workspace.id,
+    name: value(formData, "name").slice(0, 80),
+    description: value(formData, "description").slice(0, 1200),
+    target_role_id: role.id,
+    target_role_name: role.name,
+    status,
+    fields,
+    submissions_channel_id: channel?.id || null,
+    created_by: user.id,
+  });
   await finish(publicId, "applications", error);
 }
 
@@ -497,19 +512,17 @@ export async function reviewApplication(formData: FormData) {
 export async function createAutomation(formData: FormData) {
   const publicId = value(formData, "public_id");
   const { supabase, user, state } = await context(publicId);
-  const { error } = await supabase
-    .from("automations")
-    .insert({
-      workspace_id: state.workspace.id,
-      name: value(formData, "name"),
-      trigger_type: value(formData, "trigger_type"),
-      enabled: formData.get("enabled") === "on",
-      definition: {
-        action: value(formData, "action"),
-        channel_id: value(formData, "channel_id") || null,
-      },
-      created_by: user.id,
-    });
+  const { error } = await supabase.from("automations").insert({
+    workspace_id: state.workspace.id,
+    name: value(formData, "name"),
+    trigger_type: value(formData, "trigger_type"),
+    enabled: formData.get("enabled") === "on",
+    definition: {
+      action: value(formData, "action"),
+      channel_id: value(formData, "channel_id") || null,
+    },
+    created_by: user.id,
+  });
   await finish(publicId, "automations", error);
 }
 export async function deleteRecord(formData: FormData) {
@@ -550,92 +563,80 @@ export async function deleteRecord(formData: FormData) {
 export async function createDepartment(formData: FormData) {
   const publicId = value(formData, "public_id");
   const { supabase, state } = await context(publicId);
-  const { error } = await supabase
-    .from("departments")
-    .insert({
-      workspace_id: state.workspace.id,
-      name: value(formData, "name"),
-      description: value(formData, "description") || null,
-      discord_role_id: value(formData, "discord_role_id") || null,
-      roblox_group_id: value(formData, "roblox_group_id") || null,
-    });
+  const { error } = await supabase.from("departments").insert({
+    workspace_id: state.workspace.id,
+    name: value(formData, "name"),
+    description: value(formData, "description") || null,
+    discord_role_id: value(formData, "discord_role_id") || null,
+    roblox_group_id: value(formData, "roblox_group_id") || null,
+  });
   await finish(publicId, "operations", error);
 }
 export async function createCommunitySession(formData: FormData) {
   const publicId = value(formData, "public_id");
   const { supabase, user, state } = await context(publicId);
-  const { error } = await supabase
-    .from("community_sessions")
-    .insert({
-      workspace_id: state.workspace.id,
-      session_type: value(formData, "session_type"),
-      title: value(formData, "title"),
-      starts_at: new Date(value(formData, "starts_at")).toISOString(),
-      host_user_id: user.id,
-      discord_channel_id: value(formData, "discord_channel_id") || null,
-      notes: value(formData, "notes") || null,
-    });
+  const { error } = await supabase.from("community_sessions").insert({
+    workspace_id: state.workspace.id,
+    session_type: value(formData, "session_type"),
+    title: value(formData, "title"),
+    starts_at: new Date(value(formData, "starts_at")).toISOString(),
+    host_user_id: user.id,
+    discord_channel_id: value(formData, "discord_channel_id") || null,
+    notes: value(formData, "notes") || null,
+  });
   await finish(publicId, "operations", error);
 }
 export async function createLeaveRequest(formData: FormData) {
   const publicId = value(formData, "public_id");
   const { supabase, state } = await context(publicId);
-  const { error } = await supabase
-    .from("leave_requests")
-    .insert({
-      workspace_id: state.workspace.id,
-      member_name: value(formData, "member_name"),
-      starts_on: value(formData, "starts_on"),
-      ends_on: value(formData, "ends_on"),
-      reason: value(formData, "reason"),
-    });
+  const { error } = await supabase.from("leave_requests").insert({
+    workspace_id: state.workspace.id,
+    member_name: value(formData, "member_name"),
+    starts_on: value(formData, "starts_on"),
+    ends_on: value(formData, "ends_on"),
+    reason: value(formData, "reason"),
+  });
   await finish(publicId, "operations", error);
 }
 export async function createWorkspaceTask(formData: FormData) {
   const publicId = value(formData, "public_id");
   const { supabase, user, state } = await context(publicId);
   const due = value(formData, "due_at");
-  const { error } = await supabase
-    .from("workspace_tasks")
-    .insert({
-      workspace_id: state.workspace.id,
-      title: value(formData, "title"),
-      description: value(formData, "description") || null,
-      priority: value(formData, "priority") || "normal",
-      due_at: due ? new Date(due).toISOString() : null,
-      created_by: user.id,
-    });
+  const { error } = await supabase.from("workspace_tasks").insert({
+    workspace_id: state.workspace.id,
+    title: value(formData, "title"),
+    description: value(formData, "description") || null,
+    priority: value(formData, "priority") || "normal",
+    due_at: due ? new Date(due).toISOString() : null,
+    created_by: user.id,
+  });
   await finish(publicId, "operations", error);
 }
 export async function createKnowledgeEntry(formData: FormData) {
   const publicId = value(formData, "public_id");
   const { supabase, user, state } = await context(publicId);
-  const { error } = await supabase
-    .from("knowledge_entries")
-    .insert({
-      workspace_id: state.workspace.id,
-      entry_type: value(formData, "entry_type"),
-      title: value(formData, "title"),
-      content: value(formData, "content"),
-      visibility: value(formData, "visibility"),
-      created_by: user.id,
-    });
+  const { error } = await supabase.from("knowledge_entries").insert({
+    workspace_id: state.workspace.id,
+    entry_type: value(formData, "entry_type"),
+    title: value(formData, "title"),
+    content: value(formData, "content"),
+    visibility: value(formData, "visibility"),
+    created_by: user.id,
+  });
   await finish(publicId, "knowledge", error);
 }
 export async function createAnnouncementTemplate(formData: FormData) {
   const publicId = value(formData, "public_id");
   const { supabase, user, state } = await context(publicId);
-  const { error } = await supabase
-    .from("announcement_templates")
-    .insert({
-      workspace_id: state.workspace.id,
-      name: value(formData, "name"),
-      announcement_type: value(formData, "announcement_type"),
-      title_template: value(formData, "title_template"),
-      body_template: value(formData, "body_template"),
-      discord_channel_id: value(formData, "discord_channel_id") || null,
-      created_by: user.id,
-    });
+  const { error } = await supabase.from("announcement_templates").insert({
+    workspace_id: state.workspace.id,
+    name: value(formData, "name"),
+    announcement_type: value(formData, "announcement_type"),
+    title_template: value(formData, "title_template"),
+    body_template: value(formData, "body_template"),
+    discord_channel_id: value(formData, "discord_channel_id") || null,
+    created_by: user.id,
+  });
   await finish(publicId, "communications", error);
 }
 export async function saveCommunityMessaging(formData: FormData) {
@@ -767,15 +768,13 @@ export async function addWorkspaceRobloxGroup(formData: FormData) {
   if (!details)
     redirect(`/dashboard/${publicId}/connections?error=group_not_found`);
   const { supabase, state } = await context(publicId);
-  const { error } = await supabase
-    .from("workspace_roblox_groups")
-    .insert({
-      workspace_id: state.workspace.id,
-      group_id: details.id,
-      group_name: details.name,
-      purpose: value(formData, "purpose") || "community",
-      is_primary: false,
-    });
+  const { error } = await supabase.from("workspace_roblox_groups").insert({
+    workspace_id: state.workspace.id,
+    group_id: details.id,
+    group_name: details.name,
+    purpose: value(formData, "purpose") || "community",
+    is_primary: false,
+  });
   await finish(publicId, "connections", error);
 }
 export async function createDashboardRankRequest(formData: FormData) {
@@ -794,21 +793,19 @@ export async function createDashboardRankRequest(formData: FormData) {
       "ranking",
       bindingError || new Error("binding_missing"),
     );
-  const { error } = await supabase
-    .from("rank_actions")
-    .insert({
-      workspace_id: state.workspace.id,
-      target_roblox_user_id: value(formData, "roblox_user_id"),
-      target_username: value(formData, "roblox_username"),
-      requested_by: user.id,
-      to_role_id: binding!.roblox_role_id,
-      to_role_name: binding!.roblox_role_name,
-      reason: value(formData, "reason") || "Dashboard rank request",
-      status: binding!.requires_approval ? "pending" : "approved",
-      policy_snapshot: {
-        source: "dashboard",
-        requires_approval: binding!.requires_approval,
-      },
-    });
+  const { error } = await supabase.from("rank_actions").insert({
+    workspace_id: state.workspace.id,
+    target_roblox_user_id: value(formData, "roblox_user_id"),
+    target_username: value(formData, "roblox_username"),
+    requested_by: user.id,
+    to_role_id: binding!.roblox_role_id,
+    to_role_name: binding!.roblox_role_name,
+    reason: value(formData, "reason") || "Dashboard rank request",
+    status: binding!.requires_approval ? "pending" : "approved",
+    policy_snapshot: {
+      source: "dashboard",
+      requires_approval: binding!.requires_approval,
+    },
+  });
   await finish(publicId, "ranking", error);
 }

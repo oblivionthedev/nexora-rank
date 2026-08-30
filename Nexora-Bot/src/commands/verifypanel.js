@@ -18,20 +18,26 @@ export const verifyPanelCommand = {
     .setDMPermission(false),
   async execute(interaction, { config }) {
     if (interaction.guildId !== config.staffGuildId)
-      throw new UserError("The Nexora verification panel can only be posted in the official Nexora server.", "official_server_required");
+      throw new UserError(
+        "The Nexora verification panel can only be posted in the official Nexora server.",
+        "official_server_required",
+      );
     if (!interaction.channel?.isTextBased())
-      throw new UserError("Choose a text channel for the verification panel.", "text_channel_required");
+      throw new UserError(
+        "Choose a text channel for the verification panel.",
+        "text_channel_required",
+      );
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(VERIFY_BUTTON_ID)
-        .setLabel("Verify with Nexora")
+        .setLabel("Verify in browser")
         .setEmoji("✅")
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setLabel("Open Nexora")
-        .setURL(`${config.siteUrl}/login?next=/dashboard`)
+        .setURL(`${config.siteUrl}/verify`)
         .setStyle(ButtonStyle.Link),
+      new ButtonBuilder()
+        .setCustomId(VERIFY_BUTTON_ID)
+        .setLabel("Check verification")
+        .setStyle(ButtonStyle.Secondary),
     );
     await interaction.channel.send({
       embeds: [
@@ -39,16 +45,26 @@ export const verifyPanelCommand = {
           color: 0x000000,
           title: "Verify your Nexora account",
           description:
-            "Connect your Discord identity to Nexora, then press **Verify with Nexora**. Verified members receive the official role instantly.\n\n**No Discord password is shared.** Nexora checks only the Discord identity connected through official authorization.",
+            "Open Nexora's secure verification tab, authorize Discord, and receive the official role directly.\n\n**No Discord password is shared.** Nexora checks only the Discord identity connected through official authorization.",
           fields: [
-            { name: "1 · Connect", value: "Open Nexora and sign in with Discord.", inline: true },
-            { name: "2 · Verify", value: "Return here and press the green button.", inline: true },
+            {
+              name: "1 · Open",
+              value: "Press **Verify in browser** below.",
+              inline: true,
+            },
+            {
+              name: "2 · Authorize",
+              value: "Sign in with Discord and finish verification.",
+              inline: true,
+            },
           ],
           footer: { text: "Nexora Rank · Official verification" },
         },
       ],
       components: [row],
     });
-    await interaction.editReply({ content: "The Nexora verification panel is live in this channel." });
+    await interaction.editReply({
+      content: "The Nexora verification panel is live in this channel.",
+    });
   },
 };

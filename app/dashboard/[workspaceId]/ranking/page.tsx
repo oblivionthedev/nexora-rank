@@ -7,10 +7,12 @@ import {
   Notice,
   Panel,
   Row,
+  RobloxRoleSelect,
   Submit,
 } from "@/components/workspace-operations";
 import { getWorkspaceControl } from "@/lib/workspace-control";
 import { listDiscordWorkspaceResources } from "@/lib/discord-resources";
+import { getRobloxGroupRoles } from "@/lib/roblox-groups";
 import {
   createDashboardRankRequest,
   deleteRankBinding,
@@ -26,7 +28,7 @@ export default async function Ranking({
 }) {
   const [{ workspaceId }, q] = await Promise.all([params, searchParams]);
   const { supabase, state } = await getWorkspaceControl(workspaceId);
-  const [{ data: bindings }, { data: actions }, discordResources] =
+  const [{ data: bindings }, { data: actions }, discordResources, robloxRoles] =
     await Promise.all([
       supabase
         .from("rank_bindings")
@@ -40,6 +42,7 @@ export default async function Ranking({
         .order("requested_at", { ascending: false })
         .limit(30),
       listDiscordWorkspaceResources(state.workspace.discord_guild_id),
+      getRobloxGroupRoles(state.workspace.roblox_group_id),
     ]);
   const manage = ["owner", "admin"].includes(state.workspace.role);
   return (
@@ -58,8 +61,12 @@ export default async function Ranking({
         >
           <form action={saveRankBinding} className="grid gap-4">
             <input type="hidden" name="public_id" value={workspaceId} />
-            <Input label="Roblox role ID" name="roblox_role_id" required />
-            <Input label="Roblox role name" name="roblox_role_name" required />
+            <RobloxRoleSelect
+              label="Roblox group role"
+              name="roblox_role_id"
+              roles={robloxRoles}
+              required
+            />
             <DiscordRoleSelect
               label="Discord role (optional)"
               name="discord_role_id"

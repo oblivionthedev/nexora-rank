@@ -17,6 +17,8 @@ import {
   updateWorkspaceProfile,
 } from "../actions";
 import { WorkspaceThemeEditor } from "@/components/workspace-theme-editor";
+import { RobloxRolesMultiSelect } from "@/components/workspace-operations";
+import { getRobloxGroupRoles } from "@/lib/roblox-groups";
 
 export const dynamic = "force-dynamic";
 export default async function SettingsPage({
@@ -29,7 +31,7 @@ export default async function SettingsPage({
   const [{ workspaceId }, query] = await Promise.all([params, searchParams]);
   const { supabase, state } = await getWorkspaceControl(workspaceId);
   const w = state.workspace;
-  const [{ data: key }, { data: members }] = await Promise.all([
+  const [{ data: key }, { data: members }, robloxRoles] = await Promise.all([
     supabase
       .from("api_keys")
       .select("key_prefix,last_used_at,created_at")
@@ -42,6 +44,7 @@ export default async function SettingsPage({
       .from("workspace_members")
       .select("user_id,role")
       .eq("workspace_id", w.id),
+    getRobloxGroupRoles(w.roblox_group_id),
   ]);
   const canManage = ["owner", "admin"].includes(w.role);
   const owner = w.role === "owner";
@@ -144,7 +147,7 @@ export default async function SettingsPage({
         <Section
           icon={UsersRound}
           title="Who can join your workspace"
-          description="Set a minimum Roblox group rank and optionally list exact Roblox role IDs allowed to work here."
+          description="Set a minimum Roblox group rank and optionally choose exact roles from the connected group."
         >
           <form action={saveWorkspaceAccess} className="space-y-4">
             <input type="hidden" name="public_id" value={w.public_id} />
@@ -160,18 +163,12 @@ export default async function SettingsPage({
                 className="mt-2 min-h-12 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-base"
               />
             </label>
-            <label className="block">
-              <span className="text-sm font-bold">Allowed role IDs</span>
-              <input
-                name="role_ids"
-                defaultValue={(
-                  state.settings.allowed_roblox_role_ids || []
-                ).join(", ")}
-                disabled={!canManage}
-                placeholder="12345, 67890"
-                className="mt-2 min-h-12 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-base"
-              />
-            </label>
+            <RobloxRolesMultiSelect
+              label="Allowed Roblox roles"
+              name="role_ids"
+              roles={robloxRoles}
+              defaultValues={state.settings.allowed_roblox_role_ids || []}
+            />
             <button
               disabled={!canManage}
               className="min-h-12 rounded-xl bg-white px-6 text-sm font-bold text-black disabled:opacity-40"

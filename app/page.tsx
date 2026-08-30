@@ -121,6 +121,10 @@ export default async function Home({ searchParams }: HomeProps) {
               More <ChevronDown />
             </summary>
             <div>
+              <Link href="/verify">Discord verification</Link>
+              <Link href="https://discord.gg/YY9nXqqWTk" target="_blank">
+                Community &amp; support
+              </Link>
               <Link href="/bot">Discord bot</Link>
               <Link href="/investors">Investors</Link>
               <Link href="/pricing">Pricing</Link>

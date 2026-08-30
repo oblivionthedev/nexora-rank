@@ -31,7 +31,7 @@ const statusCopy: Record<string, { label: string; text: string }> = {
   },
   declined: {
     label: "Not selected",
-    text: "You were not selected for this Beta group, but you may be considered for a future opening.",
+    text: "You were not selected this time. You can submit a new application 24 hours after this decision.",
   },
 };
 
@@ -59,7 +59,8 @@ export function BetaApplicationForm({
         <h2>Tell us who you are.</h2>
         <p>
           Applications are reviewed personally. Use an email address where the
-          Nexora team can contact you.
+          Nexora team can contact you. If an application is declined, you can
+          apply again after 24 hours.
         </p>
         {!betaEnabled ? (
           <div className="beta-data-notice" role="status">
@@ -73,8 +74,8 @@ export function BetaApplicationForm({
           <div className="beta-data-notice" role="status">
             <b>Connect Discord before applying</b>
             <p>
-              Your Discord account is used to prevent duplicate applications
-              and to grant the Beta role automatically if you are selected.
+              Your Discord account is used to prevent duplicate applications and
+              to grant the Beta role automatically if you are selected.
             </p>
             <Link href="/login?next=/beta" className="beta-inline-action">
               Continue with Discord
@@ -151,7 +152,9 @@ export function BetaApplicationForm({
                 selected applicants. Your review status and submission time are
                 also stored.
               </p>
-              <p>Signed in as <b>{discordIdentity}</b>.</p>
+              <p>
+                Signed in as <b>{discordIdentity}</b>.
+              </p>
             </div>
             <label className="beta-consent">
               <input type="checkbox" name="accept_beta_privacy" required />

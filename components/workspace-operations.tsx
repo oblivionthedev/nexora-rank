@@ -3,6 +3,7 @@ import type {
   DiscordChannelOption,
   DiscordRoleOption,
 } from "@/lib/discord-resources";
+import type { RobloxGroupRole } from "@/lib/roblox-groups";
 
 export function Panel({
   icon: Icon,
@@ -147,6 +148,83 @@ export function DiscordRoleSelect({
       </select>
       <small className="mt-2 block text-[13px] leading-5 text-white/48">
         Loaded from the connected server. Managed bot roles are hidden.
+      </small>
+    </label>
+  );
+}
+export function RobloxRoleSelect({
+  label,
+  name,
+  roles,
+  defaultValue = "",
+  required = false,
+}: {
+  label: string;
+  name: string;
+  roles: RobloxGroupRole[];
+  defaultValue?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2.5 block text-[15px] font-bold text-white/78">
+        {label}
+      </span>
+      <select
+        name={name}
+        defaultValue={defaultValue}
+        required={required}
+        className="workspace-field min-h-14 w-full bg-[#0b0808] px-4 text-base"
+      >
+        <option value="">
+          {roles.length
+            ? "Choose a Roblox group role"
+            : "Connect a Roblox group to load roles"}
+        </option>
+        {roles.map((role) => (
+          <option key={role.id} value={role.id}>
+            {role.name} · rank {role.rank}
+          </option>
+        ))}
+      </select>
+      <small className="mt-2 block text-[13px] leading-5 text-white/48">
+        Loaded from this workspace&apos;s Roblox group.
+      </small>
+    </label>
+  );
+}
+export function RobloxRolesMultiSelect({
+  label,
+  name,
+  roles,
+  defaultValues = [],
+}: {
+  label: string;
+  name: string;
+  roles: RobloxGroupRole[];
+  defaultValues?: string[];
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2.5 block text-[15px] font-bold text-white/78">
+        {label}
+      </span>
+      <select
+        name={name}
+        defaultValue={defaultValues}
+        multiple
+        size={Math.min(Math.max(roles.length, 3), 7)}
+        className="workspace-field w-full bg-[#0b0808] px-4 py-3 text-base"
+      >
+        {roles.map((role) => (
+          <option className="py-2" key={role.id} value={role.id}>
+            {role.name} · rank {role.rank}
+          </option>
+        ))}
+      </select>
+      <small className="mt-2 block text-[13px] leading-5 text-white/48">
+        Choose one or more roles from the connected Roblox group. Leave every
+        role unselected to use only the minimum rank.
       </small>
     </label>
   );

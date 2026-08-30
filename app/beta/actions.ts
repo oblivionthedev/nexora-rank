@@ -60,6 +60,7 @@ export async function submitBetaApplication(
   const result = data as {
     ok?: boolean;
     error?: string;
+    retry_at?: string;
     application_id?: string;
     lookup_code?: string;
   };
@@ -70,9 +71,11 @@ export async function submitBetaApplication(
           ? "Beta applications are currently closed. You can still check an existing application below."
           : result.error === "already_registered"
             ? "That email already has a Beta application. Use your saved code to check it below."
-            : result.error === "discord_required"
-              ? "Sign in with Discord before submitting a Beta application."
-            : "Check your information and try again.",
+            : result.error === "reapply_wait"
+              ? `You can reapply 24 hours after your previous decision${result.retry_at ? ` — after ${new Date(result.retry_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" })} UTC` : ""}.`
+              : result.error === "discord_required"
+                ? "Sign in with Discord before submitting a Beta application."
+                : "Check your information and try again.",
     };
   if (!result.application_id || !result.lookup_code)
     return {
