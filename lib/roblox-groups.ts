@@ -18,6 +18,22 @@ export type RobloxGroupRole = {
   memberCount: number;
 };
 
+export async function getRobloxHeadshots(userIds: string[]) {
+  const unique = [...new Set(userIds.filter((id) => /^\d+$/.test(id)))].slice(0, 100);
+  if (!unique.length) return new Map<string, string>();
+  try {
+    const response = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${unique.join(",")}&size=150x150&format=Png&isCircular=true`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!response.ok) return new Map<string, string>();
+    const payload = await response.json() as { data?: Array<{ targetId?: number; imageUrl?: string }> };
+    return new Map((payload.data ?? []).filter((item) => item.targetId && item.imageUrl).map((item) => [String(item.targetId), String(item.imageUrl)]));
+  } catch {
+    return new Map<string, string>();
+  }
+}
+
 export async function getRobloxGroupRoles(
   groupId?: string | null,
 ): Promise<RobloxGroupRole[]> {

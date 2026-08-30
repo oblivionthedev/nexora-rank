@@ -200,6 +200,12 @@ export function createNexoraService(config, logger) {
     return data;
   }
 
+  async function claimSecurityIncidents() {
+    const { data, error } = await database.rpc("bot_claim_security_incidents");
+    throwIfError(error, "Nexora could not claim security alerts.");
+    return Array.isArray(data) ? data : [];
+  }
+
   async function workspaceSummary(guildId, discordUserId) {
     const workspace = await getWorkspace(guildId, { allowRestricted: true });
     const actor = await getActor(workspace.id, discordUserId);
@@ -596,6 +602,7 @@ export function createNexoraService(config, logger) {
     claimLink,
     createStaffAccessCode,
     setBetaEnabled,
+    claimSecurityIncidents,
     getWorkspace,
     workspaceSummary,
     disconnectGuild,

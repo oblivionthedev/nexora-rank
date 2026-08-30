@@ -399,7 +399,7 @@ export async function createApplicationForm(formData: FormData) {
 export async function setApplicationStatus(formData: FormData) {
   const publicId = value(formData, "public_id");
   const status = value(formData, "status");
-  if (!["draft", "open", "paused", "closed"].includes(status))
+  if (!["draft", "open", "paused", "closed", "archived"].includes(status))
     redirect(`/dashboard/${publicId}/applications?error=application_invalid`);
   const { supabase, state } = await context(publicId);
   if (!["owner", "admin"].includes(state.workspace.role))
@@ -534,6 +534,26 @@ export async function createAutomation(formData: FormData) {
       channel_id: value(formData, "channel_id") || null,
     },
     created_by: user.id,
+  });
+  await finish(publicId, "automations", error);
+}
+
+export async function requestWorkspaceRankChange(formData: FormData) {
+  const publicId = value(formData, "public_id");
+  const robloxUserId = value(formData, "roblox_user_id");
+  const roleId = value(formData, "target_role_id");
+  const reason = value(formData, "reason").slice(0, 500);
+  const { supabase, state } = await context(publicId);
+  const roles = await getRobloxGroupRoles(state.workspace.roblox_group_id);
+  const role = roles.find((item) => item.id === roleId);
+  if (!role || !/^\d+$/.test(robloxUserId) || reason.length < 2)
+    redirect(`/dashboard/${publicId}/automations?error=invalid_rank_request`);
+  const { error } = await supabase.rpc("create_workspace_rank_request", {
+    target_workspace_id: state.workspace.id,
+    target_roblox_user_id: robloxUserId,
+    target_role_id: role.id,
+    target_role_name: role.name,
+    request_reason: reason,
   });
   await finish(publicId, "automations", error);
 }

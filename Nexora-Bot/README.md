@@ -80,8 +80,9 @@ Hoster settings:
 - Suspended and banned workspaces are blocked before mutations.
 - Important bot operations write to `workspace_logs` with source `discord`.
 - Authorization and Beta controls are available only to Discord user `1515743540259328202` inside the private Staff server.
+- Unresolved unauthorized-access incidents are sent to channel `1543592799981535302`, ping role `1543625600919404604`, and repeat every 60 seconds until Staff resolves them.
 
-Nexora Support now runs from the separate `Nexora-Support` folder with its own Discord application, token, and host.
+Nexora Support now runs from the separate `Nexora-Support-Bot` folder with its own Discord application, token, and host.
 
 ## Ranking execution
 

@@ -24,6 +24,44 @@ const client = new Client({
 });
 const nexora = createNexoraService(config, logger);
 const healthServer = startHealthServer({ port: config.port, client, logger });
+let securityTimer;
+let securityPollActive = false;
+
+async function pollSecurityIncidents() {
+  if (securityPollActive || !client.isReady()) return;
+  securityPollActive = true;
+  try {
+    const incidents = await nexora.claimSecurityIncidents();
+    if (!incidents.length) return;
+    const channel = await client.channels.fetch(config.securityAlertChannelId);
+    if (!channel?.isTextBased()) throw new Error("Security alert channel is unavailable or is not text based.");
+    for (const incident of incidents) {
+      const details = incident.details && typeof incident.details === "object"
+        ? Object.entries(incident.details).map(([key, value]) => `${key}: ${String(value)}`).join("\n")
+        : "No additional details";
+      const alert = embed(
+        "Unresolved access incident",
+        "Nexora blocked an unauthorized signed-in access attempt. This alert repeats every 60 seconds until a Staff member resolves it in the Security queue.",
+        colors.danger,
+      ).addFields(
+        { name: "Incident", value: `#${incident.id} · ${String(incident.scope).replaceAll("_", " ")}`, inline: true },
+        { name: "Occurrences", value: String(incident.occurrence_count ?? 1), inline: true },
+        { name: "Account", value: incident.actor_email || incident.actor_user_id || "Unknown", inline: false },
+        { name: "Target", value: incident.target_ref || "Nexora", inline: false },
+        { name: "Details", value: details.slice(0, 1000) || "No additional details", inline: false },
+      );
+      await channel.send({
+        content: `<@&${config.securityPingRoleId}>`,
+        embeds: [alert],
+        allowedMentions: { roles: [config.securityPingRoleId] },
+      });
+    }
+  } catch (error) {
+    logger.error("Security alert poll failed", { error: error?.stack || String(error) });
+  } finally {
+    securityPollActive = false;
+  }
+}
 
 async function registerCommands(guildId = config.discordGuildId) {
   const rest = new REST({ version: "10" }).setToken(config.discordToken);
@@ -85,6 +123,9 @@ client.once(Events.ClientReady, async (readyClient) => {
     guilds: readyClient.guilds.cache.size,
     commands: commandMap.size,
   });
+  await pollSecurityIncidents();
+  securityTimer = setInterval(pollSecurityIncidents, 60_000);
+  securityTimer.unref();
 });
 
 client.on(Events.GuildCreate, (guild) =>
@@ -198,6 +239,7 @@ process.on("uncaughtException", (error) =>
 
 async function shutdown(signal) {
   logger.info("Shutting down Nexora Bot", { signal });
+  if (securityTimer) clearInterval(securityTimer);
   healthServer.close();
   client.destroy();
   process.exit(0);

@@ -15,6 +15,8 @@ const NEXORA_PROVIDER_STATUS_CHANNEL_ID = "1543328254453223434";
 const NEXORA_BETA_ROLE_ID = "1543356004316614687";
 const NEXORA_VERIFIED_ROLE_ID = "1543357165836705883";
 const NEXORA_WORKSPACE_OWNER_ROLE_ID = "1543357235185324123";
+const NEXORA_SECURITY_ALERT_CHANNEL_ID = "1543592799981535302";
+const NEXORA_SECURITY_PING_ROLE_ID = "1543625600919404604";
 const discordId = z.string().regex(/^\d{17,22}$/);
 
 const schema = z.object({
@@ -59,6 +61,8 @@ export function loadConfig(environment = process.env) {
     betaRoleId: NEXORA_BETA_ROLE_ID,
     verifiedRoleId: NEXORA_VERIFIED_ROLE_ID,
     workspaceOwnerRoleId: NEXORA_WORKSPACE_OWNER_ROLE_ID,
+    securityAlertChannelId: NEXORA_SECURITY_ALERT_CHANNEL_ID,
+    securityPingRoleId: NEXORA_SECURITY_PING_ROLE_ID,
     purchasedPlansChannelId: null,
     supabaseUrl: result.data.SUPABASE_URL.replace(/\/$/, ""),
     supabaseServiceRoleKey: result.data.SUPABASE_SERVICE_ROLE_KEY,

@@ -11,6 +11,7 @@ const links = [
   { href: "/beta", label: "Beta" },
 ];
 const moreLinks = [
+  { href: "/groups", label: "Groups using Nexora" },
   { href: "/verify", label: "Discord verification" },
   { href: "https://discord.gg/YY9nXqqWTk", label: "Community & support" },
   { href: "/bot", label: "Discord bot" },

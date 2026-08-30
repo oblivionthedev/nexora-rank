@@ -90,6 +90,14 @@ export default async function Applications({
                           <button><Megaphone /> Announce</button>
                         </form>
                       ) : null}
+                      {form.status !== "archived" ? (
+                        <form action={setApplicationStatus}>
+                          <input type="hidden" name="public_id" value={workspaceId} />
+                          <input type="hidden" name="id" value={form.id} />
+                          <input type="hidden" name="status" value="archived" />
+                          <button>Archive</button>
+                        </form>
+                      ) : null}
                       <form action={deleteRecord} className="application-delete-form">
                         <input type="hidden" name="public_id" value={workspaceId} />
                         <input type="hidden" name="path" value="applications" />

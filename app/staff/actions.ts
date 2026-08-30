@@ -229,3 +229,54 @@ export async function removePartner(formData: FormData) {
   revalidatePath("/partners");
   redirect("/staff?notice=partner_removed#partners");
 }
+
+export async function addNexoraGroup(formData: FormData) {
+  const groupId = robloxGroupId(clean(formData.get("roblox_group")));
+  const discordUrl = clean(formData.get("discord_invite"));
+  if (!groupId || (discordUrl && !/^https:\/\/(?:www\.)?(?:discord\.gg|discord\.com\/invite)\/[A-Za-z0-9_-]+\/?$/.test(discordUrl)))
+    redirect("/staff?error=invalid_group_listing#nexora-groups");
+  const group = await getRobloxGroupDetails(groupId);
+  if (!group) redirect("/staff?error=roblox_group_not_found#nexora-groups");
+  const supabase = await authenticatedClient();
+  const { error } = await supabase.rpc("staff_add_nexora_group", {
+    group_id: group.id, group_name: group.name, group_logo_url: group.iconUrl || "",
+    member_count: group.memberCount, owner_user_id: group.owner?.userId || "",
+    owner_username: group.owner?.username || "", owner_display_name: group.owner?.displayName || "",
+    discord_url: discordUrl,
+  });
+  if (error) redirect(`/staff?error=${errorCode(error.message)}#nexora-groups`);
+  revalidatePath("/staff"); revalidatePath("/groups");
+  redirect("/staff?notice=group_added#nexora-groups");
+}
+
+export async function removeNexoraGroup(formData: FormData) {
+  const id = Number(clean(formData.get("group_record_id")));
+  if (!Number.isSafeInteger(id)) redirect("/staff?error=invalid_group_listing#nexora-groups");
+  const supabase = await authenticatedClient();
+  const { error } = await supabase.rpc("staff_remove_nexora_group", { group_record_id: id });
+  if (error) redirect(`/staff?error=${errorCode(error.message)}#nexora-groups`);
+  revalidatePath("/staff"); revalidatePath("/groups");
+  redirect("/staff?notice=group_removed#nexora-groups");
+}
+
+export async function manageBetaApplication(formData: FormData) {
+  const applicationId = clean(formData.get("application_id"));
+  const action = clean(formData.get("manage_action"));
+  if (!applicationId || !["archive", "delete"].includes(action)) redirect("/staff?error=invalid_beta_request#beta-applications");
+  const supabase = await authenticatedClient();
+  const rpc = action === "delete" ? "staff_delete_beta_application" : "staff_archive_beta_application";
+  const { error } = await supabase.rpc(rpc, { application_id: applicationId });
+  if (error) redirect(`/staff?error=${errorCode(error.message)}#beta-applications`);
+  revalidatePath("/staff");
+  redirect(`/staff?notice=beta_${action}d#beta-applications`);
+}
+
+export async function resolveSecurityIncident(formData: FormData) {
+  const incidentId = Number(clean(formData.get("incident_id")));
+  if (!Number.isSafeInteger(incidentId)) redirect("/staff?error=invalid_security_incident#security-incidents");
+  const supabase = await authenticatedClient();
+  const { error } = await supabase.rpc("staff_resolve_security_incident", { incident_id: incidentId });
+  if (error) redirect(`/staff?error=${errorCode(error.message)}#security-incidents`);
+  revalidatePath("/staff");
+  redirect("/staff?notice=security_resolved#security-incidents");
+}

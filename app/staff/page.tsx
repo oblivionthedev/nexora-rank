@@ -17,8 +17,12 @@ import {
 import { BrandMark } from "@/components/brand-mark";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import {
+  addNexoraGroup,
   addPartner,
+  manageBetaApplication,
+  removeNexoraGroup,
   removePartner,
+  resolveSecurityIncident,
   staffSignOut,
   updateBetaApplication,
 } from "@/app/staff/actions";
@@ -106,6 +110,15 @@ type PartnerRow = {
   published: boolean;
   created_at: string;
 };
+type NexoraGroupRow = Omit<PartnerRow, "id" | "discord_invite_url"> & {
+  id: number;
+  discord_invite_url: string | null;
+};
+type SecurityIncidentRow = {
+  id: number; scope: string; target_ref: string | null; actor_email: string | null;
+  occurrence_count: number; first_seen_at: string; last_seen_at: string;
+  resolved_at: string | null; details: Record<string, unknown>;
+};
 
 const notices: Record<string, string> = {
   workspace_suspend: "Workspace suspended.",
@@ -116,6 +129,11 @@ const notices: Record<string, string> = {
   beta_updated: "Beta application status updated.",
   partner_added: "Partner published to the directory.",
   partner_removed: "Partner removed from the directory.",
+  group_added: "Group published to Groups using Nexora.",
+  group_removed: "Group removed from the Nexora directory.",
+  beta_archived: "Beta application archived.",
+  beta_deleted: "Beta application permanently deleted.",
+  security_resolved: "Security incident resolved. Repeated alerts have stopped.",
 };
 const errors: Record<string, string> = {
   beta_role_sync_failed:
@@ -141,6 +159,8 @@ const errors: Record<string, string> = {
   invalid_staff_request: "Enter a valid account email and role.",
   invalid_partner:
     "Enter a Roblox group or community link and a valid Discord invite.",
+  invalid_group_listing: "Enter a valid Roblox group and optional Discord invite.",
+  invalid_security_incident: "That security incident could not be found.",
   roblox_group_not_found: "Roblox could not find that group.",
   action_failed: "The action could not be completed.",
 };
@@ -171,6 +191,8 @@ export default async function StaffPage({
     { data: groupData },
     { data: betaData },
     { data: partnerData },
+    { data: nexoraGroupData },
+    { data: securityData },
   ] = await Promise.all([
     supabase.rpc("staff_console_state", {
       search_query: params.q?.slice(0, 120) || undefined,
@@ -183,12 +205,23 @@ export default async function StaffPage({
       : Promise.resolve({ data: [] }),
     supabase.rpc("staff_beta_applications"),
     supabase.rpc("staff_partners"),
+    supabase.rpc("staff_nexora_groups"),
+    supabase.rpc("staff_security_incidents"),
   ]);
-  if (error || !data) redirect("/staff/login");
+  if (error || !data) {
+    await supabase.rpc("report_security_incident", {
+      requested_scope: "staff_access",
+      requested_target: "/staff",
+      requested_details: { reason: error?.message || "staff_access_denied" },
+    });
+    redirect("/staff/login?error=staff_access_denied");
+  }
   const state = data as unknown as ConsoleState;
   const groupResults = (groupData ?? []) as unknown as GroupResult[];
   const betaApplications = (betaData ?? []) as unknown as BetaRow[];
   const partners = (partnerData ?? []) as unknown as PartnerRow[];
+  const nexoraGroups = (nexoraGroupData ?? []) as unknown as NexoraGroupRow[];
+  const securityIncidents = (securityData ?? []) as unknown as SecurityIncidentRow[];
 
   return (
     <div className="min-h-screen bg-[#050303] text-white">
@@ -204,6 +237,8 @@ export default async function StaffPage({
             <a href="#overview">Overview</a>
             <a href="#beta-applications">Beta</a>
             <a href="#partners">Partners</a>
+            <a href="#nexora-groups">Groups</a>
+            <a href="#security-incidents">Security</a>
             <a href="#workspaces">Workspaces</a>
             <a href="#audit">Audit</a>
           </nav>
@@ -408,6 +443,7 @@ export default async function StaffPage({
                       Applied {formatDate(application.created_at)}
                     </time>
                   </div>
+                  <div className="flex flex-wrap gap-2">
                   <form action={updateBetaApplication} className="flex gap-2">
                     <input
                       type="hidden"
@@ -429,6 +465,12 @@ export default async function StaffPage({
                       Save
                     </button>
                   </form>
+                  <form action={manageBetaApplication} className="flex gap-2">
+                    <input type="hidden" name="application_id" value={application.id} />
+                    <button name="manage_action" value="archive" className="min-h-11 rounded-xl border border-white/10 px-3 text-xs font-bold text-white/60">Archive</button>
+                    {(state.access.role === "owner" || state.access.role === "admin") ? <button name="manage_action" value="delete" className="min-h-11 rounded-xl border border-red-300/15 px-3 text-xs font-bold text-red-100/70">Delete</button> : null}
+                  </form>
+                  </div>
                 </article>
               ))
             ) : (
@@ -437,6 +479,31 @@ export default async function StaffPage({
               </p>
             )}
           </div>
+        </section>
+
+        <section id="nexora-groups" className="mt-8 rounded-[28px] border border-white/9 bg-white/[.025] p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div><p className="microlabel">Public customer directory</p><h2 className="mt-3 text-2xl font-extrabold">Groups using Nexora</h2><p className="mt-2 max-w-2xl text-sm leading-7 text-white/50">Publish verified Roblox groups that actively use Nexora. This is separate from partnerships.</p></div>
+            <span className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-white/45">{nexoraGroups.length} published</span>
+          </div>
+          {(state.access.role === "owner" || state.access.role === "admin") ? <form action={addNexoraGroup} className="mt-6 grid gap-3 rounded-2xl border border-[#d79a9a]/18 bg-[#d79a9a]/[.045] p-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+            <label><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">Roblox group</span><input name="roblox_group" required placeholder="Group ID or community link" className="min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4" /></label>
+            <label><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">Discord invite · optional</span><input name="discord_invite" type="url" placeholder="https://discord.gg/your-server" className="min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4" /></label>
+            <button className="min-h-12 rounded-xl bg-white px-6 text-sm font-extrabold text-black">Add group</button>
+          </form> : null}
+          <div className="mt-5 grid gap-3 md:grid-cols-2">{nexoraGroups.length ? nexoraGroups.map((group) => <article key={group.id} className="flex items-center gap-4 rounded-2xl border border-white/8 bg-black/20 p-4">
+            {group.roblox_group_logo_url ? <img src={group.roblox_group_logo_url} alt="" className="size-14 rounded-2xl bg-white object-cover" /> : <span className="flex size-14 items-center justify-center rounded-2xl bg-white/7 text-sm font-black">RB</span>}
+            <div className="min-w-0 flex-1"><b className="block truncate">{group.roblox_group_name}</b><p className="mt-1 text-xs text-white/45">Owned by {group.roblox_owner_display_name || group.roblox_owner_username || "Roblox member"}</p><p className="mt-1 text-xs text-white/30">{group.roblox_member_count.toLocaleString()} members</p></div>
+            {(state.access.role === "owner" || state.access.role === "admin") ? <form action={removeNexoraGroup}><input type="hidden" name="group_record_id" value={group.id} /><button aria-label={`Remove ${group.roblox_group_name}`} className="flex size-10 items-center justify-center rounded-xl border border-red-300/15 text-red-100/70"><Trash2 className="size-4" /></button></form> : null}
+          </article>) : <p className="col-span-full rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/40">No groups are published yet.</p>}</div>
+        </section>
+
+        <section id="security-incidents" className="mt-8 rounded-[28px] border border-red-300/12 bg-red-300/[.025] p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-red-200/70">Access protection</p><h2 className="mt-3 text-2xl font-extrabold">Unauthorized access incidents</h2><p className="mt-2 text-sm text-white/45">Unresolved attempts alert the security channel every 60 seconds until Staff resolves them here.</p></div><span className="rounded-full border border-red-300/15 px-3 py-1.5 text-xs font-bold text-red-100/60">{securityIncidents.filter((item) => !item.resolved_at).length} unresolved</span></div>
+          <div className="mt-6 grid gap-3">{securityIncidents.length ? securityIncidents.map((incident) => <article key={incident.id} className="grid gap-4 rounded-2xl border border-white/8 bg-black/25 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div><div className="flex flex-wrap gap-2"><b className="capitalize">{incident.scope.replaceAll("_", " ")}</b><span className={incident.resolved_at ? "text-xs text-emerald-200/60" : "text-xs text-red-200"}>{incident.resolved_at ? "Resolved" : "Alerting"}</span></div><p className="mt-2 text-sm text-white/50">{incident.actor_email || "Unknown signed-in account"}{incident.target_ref ? ` · ${incident.target_ref}` : ""}</p><p className="mt-1 text-xs text-white/30">{incident.occurrence_count} attempt(s) · last seen {formatDate(incident.last_seen_at)}</p></div>
+            {!incident.resolved_at ? <form action={resolveSecurityIncident}><input type="hidden" name="incident_id" value={incident.id} /><button className="min-h-11 rounded-xl bg-white px-4 text-sm font-extrabold text-black">Resolve &amp; stop alerts</button></form> : null}
+          </article>) : <p className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/40">No unauthorized access incidents.</p>}</div>
         </section>
 
         <section

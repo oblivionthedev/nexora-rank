@@ -596,6 +596,62 @@ export type Database = {
           },
         ];
       };
+      nexora_groups: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          discord_invite_url: string | null;
+          id: number;
+          published: boolean;
+          roblox_group_id: string;
+          roblox_group_logo_url: string | null;
+          roblox_group_name: string;
+          roblox_member_count: number;
+          roblox_owner_display_name: string | null;
+          roblox_owner_user_id: string | null;
+          roblox_owner_username: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          discord_invite_url?: string | null;
+          id?: never;
+          published?: boolean;
+          roblox_group_id: string;
+          roblox_group_logo_url?: string | null;
+          roblox_group_name: string;
+          roblox_member_count?: number;
+          roblox_owner_display_name?: string | null;
+          roblox_owner_user_id?: string | null;
+          roblox_owner_username?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          discord_invite_url?: string | null;
+          id?: never;
+          published?: boolean;
+          roblox_group_id?: string;
+          roblox_group_logo_url?: string | null;
+          roblox_group_name?: string;
+          roblox_member_count?: number;
+          roblox_owner_display_name?: string | null;
+          roblox_owner_user_id?: string | null;
+          roblox_owner_username?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "nexora_groups_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       partners: {
         Row: {
           created_at: string;
@@ -1569,6 +1625,61 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      dashboard_access_state: { Args: never; Returns: Json };
+      report_security_incident: {
+        Args: {
+          requested_scope: string;
+          requested_target?: string;
+          requested_details?: Json;
+        };
+        Returns: number;
+      };
+      staff_security_incidents: { Args: never; Returns: Json };
+      staff_resolve_security_incident: {
+        Args: { incident_id: number };
+        Returns: boolean;
+      };
+      bot_claim_security_incidents: { Args: never; Returns: Json };
+      staff_nexora_groups: { Args: never; Returns: Json };
+      staff_add_nexora_group: {
+        Args: {
+          group_id: string;
+          group_name: string;
+          group_logo_url: string;
+          member_count: number;
+          owner_user_id: string;
+          owner_username: string;
+          owner_display_name: string;
+          discord_url?: string;
+        };
+        Returns: number;
+      };
+      staff_remove_nexora_group: {
+        Args: { group_record_id: number };
+        Returns: boolean;
+      };
+      staff_archive_beta_application: {
+        Args: { application_id: string };
+        Returns: boolean;
+      };
+      staff_delete_beta_application: {
+        Args: { application_id: string };
+        Returns: boolean;
+      };
+      workspace_rank_candidates: {
+        Args: { target_workspace_id: string };
+        Returns: Json;
+      };
+      create_workspace_rank_request: {
+        Args: {
+          target_workspace_id: string;
+          target_roblox_user_id: string;
+          target_role_id: string;
+          target_role_name: string;
+          request_reason: string;
+        };
+        Returns: string;
+      };
       get_public_platform_settings: { Args: never; Returns: Json };
       bot_set_beta_enabled: {
         Args: { requested_enabled: boolean; actor_discord_id: string };

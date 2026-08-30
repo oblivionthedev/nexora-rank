@@ -1,0 +1,493 @@
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ChannelType,
+  PermissionFlagsBits,
+} from "discord.js";
+import { supportEmbed } from "../lib/response.js";
+
+const categoryName = "Nexora Support";
+const roleName = "Nexora Support";
+const transcriptName = "support-transcripts";
+const logsName = "support-logs";
+const ticketPrefix = "nexora-support:";
+
+function userIdFromTicket(channel) {
+  return channel?.type === ChannelType.GuildText &&
+    channel.topic?.startsWith(ticketPrefix)
+    ? channel.topic.slice(ticketPrefix.length).split(";")[0]
+    : null;
+}
+
+function safeChannelName(value) {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 48) || "member"
+  );
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function messageText(message) {
+  const embedText = message.embeds.flatMap((embed) => [
+    embed.title,
+    embed.description,
+    ...embed.fields.flatMap((field) => [`${field.name}:`, field.value]),
+    embed.footer?.text,
+  ]);
+  return [message.cleanContent, ...embedText]
+    .filter((value) => typeof value === "string" && value.trim())
+    .join("\n");
+}
+
+export function transcriptText(channel, messages, details) {
+  const divider = "-".repeat(72);
+  const rows = messages.map((message) => {
+    const attachments = [...message.attachments.values()].map(
+      (attachment) => `Attachment: ${attachment.url}`,
+    );
+    const body = messageText(message) || "Attachment only";
+    return [
+      `[${message.createdAt.toISOString()}] ${message.author.tag}${message.author.bot ? " (BOT)" : ""}`,
+      body,
+      ...attachments,
+    ].join("\n");
+  });
+  return [
+    "NEXORA SUPPORT TRANSCRIPT",
+    divider,
+    `Ticket: ${channel.name}`,
+    `Member: ${details.memberTag} (${details.memberId})`,
+    `Closed by: ${details.closedBy}`,
+    `Reason: ${details.reason}`,
+    `Closed: ${details.closedAt.toISOString()}`,
+    `Messages: ${messages.length}`,
+    divider,
+    ...rows.flatMap((row) => [row, divider]),
+  ].join("\n");
+}
+
+async function allMessages(channel) {
+  const messages = [];
+  let before;
+  for (;;) {
+    const batch = await channel.messages.fetch({ limit: 100, before });
+    if (!batch.size) break;
+    messages.push(...batch.values());
+    before = batch.last().id;
+    if (batch.size < 100) break;
+  }
+  return messages.sort(
+    (left, right) => left.createdTimestamp - right.createdTimestamp,
+  );
+}
+
+function transcriptDocument(channel, messages) {
+  const rows = messages
+    .map((message) => {
+      const attachments = [...message.attachments.values()]
+        .map(
+          (attachment) =>
+            `<a href="${escapeHtml(attachment.url)}">Attachment</a>`,
+        )
+        .join(" · ");
+      return `<article><header><b>${escapeHtml(message.author.tag)}</b><time>${message.createdAt.toISOString()}</time></header><p>${escapeHtml(messageText(message) || "Attachment only")}</p>${attachments}</article>`;
+    })
+    .join("\n");
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(channel.name)}</title><style>body{background:#080606;color:#f7f2f2;font:15px system-ui;margin:0;padding:40px}main{max-width:900px;margin:auto}h1{font-size:32px}article{border-top:1px solid #2d2727;padding:18px 0}header{display:flex;justify-content:space-between;gap:20px}time{color:#8e8484;font-size:12px}p{white-space:pre-wrap;line-height:1.7}a{color:#e9b7b7}</style></head><body><main><h1>Nexora Support transcript</h1><p>${escapeHtml(channel.name)} · ${messages.length} messages</p>${rows}</main></body></html>`;
+}
+
+export function createSupportService(client, config) {
+  async function guild() {
+    return client.guilds.fetch(config.supportGuildId);
+  }
+
+  async function setup(actor) {
+    const target = await guild();
+    await Promise.all([target.channels.fetch(), target.roles.fetch()]);
+    const supportTeamRole = target.roles.cache.get(config.supportTeamRoleId);
+    if (!supportTeamRole) throw new Error("support_team_role_missing");
+    let role = target.roles.cache.find((item) => item.name === roleName);
+    if (!role) {
+      role = await target.roles.create({
+        name: roleName,
+        color: 0xd7a1a1,
+        mentionable: true,
+        reason: `Nexora Support setup by ${actor.tag}`,
+      });
+    }
+
+    let category = target.channels.cache.find(
+      (item) =>
+        item.type === ChannelType.GuildCategory && item.name === categoryName,
+    );
+    if (!category) {
+      category = await target.channels.create({
+        name: categoryName,
+        type: ChannelType.GuildCategory,
+        permissionOverwrites: [
+          {
+            id: target.roles.everyone.id,
+            deny: [PermissionFlagsBits.ViewChannel],
+          },
+          {
+            id: role.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.SendMessages,
+              PermissionFlagsBits.ReadMessageHistory,
+              PermissionFlagsBits.AttachFiles,
+            ],
+          },
+          {
+            id: client.user.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel,
+              PermissionFlagsBits.SendMessages,
+              PermissionFlagsBits.ReadMessageHistory,
+              PermissionFlagsBits.ManageChannels,
+              PermissionFlagsBits.AttachFiles,
+            ],
+          },
+        ],
+        reason: `Nexora Support setup by ${actor.tag}`,
+      });
+    }
+    await category.permissionOverwrites.edit(supportTeamRole.id, {
+      ViewChannel: true,
+      SendMessages: true,
+      ReadMessageHistory: true,
+      AttachFiles: true,
+    });
+
+    async function ensureChannel(name) {
+      let channel = target.channels.cache.find(
+        (item) =>
+          item.type === ChannelType.GuildText &&
+          item.parentId === category.id &&
+          item.name === name,
+      );
+      if (!channel) {
+        channel = await target.channels.create({
+          name,
+          type: ChannelType.GuildText,
+          parent: category.id,
+          reason: `Nexora Support setup by ${actor.tag}`,
+        });
+      }
+      return channel;
+    }
+
+    const [transcripts, logs] = await Promise.all([
+      ensureChannel(transcriptName),
+      ensureChannel(logsName),
+    ]);
+    await Promise.all([transcripts, logs].map((channel) =>
+      channel.permissionOverwrites.edit(supportTeamRole.id, {
+        ViewChannel: true,
+        SendMessages: true,
+        ReadMessageHistory: true,
+        AttachFiles: true,
+      }),
+    ));
+    await logs.send({
+      embeds: [
+        supportEmbed(
+          "Support system ready",
+          `Tickets will open under **${category.name}**. Closed conversations will be saved in ${transcripts}. Agents need the ${role} role.`,
+        ),
+      ],
+    });
+    return { target, role, supportTeamRole, category, transcripts, logs };
+  }
+
+  async function resources() {
+    const target = await guild();
+    await Promise.all([target.channels.fetch(), target.roles.fetch()]);
+    const category = target.channels.cache.find(
+      (item) =>
+        item.type === ChannelType.GuildCategory && item.name === categoryName,
+    );
+    const role = target.roles.cache.find((item) => item.name === roleName);
+    const supportTeamRole = target.roles.cache.get(config.supportTeamRoleId);
+    const transcripts = target.channels.cache.find(
+      (item) =>
+        item.type === ChannelType.GuildText && item.name === transcriptName,
+    );
+    const logs = target.channels.cache.find(
+      (item) => item.type === ChannelType.GuildText && item.name === logsName,
+    );
+    if (!category || !role || !supportTeamRole || !transcripts || !logs) return null;
+    return { target, role, supportTeamRole, category, transcripts, logs };
+  }
+
+  async function sendPanel(channel, actor) {
+    const configured = (await resources()) || (await setup(actor));
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setLabel("Message Nexora Support")
+        .setStyle(ButtonStyle.Link)
+        .setURL(`https://discord.com/users/${client.user.id}`),
+    );
+    const message = await channel.send({
+      embeds: [
+        supportEmbed(
+          "Need help with Nexora?",
+          "Send this bot a direct message. A private conversation will open for the Nexora Support team, and every reply will stay between you and the assigned agents.",
+        ).addFields(
+          {
+            name: "Private",
+            value:
+              "Your messages are visible only to authorized Support agents.",
+            inline: true,
+          },
+          {
+            name: "Recorded",
+            value: "A transcript is saved when the conversation closes.",
+            inline: true,
+          },
+        ),
+      ],
+      components: [row],
+    });
+    await configured.logs.send({
+      embeds: [
+        supportEmbed(
+          "Support panel published",
+          `${actor.tag} published a panel in ${channel}.`,
+        ),
+      ],
+    });
+    return message;
+  }
+
+  async function ticketFor(user) {
+    const configured = await resources();
+    if (!configured) throw new Error("support_not_configured");
+    let ticket = configured.target.channels.cache.find(
+      (item) => userIdFromTicket(item) === user.id,
+    );
+    if (ticket) return { ticket, configured, created: false };
+    ticket = await configured.target.channels.create({
+      name: `ticket-${safeChannelName(user.globalName || user.username)}-${user.id.slice(-4)}`,
+      type: ChannelType.GuildText,
+      parent: configured.category.id,
+      topic: `${ticketPrefix}${user.id}`,
+      reason: `Support conversation for ${user.tag}`,
+    });
+    const controls = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("ticket:claim")
+        .setLabel("Claim")
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId("ticket:close")
+        .setLabel("Close & transcript")
+        .setStyle(ButtonStyle.Danger),
+    );
+    await ticket.send({
+      content: `${configured.role} ${configured.supportTeamRole}`,
+      embeds: [
+        supportEmbed(
+          "New support conversation",
+          "Reply normally in this channel to message the member. Claim the ticket when you begin, and close it when the issue is resolved.",
+        )
+          .setAuthor({
+            name: user.globalName || user.username,
+            iconURL: user.displayAvatarURL(),
+          })
+          .addFields({ name: "Member", value: `${user.tag}\n\`${user.id}\`` }),
+      ],
+      components: [controls],
+      allowedMentions: { roles: [configured.role.id, configured.supportTeamRole.id] },
+    });
+    await configured.logs.send({
+      embeds: [supportEmbed("Ticket opened", `${user.tag} opened ${ticket}.`)],
+    });
+    return { ticket, configured, created: true };
+  }
+
+  async function receiveDm(message) {
+    const { ticket } = await ticketFor(message.author);
+    const attachments = [...message.attachments.values()]
+      .map((item) => item.url)
+      .join("\n");
+    const description = [message.content || "Attachment only", attachments]
+      .filter(Boolean)
+      .join("\n\n")
+      .slice(0, 4000);
+    await ticket.send({
+      embeds: [
+        supportEmbed("Member message", description).setAuthor({
+          name: message.author.globalName || message.author.username,
+          iconURL: message.author.displayAvatarURL(),
+        }),
+      ],
+    });
+    await message.react("✅");
+  }
+
+  async function relayAgentMessage(message) {
+    const userId = userIdFromTicket(message.channel);
+    if (!userId || message.author.bot) return false;
+    const configured = await resources();
+    const isAgent =
+      message.member?.roles.cache.has(configured?.role.id) ||
+      message.member?.roles.cache.has(configured?.supportTeamRole.id) ||
+      message.member?.permissions.has(PermissionFlagsBits.ManageGuild);
+    if (!isAgent) return false;
+    const user = await client.users.fetch(userId);
+    const attachments = [...message.attachments.values()]
+      .map((item) => item.url)
+      .join("\n");
+    const description = [message.content || "Attachment only", attachments]
+      .filter(Boolean)
+      .join("\n\n")
+      .slice(0, 4000);
+    await user.send({
+      embeds: [
+        supportEmbed("Nexora Support", description).setAuthor({
+          name: message.member?.displayName || message.author.username,
+          iconURL: message.author.displayAvatarURL(),
+        }),
+      ],
+    });
+    await message.react("✅").catch(() => undefined);
+    return true;
+  }
+
+  async function requireAgent(interaction) {
+    const configured = await resources();
+    if (!configured) throw new Error("support_not_configured");
+    const member = await configured.target.members.fetch(interaction.user.id);
+    if (
+      !member.roles.cache.has(configured.role.id) &&
+      !member.roles.cache.has(configured.supportTeamRole.id) &&
+      !member.permissions.has(PermissionFlagsBits.ManageGuild)
+    ) {
+      throw new Error("support_agent_required");
+    }
+    return configured;
+  }
+
+  async function claim(channel, actor) {
+    const userId = userIdFromTicket(channel);
+    if (!userId) throw new Error("ticket_required");
+    const baseTopic = `${ticketPrefix}${userId}`;
+    await channel.setTopic(`${baseTopic};claimed=${actor.id}`);
+    await channel.send({
+      embeds: [
+        supportEmbed(
+          "Ticket claimed",
+          `${actor} is handling this conversation.`,
+        ),
+      ],
+    });
+  }
+
+  async function close(channel, actor, reason = "Conversation resolved") {
+    const userId = userIdFromTicket(channel);
+    if (!userId) throw new Error("ticket_required");
+    const configured = await resources();
+    const user = await client.users.fetch(userId);
+    const messages = await allMessages(channel);
+    const closedAt = new Date();
+    const text = transcriptText(channel, messages, {
+      memberTag: user.tag,
+      memberId: user.id,
+      closedBy: actor.tag,
+      reason,
+      closedAt,
+    });
+    const html = transcriptDocument(channel, messages);
+    const transcriptMessage = await configured.transcripts.send({
+      embeds: [
+        supportEmbed(
+          "Support transcript",
+          `**Member:** ${user.tag} (\`${user.id}\`)\n**Closed by:** ${actor.tag}\n**Reason:** ${reason}\n**Messages:** ${messages.length}`,
+        ),
+      ],
+      files: [
+        {
+          attachment: Buffer.from(text, "utf8"),
+          name: `${channel.name}.txt`,
+          description: "Readable Nexora Support transcript",
+        },
+        {
+          attachment: Buffer.from(html, "utf8"),
+          name: `${channel.name}.html`,
+          description: "Styled transcript for download",
+        },
+      ],
+    });
+    await configured.logs.send({
+      embeds: [
+        supportEmbed(
+          "Ticket closed",
+          `${actor.tag} closed **${channel.name}**. [Open transcript](${transcriptMessage.url})`,
+        ),
+      ],
+    });
+    await user
+      .send({
+        embeds: [
+          supportEmbed(
+            "Support conversation closed",
+            `${reason}\n\nSend another DM whenever you need more help.`,
+          ),
+        ],
+      })
+      .catch(() => undefined);
+    await channel.delete(`Closed by ${actor.tag}: ${reason}`);
+  }
+
+  async function askMemberToClose(channel, actor) {
+    const userId = userIdFromTicket(channel);
+    if (!userId) throw new Error("ticket_required");
+    const user = await client.users.fetch(userId);
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`ticket:member-close:${channel.id}`)
+        .setLabel("Close my support conversation")
+        .setStyle(ButtonStyle.Danger),
+    );
+    await user.send({
+      embeds: [supportEmbed("Is everything resolved?", `${actor.tag} asked whether you are ready to close this support conversation. Close it only if you no longer need help.`)],
+      components: [row],
+    });
+    await channel.send({ embeds: [supportEmbed("Member confirmation requested", `${actor} asked the member to close this conversation.`)] });
+  }
+
+  async function closeFromMember(interaction, channelId) {
+    const target = await guild();
+    const channel = await target.channels.fetch(channelId);
+    if (!channel || userIdFromTicket(channel) !== interaction.user.id)
+      throw new Error("ticket_member_required");
+    await close(channel, interaction.user, "Closed by the member");
+  }
+
+  return {
+    setup,
+    resources,
+    sendPanel,
+    receiveDm,
+    relayAgentMessage,
+    requireAgent,
+    claim,
+    close,
+    askMemberToClose,
+    closeFromMember,
+    userIdFromTicket,
+  };
+}

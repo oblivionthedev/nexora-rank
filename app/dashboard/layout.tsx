@@ -17,12 +17,16 @@ export default async function DashboardLayout({
     redirect("/login?next=/dashboard");
   }
 
-  const ownerEmail = process.env.NEXORA_OWNER_EMAIL?.trim().toLowerCase();
-  const signedInEmail = data.user.email?.trim().toLowerCase();
-
-  // Fail closed if the owner allowlist is missing or the account does not match.
-  if (!ownerEmail || signedInEmail !== ownerEmail) {
-    redirect("/");
+  const { data: access } = await supabase.rpc("dashboard_access_state");
+  const allowed = Boolean((access as { allowed?: boolean } | null)?.allowed);
+  if (!allowed) {
+    await supabase.rpc("report_security_incident", {
+      requested_scope: "dashboard_access",
+      requested_target: "/dashboard",
+      requested_details: { reason: "beta_selection_required" },
+    });
+    await supabase.auth.signOut();
+    redirect("/beta?access=selection_required");
   }
 
   return children;

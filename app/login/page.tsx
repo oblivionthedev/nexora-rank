@@ -30,6 +30,8 @@ const authErrors: Record<string, string> = {
     "Roblox sign-in is not configured yet. Please try again shortly.",
   roblox_already_linked:
     "This Roblox account is already linked to another Nexora Rank user.",
+  beta_selection_required:
+    "Dashboard access is temporarily limited to selected Beta applicants and Nexora Staff.",
 };
 
 const setupSteps = [
@@ -177,10 +179,10 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <span className="signin-eyebrow">Sign in</span>
-          <h2>Choose how to begin</h2>
+          <span className="signin-eyebrow">Selected Beta access</span>
+          <h2>Sign in to your invitation</h2>
           <p className="signin-action-lede">
-            Start with Discord. Setup will guide you through any optional account connections.
+            Discord sign-in is available to selected applicants and Nexora Staff. Roblox remains optional while provider approval is pending.
           </p>
 
           <button

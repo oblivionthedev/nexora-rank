@@ -15,6 +15,13 @@ export async function GET(request: NextRequest) {
     raw_code: code,
   });
   const authorized = (data as { authorized?: boolean } | null)?.authorized;
+  if (error || !authorized) {
+    await supabase.rpc("report_security_incident", {
+      requested_scope: "staff_login",
+      requested_target: "/staff/complete",
+      requested_details: { reason: error?.message || "invalid_staff_code" },
+    });
+  }
   const response = NextResponse.redirect(
     new URL(
       !error && authorized ? "/staff" : "/staff/login?error=invalid_code",

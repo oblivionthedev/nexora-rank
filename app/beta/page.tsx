@@ -21,7 +21,12 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-export default async function BetaPage() {
+export default async function BetaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ access?: string }>;
+}) {
+  const query = await searchParams;
   const supabase = await createClient();
   const [{ data }, { data: auth }] = await Promise.all([
     supabase.rpc("get_public_platform_settings"),
@@ -59,6 +64,15 @@ export default async function BetaPage() {
           </Link>
         </div>
       </nav>
+      {query.access === "selection_required" ? (
+        <div className="beta-access-notice" role="status">
+          <LockKeyhole />
+          <div>
+            <strong>Dashboard access is currently invitation-only.</strong>
+            <span>Apply below or check your Beta status. Selected applicants can sign in as soon as access is approved.</span>
+          </div>
+        </div>
+      ) : null}
       <header className="beta-hero">
         <div className="beta-grid" aria-hidden="true" />
         <div className="home-section-label">
