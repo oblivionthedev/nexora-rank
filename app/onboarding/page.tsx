@@ -44,6 +44,8 @@ const messages: Record<string, string> = {
     "Use a 2–64 character name and a lowercase URL such as my-community.",
   slug_taken: "That workspace URL is already taken.",
   workspace_failed: "The workspace could not be created.",
+  workspace_creation_paused:
+    "Workspace creation is temporarily paused while Nexora Beta applications are reviewed. Your account and application remain safe.",
   onboarding_incomplete:
     "Complete the earlier setup steps before creating a workspace.",
   roblox_not_ready:
@@ -80,6 +82,8 @@ export default async function OnboardingPage({
     { data: links },
     { data: membership },
     { data: policy },
+    { data: platformSettings },
+    { data: dashboardAccess },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -99,6 +103,8 @@ export default async function OnboardingPage({
       .limit(1)
       .maybeSingle(),
     supabase.rpc("get_free_membership_policy"),
+    supabase.rpc("get_public_platform_settings"),
+    supabase.rpc("dashboard_access_state"),
   ]);
 
   const providerMap = new Map(
@@ -120,6 +126,14 @@ export default async function OnboardingPage({
     grace_hours?: number;
   } | null;
   const membershipEnforced = Boolean(membershipPolicy?.enabled);
+  const workspaceCreationEnabled = Boolean(
+    (platformSettings as { workspace_creation_enabled?: boolean } | null)
+      ?.workspace_creation_enabled,
+  );
+  const isStaff = Boolean(
+    (dashboardAccess as { staff?: boolean } | null)?.staff,
+  );
+  const workspaceCreationAvailable = workspaceCreationEnabled || isStaff;
   const robloxAvailable =
     process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
   // Roblox remains optional while the live membership policy is disabled.
@@ -190,8 +204,8 @@ export default async function OnboardingPage({
             <span className="setup-eyebrow">Nexora onboarding</span>
             <h1>Build your community control room.</h1>
             <p>
-              A focused setup for connected accounts, ownership, plan limits, and the
-              workspace your team will run from.
+              A focused setup for connected accounts, ownership, plan limits,
+              and the workspace your team will run from.
             </p>
           </div>
           <ol className="setup-steps">
@@ -529,40 +543,51 @@ export default async function OnboardingPage({
                 <UsersRound />
               </div>
               <span className="setup-kicker">Create workspace</span>
-              <h2>Name the control center for your community.</h2>
+              <h2>
+                {workspaceCreationAvailable
+                  ? "Name the control center for your community."
+                  : "Workspace creation is temporarily paused."}
+              </h2>
               <p>
-                Your workspace receives a permanent letters-and-numbers ID. It
-                never changes, while the private 25-character API key can be
-                replaced from the dashboard at any time.
+                {workspaceCreationAvailable
+                  ? "Your workspace receives a permanent letters-and-numbers ID. It never changes, while the private 25-character API key can be replaced from the dashboard at any time."
+                  : "We are reviewing the first Beta members before opening workspace setup. You can stay signed in, and your selected Beta access remains active."}
               </p>
-              <form action={createOnboardingWorkspace} className="setup-form">
-                <label>
-                  <span>Workspace name</span>
-                  <input
-                    name="name"
-                    required
-                    minLength={2}
-                    maxLength={64}
-                    placeholder="Nexora Community"
-                  />
-                </label>
-                <label>
-                  <span>Workspace URL</span>
-                  <div className="setup-slug">
-                    <small>nexorarank.tech/w/</small>
+              {workspaceCreationAvailable ? (
+                <form action={createOnboardingWorkspace} className="setup-form">
+                  <label>
+                    <span>Workspace name</span>
                     <input
-                      name="slug"
+                      name="name"
                       required
-                      pattern="[a-z0-9][a-z0-9-]{1,46}[a-z0-9]"
-                      placeholder="nexora-community"
+                      minLength={2}
+                      maxLength={64}
+                      placeholder="Nexora Community"
                     />
-                  </div>
-                  <small>Lowercase letters, numbers and hyphens only.</small>
-                </label>
-                <Button type="submit" className="button-glow h-12 rounded-xl">
-                  Create workspace <ArrowRight />
-                </Button>
-              </form>
+                  </label>
+                  <label>
+                    <span>Workspace URL</span>
+                    <div className="setup-slug">
+                      <small>nexorarank.tech/w/</small>
+                      <input
+                        name="slug"
+                        required
+                        pattern="[a-z0-9][a-z0-9-]{1,46}[a-z0-9]"
+                        placeholder="nexora-community"
+                      />
+                    </div>
+                    <small>Lowercase letters, numbers and hyphens only.</small>
+                  </label>
+                  <Button type="submit" className="button-glow h-12 rounded-xl">
+                    Create workspace <ArrowRight />
+                  </Button>
+                </form>
+              ) : (
+                <div className="onboarding-error" role="status">
+                  New workspaces are paused during the Beta intake. No action is
+                  required from you right now.
+                </div>
+              )}
               <div className="setup-capabilities">
                 <span>
                   <Webhook /> Signed API requests

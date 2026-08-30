@@ -139,6 +139,19 @@ export async function createOnboardingWorkspace(formData: FormData) {
 
   const { supabase, user } = await authenticatedClient();
 
+  const [{ data: platformSettings }, { data: accessState }] = await Promise.all(
+    [
+      supabase.rpc("get_public_platform_settings"),
+      supabase.rpc("dashboard_access_state"),
+    ],
+  );
+  const settings = platformSettings as {
+    workspace_creation_enabled?: boolean;
+  } | null;
+  const access = accessState as { staff?: boolean } | null;
+  if (!settings?.workspace_creation_enabled && !access?.staff)
+    redirect("/onboarding?error=workspace_creation_paused");
+
   const { data: policy } = await supabase.rpc("get_free_membership_policy");
   const membershipPolicy = policy as { enabled?: boolean } | null;
   if (membershipPolicy?.enabled) {
@@ -186,6 +199,8 @@ export async function createOnboardingWorkspace(formData: FormData) {
       redirect("/onboarding?error=onboarding_incomplete");
     if (error.message.includes("roblox_membership_required"))
       redirect("/onboarding?error=roblox_membership_required");
+    if (error.message.includes("workspace_creation_paused"))
+      redirect("/onboarding?error=workspace_creation_paused");
     if (error.code === "23505") redirect("/onboarding?error=slug_taken");
     redirect("/onboarding?error=workspace_failed");
   }

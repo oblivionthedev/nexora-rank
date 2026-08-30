@@ -31,7 +31,10 @@ export function createNexoraService(config, logger) {
       .eq("provider", "discord")
       .eq("provider_user_id", discordUserId)
       .maybeSingle();
-    throwIfError(error, "Nexora could not check your connected Discord identity.");
+    throwIfError(
+      error,
+      "Nexora could not check your connected Discord identity.",
+    );
     return data;
   }
 
@@ -197,6 +200,18 @@ export function createNexoraService(config, logger) {
       actor_discord_id: actorDiscordId,
     });
     throwIfError(error, "Nexora could not update the live Beta switch.");
+    return data;
+  }
+
+  async function setWorkspaceCreationEnabled({ enabled, actorDiscordId }) {
+    const { data, error } = await database.rpc(
+      "bot_set_workspace_creation_enabled",
+      {
+        requested_enabled: enabled,
+        actor_discord_id: actorDiscordId,
+      },
+    );
+    throwIfError(error, "Nexora could not update workspace creation.");
     return data;
   }
 
@@ -578,7 +593,9 @@ export function createNexoraService(config, logger) {
       .eq("workspace_id", workspace.id)
       .eq("id", submissionId)
       .in("status", ["submitted", "in_review"])
-      .select("id, status, applicant_discord_user_id, application_forms(target_role_id, target_role_name)")
+      .select(
+        "id, status, applicant_discord_user_id, application_forms(target_role_id, target_role_name)",
+      )
       .maybeSingle();
     throwIfError(error, "Nexora could not decide that application.");
     if (!data)
@@ -602,6 +619,7 @@ export function createNexoraService(config, logger) {
     claimLink,
     createStaffAccessCode,
     setBetaEnabled,
+    setWorkspaceCreationEnabled,
     claimSecurityIncidents,
     getWorkspace,
     workspaceSummary,

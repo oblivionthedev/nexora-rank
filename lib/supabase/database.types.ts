@@ -1685,6 +1685,10 @@ export type Database = {
         Args: { requested_enabled: boolean; actor_discord_id: string };
         Returns: Json;
       };
+      bot_set_workspace_creation_enabled: {
+        Args: { actor_discord_id: string; requested_enabled: boolean };
+        Returns: Json;
+      };
       redeem_staff_access_code: { Args: { raw_code: string }; Returns: Json };
       revoke_current_staff_session: { Args: never; Returns: boolean };
       bot_create_staff_access_code: {

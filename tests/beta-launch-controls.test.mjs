@@ -9,7 +9,9 @@ test("publishes a Staff-managed Groups using Nexora directory", async () => {
     read("app/groups/page.tsx"),
     read("components/site-nav.tsx"),
     read("app/staff/page.tsx"),
-    read("supabase/migrations/20260830142743_add_groups_security_and_beta_launch_controls.sql"),
+    read(
+      "supabase/migrations/20260830142743_add_groups_security_and_beta_launch_controls.sql",
+    ),
   ]);
   assert.match(page, /Groups using Nexora/);
   assert.match(nav, /href: "\/groups"/);
@@ -18,13 +20,23 @@ test("publishes a Staff-managed Groups using Nexora directory", async () => {
 });
 
 test("Beta launch access is invite-only and unauthorized access remains alertable", async () => {
-  const [dashboard, callback, migration, bot] = await Promise.all([
-    read("app/dashboard/layout.tsx"),
-    read("app/auth/callback/route.ts"),
-    read("supabase/migrations/20260830142743_add_groups_security_and_beta_launch_controls.sql"),
-    read("Nexora-Bot/src/index.js"),
-  ]);
+  const [dashboard, callback, migration, bot, onboarding, creationControl] =
+    await Promise.all([
+      read("app/dashboard/layout.tsx"),
+      read("app/auth/callback/route.ts"),
+      read(
+        "supabase/migrations/20260830142743_add_groups_security_and_beta_launch_controls.sql",
+      ),
+      read("Nexora-Bot/src/index.js"),
+      read("app/onboarding/page.tsx"),
+      read(
+        "supabase/migrations/20260830191650_temporarily_pause_workspace_creation.sql",
+      ),
+    ]);
   assert.match(dashboard, /dashboard_access_state/);
+  assert.match(onboarding, /workspace_creation_enabled/);
+  assert.match(onboarding, /workspace_creation_paused/);
+  assert.match(creationControl, /guard_beta_workspace_creation/);
   assert.match(callback, /report_security_incident/);
   assert.match(migration, /interval '60 seconds'/);
   assert.match(bot, /securityPingRoleId/);
@@ -35,7 +47,9 @@ test("workspace rank requests use linked members, live roles, reasons, and audit
   const [page, actions, migration] = await Promise.all([
     read("app/dashboard/[workspaceId]/automations/page.tsx"),
     read("app/dashboard/[workspaceId]/actions.ts"),
-    read("supabase/migrations/20260830142743_add_groups_security_and_beta_launch_controls.sql"),
+    read(
+      "supabase/migrations/20260830142743_add_groups_security_and_beta_launch_controls.sql",
+    ),
   ]);
   assert.match(page, /workspace_rank_candidates/);
   assert.match(page, /target_role_id/);

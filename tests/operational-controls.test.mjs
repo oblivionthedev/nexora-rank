@@ -21,10 +21,17 @@ test("operational logs use the configured Nexora channels", async () => {
 });
 
 test("Beta availability is database-backed and enforced server-side", async () => {
-  const [migration, page, form] = await Promise.all([
+  const [migration, creationControl, page, form] = await Promise.all([
     readFile(
       new URL(
         "../supabase/migrations/20260829192724_add_beta_controls_and_support_system.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "../supabase/migrations/20260830191650_temporarily_pause_workspace_creation.sql",
         import.meta.url,
       ),
       "utf8",
@@ -36,6 +43,7 @@ test("Beta availability is database-backed and enforced server-side", async () =
     ),
   ]);
   assert.match(migration, /bot_set_beta_enabled/);
+  assert.match(creationControl, /bot_set_workspace_creation_enabled/);
   assert.match(migration, /'beta_closed'/);
   assert.match(page, /get_public_platform_settings/);
   assert.match(page, /force-dynamic/);
