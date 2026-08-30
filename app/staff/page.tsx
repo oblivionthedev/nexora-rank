@@ -11,11 +11,17 @@ import {
   LogOut,
   Search,
   ShieldCheck,
+  Trash2,
   UsersRound,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { staffSignOut, updateBetaApplication } from "@/app/staff/actions";
+import {
+  addPartner,
+  removePartner,
+  staffSignOut,
+  updateBetaApplication,
+} from "@/app/staff/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +94,18 @@ type BetaRow = {
   created_at: string;
   updated_at: string;
 };
+type PartnerRow = {
+  id: string;
+  roblox_group_id: string;
+  roblox_group_name: string;
+  roblox_group_logo_url: string | null;
+  roblox_member_count: number;
+  roblox_owner_display_name: string | null;
+  roblox_owner_username: string | null;
+  discord_invite_url: string;
+  published: boolean;
+  created_at: string;
+};
 
 const notices: Record<string, string> = {
   workspace_suspend: "Workspace suspended.",
@@ -96,6 +114,8 @@ const notices: Record<string, string> = {
   staff_updated: "Staff access updated.",
   staff_revoked: "Staff access revoked.",
   beta_updated: "Beta application status updated.",
+  partner_added: "Partner published to the directory.",
+  partner_removed: "Partner removed from the directory.",
 };
 const errors: Record<string, string> = {
   beta_role_sync_failed:
@@ -119,6 +139,9 @@ const errors: Record<string, string> = {
   invalid_beta_request: "Choose a valid Beta application status.",
   invalid_beta_status: "Choose a valid Beta application status.",
   invalid_staff_request: "Enter a valid account email and role.",
+  invalid_partner:
+    "Enter a Roblox group or community link and a valid Discord invite.",
+  roblox_group_not_found: "Roblox could not find that group.",
   action_failed: "The action could not be completed.",
 };
 
@@ -143,23 +166,29 @@ export default async function StaffPage({
   const status = ["active", "suspended", "banned"].includes(params.status ?? "")
     ? params.status!
     : "all";
-  const [{ data, error }, { data: groupData }, { data: betaData }] =
-    await Promise.all([
-      supabase.rpc("staff_console_state", {
-        search_query: params.q?.slice(0, 120) || undefined,
-        status_filter: status,
-      }),
-      params.group
-        ? supabase.rpc("staff_find_workspaces", {
-            group_query: params.group.slice(0, 120),
-          })
-        : Promise.resolve({ data: [] }),
-      supabase.rpc("staff_beta_applications"),
-    ]);
+  const [
+    { data, error },
+    { data: groupData },
+    { data: betaData },
+    { data: partnerData },
+  ] = await Promise.all([
+    supabase.rpc("staff_console_state", {
+      search_query: params.q?.slice(0, 120) || undefined,
+      status_filter: status,
+    }),
+    params.group
+      ? supabase.rpc("staff_find_workspaces", {
+          group_query: params.group.slice(0, 120),
+        })
+      : Promise.resolve({ data: [] }),
+    supabase.rpc("staff_beta_applications"),
+    supabase.rpc("staff_partners"),
+  ]);
   if (error || !data) redirect("/staff/login");
   const state = data as unknown as ConsoleState;
   const groupResults = (groupData ?? []) as unknown as GroupResult[];
   const betaApplications = (betaData ?? []) as unknown as BetaRow[];
+  const partners = (partnerData ?? []) as unknown as PartnerRow[];
 
   return (
     <div className="min-h-screen bg-[#050303] text-white">
@@ -174,6 +203,7 @@ export default async function StaffPage({
           <nav className="staff-console-nav">
             <a href="#overview">Overview</a>
             <a href="#beta-applications">Beta</a>
+            <a href="#partners">Partners</a>
             <a href="#workspaces">Workspaces</a>
             <a href="#audit">Audit</a>
           </nav>
@@ -404,6 +434,118 @@ export default async function StaffPage({
             ) : (
               <p className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/40">
                 No Beta applications yet.
+              </p>
+            )}
+          </div>
+        </section>
+
+        <section
+          id="partners"
+          className="mt-8 rounded-[28px] border border-white/9 bg-white/[.025] p-4 sm:p-6"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="microlabel">Public directory</p>
+              <h2 className="mt-3 text-2xl font-extrabold">Partners</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-white/50">
+                Add a Roblox community and its Discord invite. Nexora verifies
+                the group and publishes its live name, logo, member count, and
+                owner.
+              </p>
+            </div>
+            <span className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-white/45">
+              {partners.length} published
+            </span>
+          </div>
+
+          {state.access.role === "owner" || state.access.role === "admin" ? (
+            <form
+              action={addPartner}
+              className="mt-6 grid gap-3 rounded-2xl border border-[#d79a9a]/18 bg-[#d79a9a]/[.045] p-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end"
+            >
+              <label className="block">
+                <span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">
+                  Roblox group
+                </span>
+                <input
+                  name="roblox_group"
+                  required
+                  placeholder="Group ID or Roblox community link"
+                  className="min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-base outline-none focus:border-[#d79a9a]/50"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">
+                  Discord invite
+                </span>
+                <input
+                  name="discord_invite"
+                  type="url"
+                  required
+                  placeholder="https://discord.gg/your-server"
+                  className="min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-base outline-none focus:border-[#d79a9a]/50"
+                />
+              </label>
+              <button className="min-h-12 rounded-xl bg-white px-6 text-sm font-extrabold text-black">
+                Add partner
+              </button>
+            </form>
+          ) : null}
+
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            {partners.length ? (
+              partners.map((partner) => (
+                <article
+                  key={partner.id}
+                  className="flex items-center gap-4 rounded-2xl border border-white/8 bg-black/20 p-4"
+                >
+                  {partner.roblox_group_logo_url ? (
+                    <img
+                      src={partner.roblox_group_logo_url}
+                      alt=""
+                      className="size-14 rounded-2xl bg-white object-cover"
+                    />
+                  ) : (
+                    <span className="flex size-14 items-center justify-center rounded-2xl bg-white/7 text-sm font-black">
+                      RB
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <b className="block truncate text-base">
+                      {partner.roblox_group_name}
+                    </b>
+                    <p className="mt-1 truncate text-xs text-white/45">
+                      Owned by{" "}
+                      {partner.roblox_owner_display_name ||
+                        partner.roblox_owner_username ||
+                        "Roblox member"}
+                    </p>
+                    <p className="mt-1 text-xs text-white/30">
+                      {partner.roblox_member_count.toLocaleString()} members ·
+                      Group {partner.roblox_group_id}
+                    </p>
+                  </div>
+                  {state.access.role === "owner" ||
+                  state.access.role === "admin" ? (
+                    <form action={removePartner}>
+                      <input
+                        type="hidden"
+                        name="partner_id"
+                        value={partner.id}
+                      />
+                      <button
+                        aria-label={`Remove ${partner.roblox_group_name}`}
+                        className="flex size-10 items-center justify-center rounded-xl border border-red-300/15 text-red-100/70 transition hover:bg-red-300/10"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </form>
+                  ) : null}
+                </article>
+              ))
+            ) : (
+              <p className="col-span-full rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/40">
+                No partners have been published yet.
               </p>
             )}
           </div>

@@ -63,6 +63,23 @@ export default async function SettingsPage({
           permission.
         </p>
       ) : null}
+      <section
+        className="settings-summary"
+        aria-label="Workspace configuration summary"
+      >
+        <article>
+          <small>Workspace</small>
+          <b>{w.name}</b>
+        </article>
+        <article>
+          <small>API access</small>
+          <b>{key ? `Active · ${key.key_prefix}…` : "No active key"}</b>
+        </article>
+        <article>
+          <small>Your permission</small>
+          <b className="capitalize">{w.role}</b>
+        </article>
+      </section>
       <div className="mt-8 grid gap-5 xl:grid-cols-2">
         <Section
           icon={Settings}
@@ -175,8 +192,8 @@ export default async function SettingsPage({
         {owner ? (
           <Section
             icon={AlertTriangle}
-            title="Ownership and danger zone"
-            description="Ownership changes immediately. Deleting a workspace permanently removes it and every connected record without a recovery period."
+            title="Ownership"
+            description="Transfer this workspace to an existing member. The new owner receives full control immediately and your role becomes administrator."
           >
             <form action={transferOwnership} className="space-y-3">
               <input type="hidden" name="public_id" value={w.public_id} />
@@ -198,32 +215,43 @@ export default async function SettingsPage({
                 Transfer ownership
               </button>
             </form>
-            <form
-              action={setWorkspaceLifecycle}
-              className="mt-6 space-y-3 border-t border-white/8 pt-6"
-            >
+          </Section>
+        ) : null}
+        {owner ? (
+          <Section
+            icon={AlertTriangle}
+            title="Delete workspace forever"
+            description="This is permanent. Nexora removes the workspace and all records connected to it immediately; there is no recovery period."
+            className="settings-danger"
+          >
+            <div className="settings-consequences">
+              <span>
+                Members, applications, sessions, logs, and automation history
+                are deleted.
+              </span>
+              <span>
+                API keys and Discord workspace connections stop working.
+              </span>
+              <span>
+                The workspace ID cannot be restored after confirmation.
+              </span>
+            </div>
+            <form action={setWorkspaceLifecycle} className="mt-5 space-y-3">
               <input type="hidden" name="public_id" value={w.public_id} />
               <input
                 name="confirmation_name"
+                required
+                autoComplete="off"
                 placeholder={`Type ${w.name} to confirm deletion`}
-                className="min-h-12 w-full rounded-xl border border-red-200/15 bg-black/25 px-4"
+                className="min-h-12 w-full rounded-xl border border-red-200/20 bg-black/30 px-4 outline-none focus:border-red-200/50"
               />
-              <div className="flex flex-wrap gap-3">
-                <button
-                  name="action"
-                  value="archive"
-                  className="min-h-11 rounded-xl border border-white/12 px-5 text-sm font-bold"
-                >
-                  Archive workspace
-                </button>
-                <button
-                  name="action"
-                  value="delete"
-                  className="min-h-11 rounded-xl border border-red-300/20 bg-red-300/10 px-5 text-sm font-bold text-red-100"
-                >
-                  Delete permanently
-                </button>
-              </div>
+              <button
+                name="action"
+                value="delete"
+                className="min-h-12 rounded-xl border border-red-300/25 bg-red-300/12 px-6 text-sm font-extrabold text-red-100"
+              >
+                Delete {w.name} forever
+              </button>
             </form>
           </Section>
         ) : null}
@@ -236,14 +264,18 @@ function Section({
   title,
   description,
   children,
+  className = "",
 }: {
   icon: typeof Settings;
   title: string;
   description: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/[.025] p-6 sm:p-8">
+    <section
+      className={`settings-section rounded-[28px] border border-white/10 bg-white/[.025] p-6 sm:p-8 ${className}`}
+    >
       <Icon className="workspace-accent size-6" />
       <h2 className="mt-6 text-2xl font-bold">{title}</h2>
       <p className="mt-2 text-sm leading-7 text-white/45">{description}</p>

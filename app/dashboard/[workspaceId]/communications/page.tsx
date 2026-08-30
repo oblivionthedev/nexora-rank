@@ -11,6 +11,7 @@ import {
 import { PageHeading } from "@/components/workspace-shell";
 import {
   Empty,
+  DiscordChannelSelect,
   Input,
   Notice,
   Panel,
@@ -20,6 +21,7 @@ import {
   Textarea,
 } from "@/components/workspace-operations";
 import { getWorkspaceControl } from "@/lib/workspace-control";
+import { listDiscordWorkspaceResources } from "@/lib/discord-resources";
 import {
   createAnnouncementTemplate,
   deleteRecord,
@@ -38,7 +40,7 @@ export default async function Communications({
 }) {
   const [{ workspaceId }, q] = await Promise.all([params, searchParams]);
   const { supabase, state } = await getWorkspaceControl(workspaceId);
-  const [{ data: templates }, { data: settings }] = await Promise.all([
+  const [{ data: templates }, { data: settings }, resources] = await Promise.all([
     supabase
       .from("announcement_templates")
       .select("*")
@@ -49,6 +51,7 @@ export default async function Communications({
       .select("*")
       .eq("workspace_id", state.workspace.id)
       .single(),
+    listDiscordWorkspaceResources(state.workspace.discord_guild_id),
   ]);
 
   return (
@@ -73,12 +76,10 @@ export default async function Communications({
           <form action={sendDiscordMessage} className="grid gap-6">
             <input type="hidden" name="public_id" value={workspaceId} />
             <div className="grid gap-5 lg:grid-cols-[minmax(250px,.55fr)_1fr]">
-              <Input
-                label="Discord channel ID"
+              <DiscordChannelSelect
+                label="Post in channel"
                 name="channel_id"
-                inputMode="numeric"
-                pattern="[0-9]{17,22}"
-                placeholder="123456789012345678"
+                channels={resources.channels}
                 required
               />
               <Textarea
@@ -99,7 +100,7 @@ export default async function Communications({
             <label htmlFor="use-embed" className="message-mode-toggle">
               <span>
                 <Sparkles />
-                Rich Discord embed
+                Embed
               </span>
               <span className="message-mode-switch" aria-hidden="true" />
             </label>
@@ -234,7 +235,7 @@ export default async function Communications({
             </Select>
             <Input label="Title" name="title_template" required />
             <Textarea label="Message" name="body_template" required />
-            <Input label="Discord channel ID" name="discord_channel_id" />
+            <DiscordChannelSelect label="Default posting channel" name="discord_channel_id" channels={resources.channels} />
             <div>
               <Submit>Save template</Submit>
             </div>
@@ -252,9 +253,10 @@ export default async function Communications({
               label="Welcome messages"
               checked={settings?.welcome_enabled}
             />
-            <Input
-              label="Welcome channel ID"
+            <DiscordChannelSelect
+              label="Welcome channel"
               name="welcome_channel_id"
+              channels={resources.channels}
               defaultValue={settings?.welcome_channel_id || ""}
             />
             <Textarea
@@ -270,9 +272,10 @@ export default async function Communications({
               label="Goodbye messages"
               checked={settings?.goodbye_enabled}
             />
-            <Input
-              label="Goodbye channel ID"
+            <DiscordChannelSelect
+              label="Goodbye channel"
               name="goodbye_channel_id"
+              channels={resources.channels}
               defaultValue={settings?.goodbye_channel_id || ""}
             />
             <Textarea
@@ -298,9 +301,10 @@ export default async function Communications({
               label="Verification confirmation DM"
               checked={settings?.verification_dm_enabled}
             />
-            <Input
-              label="Live member-count channel ID"
+            <DiscordChannelSelect
+              label="Live member-count channel"
               name="member_count_channel_id"
+              channels={resources.allChannels}
               defaultValue={settings?.member_count_channel_id || ""}
             />
             <div>

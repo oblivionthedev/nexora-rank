@@ -14,11 +14,15 @@ export type DiscordChannelOption = {
 };
 
 type DiscordRole = DiscordRoleOption & { managed?: boolean };
-type DiscordChannel = DiscordChannelOption & { type: number; parent_id?: string };
+type DiscordChannel = DiscordChannelOption & {
+  type: number;
+  parent_id?: string;
+};
 
 export async function listDiscordWorkspaceResources(guildId?: string | null) {
   const token = process.env.DISCORD_BOT_TOKEN?.trim();
-  if (!token || !guildId) return { roles: [], channels: [], available: false };
+  if (!token || !guildId)
+    return { roles: [], channels: [], allChannels: [], available: false };
 
   const headers = { Authorization: `Bot ${token}` };
   try {
@@ -36,20 +40,25 @@ export async function listDiscordWorkspaceResources(guildId?: string | null) {
     ]);
 
     if (!rolesResponse.ok || !channelsResponse.ok)
-      return { roles: [], channels: [], available: false };
+      return { roles: [], channels: [], allChannels: [], available: false };
 
     const roles = ((await rolesResponse.json()) as DiscordRole[])
       .filter((role) => role.name !== "@everyone" && !role.managed)
       .sort((left, right) => right.position - left.position)
       .map(({ id, name, color, position }) => ({ id, name, color, position }));
-    const channels = ((await channelsResponse.json()) as DiscordChannel[])
-      .filter((channel) => channel.type === 0 || channel.type === 5)
+    const rawChannels = (await channelsResponse.json()) as DiscordChannel[];
+    const channels = rawChannels
+      .filter((channel) => [0, 5, 10, 11, 12].includes(channel.type))
+      .sort((left, right) => left.position - right.position)
+      .map(({ id, name, position }) => ({ id, name, position }));
+    const allChannels = rawChannels
+      .filter((channel) => [0, 2, 5, 10, 11, 12, 13, 15].includes(channel.type))
       .sort((left, right) => left.position - right.position)
       .map(({ id, name, position }) => ({ id, name, position }));
 
-    return { roles, channels, available: true };
+    return { roles, channels, allChannels, available: true };
   } catch {
-    return { roles: [], channels: [], available: false };
+    return { roles: [], channels: [], allChannels: [], available: false };
   }
 }
 

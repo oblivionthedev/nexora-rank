@@ -1,15 +1,22 @@
 import Link from "next/link";
-import { ArrowRight, LayoutDashboard, LogIn } from "lucide-react";
+import { ArrowRight, ChevronDown, LayoutDashboard, LogIn } from "lucide-react";
 import { signOut } from "@/app/dashboard/actions";
 import { BrandMark } from "@/components/brand-mark";
 import { createClient } from "@/lib/supabase/server";
 
 const links = [
-  { href: "/#platform", label: "Platform" },
-  { href: "/team", label: "Team" },
+  { href: "/", label: "Home" },
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/partners", label: "Partners" },
+  { href: "/beta", label: "Beta" },
+];
+const moreLinks = [
+  { href: "/bot", label: "Discord bot" },
+  { href: "/investors", label: "Investors" },
   { href: "/pricing", label: "Pricing" },
   { href: "/security", label: "Security" },
   { href: "/status", label: "Status" },
+  { href: "/team", label: "Team" },
 ];
 
 /**
@@ -55,6 +62,18 @@ export async function SiteNav({ active }: { active?: string } = {}) {
                 {link.label}
               </Link>
             ))}
+            <details className="island-more">
+              <summary>
+                More <ChevronDown aria-hidden="true" />
+              </summary>
+              <div>
+                {moreLinks.map((link) => (
+                  <Link key={link.href} href={link.href}>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
           </div>
 
           <div className="island-actions">
@@ -66,7 +85,8 @@ export async function SiteNav({ active }: { active?: string } = {}) {
                   </button>
                 </form>
                 <Link href="/dashboard" className="pill pill-solid">
-                  Dashboard <ArrowRight className="size-3.5" aria-hidden="true" />
+                  Dashboard{" "}
+                  <ArrowRight className="size-3.5" aria-hidden="true" />
                 </Link>
               </>
             ) : (
@@ -74,8 +94,12 @@ export async function SiteNav({ active }: { active?: string } = {}) {
                 <Link href="/login" className="pill pill-ghost">
                   Sign in
                 </Link>
-                <Link href="/login?next=/onboarding" className="pill pill-solid">
-                  Get started <ArrowRight className="size-3.5" aria-hidden="true" />
+                <Link
+                  href="/login?next=/onboarding"
+                  className="pill pill-solid"
+                >
+                  Get started{" "}
+                  <ArrowRight className="size-3.5" aria-hidden="true" />
                 </Link>
               </>
             )}

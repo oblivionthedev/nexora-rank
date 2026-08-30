@@ -7,6 +7,7 @@ import {
   Award,
   Bot,
   Check,
+  ChevronDown,
   ChevronRight,
   CircleDot,
   Clock3,
@@ -111,11 +112,23 @@ export default async function Home({ searchParams }: HomeProps) {
           <span>Nexora Rank</span>
         </Link>
         <div className="home-nav-links">
-          <a href="#platform">Platform</a>
+          <Link href="/">Home</Link>
           <a href="#how-it-works">How it works</a>
-          <Link href="/bot">Discord bot</Link>
+          <Link href="/partners">Partners</Link>
           <Link href="/beta">Beta</Link>
-          <Link href="/investors">Investors</Link>
+          <details className="home-nav-more">
+            <summary>
+              More <ChevronDown />
+            </summary>
+            <div>
+              <Link href="/bot">Discord bot</Link>
+              <Link href="/investors">Investors</Link>
+              <Link href="/pricing">Pricing</Link>
+              <Link href="/security">Security</Link>
+              <Link href="/status">Status</Link>
+              <Link href="/team">Team</Link>
+            </div>
+          </details>
         </div>
         <div className="home-nav-actions">
           <Link href="/login?next=/dashboard" className="home-signin">
@@ -350,8 +363,8 @@ export default async function Home({ searchParams }: HomeProps) {
             <p>
               Nexora is a community operations platform. It gives owners and
               staff one place to manage the work behind a Roblox group—from
-              connected accounts and ranking to applications, activity, communications,
-              and accountability.
+              connected accounts and ranking to applications, activity,
+              communications, and accountability.
             </p>
             <p>
               The Discord bot keeps everyday actions close to your team. The
@@ -606,7 +619,10 @@ export default async function Home({ searchParams }: HomeProps) {
             </span>
             <div>
               <h3>Clear workspace controls</h3>
-              <p>Transfer ownership, archive safely, or permanently delete only after typing the exact workspace name.</p>
+              <p>
+                Transfer ownership, archive safely, or permanently delete only
+                after typing the exact workspace name.
+              </p>
             </div>
           </article>
         </div>
