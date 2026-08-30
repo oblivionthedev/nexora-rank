@@ -15,6 +15,8 @@ The official Node.js Discord bot for Nexora Rank. It uses slash commands, the ex
 - `/audit` — filtered workspace, Roblox, bot, and in-game logs.
 - `/login create` — owner-only Staff authorization code delivered privately by DM.
 - `/toggle beta` — owner-only live Beta application switch.
+- `/verifypanel` — publishes the website-based Discord verification panel.
+- `/rules`, `/faq`, `/welcome`, `/getting-started`, `/resources`, `/about` — publish polished official information panels in the current channel. These Staff-only commands require **Manage Server** and work only in the official Nexora server.
 
 All replies are private. Every command reads the workspace status before doing work. A suspended or banned workspace cannot use operational bot commands.
 
@@ -80,6 +82,7 @@ Hoster settings:
 - Suspended and banned workspaces are blocked before mutations.
 - Important bot operations write to `workspace_logs` with source `discord`.
 - Authorization and Beta controls are available only to Discord user `1515743540259328202` inside the private Staff server.
+- Verification buttons open `${NEXORA_SITE_URL}/verify`; role assignment happens only after the website confirms the connected Discord account and server membership.
 - Unresolved unauthorized-access incidents are sent to channel `1543592799981535302`, ping role `1543625600919404604`, and repeat every 60 seconds until Staff resolves them.
 
 Nexora Support now runs from the separate `Nexora-Support-Bot` folder with its own Discord application, token, and host.

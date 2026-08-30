@@ -32,6 +32,11 @@ export const helpCommand = {
           "Support is handled by the separate **Nexora Support** bot. Use the Support panel in the official server and send that bot a DM.",
       },
       {
+        name: "Official channel panels · Nexora Staff",
+        value:
+          "`/rules` · `/faq` · `/welcome` · `/getting-started` · `/resources` · `/about` — publish polished public information panels in the official Nexora server.",
+      },
+      {
         name: "Private by default",
         value:
           "Command replies are only visible to you. Workspace roles decide which operations you can use.",

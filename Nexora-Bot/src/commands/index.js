@@ -16,6 +16,7 @@ import { userCommand } from "./user.js";
 import { loginCommand } from "./login.js";
 import { toggleCommand } from "./toggle.js";
 import { verifyPanelCommand } from "./verifypanel.js";
+import { channelFormatCommands } from "./channel-formats.js";
 
 export const commands = [
   helpCommand,
@@ -36,6 +37,7 @@ export const commands = [
   loginCommand,
   toggleCommand,
   verifyPanelCommand,
+  ...channelFormatCommands,
 ];
 export const commandMap = new Map(
   commands.map((command) => [command.data.name, command]),

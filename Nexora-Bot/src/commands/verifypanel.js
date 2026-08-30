@@ -7,8 +7,6 @@ import {
 } from "discord.js";
 import { UserError } from "../lib/errors.js";
 
-export const VERIFY_BUTTON_ID = "nexora_verify_identity";
-
 export const verifyPanelCommand = {
   staffOnly: true,
   data: new SlashCommandBuilder()
@@ -30,14 +28,10 @@ export const verifyPanelCommand = {
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setLabel("Verify in browser")
+        .setLabel("Verify with Nexora")
         .setEmoji("✅")
         .setURL(`${config.siteUrl}/verify`)
         .setStyle(ButtonStyle.Link),
-      new ButtonBuilder()
-        .setCustomId(VERIFY_BUTTON_ID)
-        .setLabel("Check verification")
-        .setStyle(ButtonStyle.Secondary),
     );
     await interaction.channel.send({
       embeds: [
@@ -45,16 +39,16 @@ export const verifyPanelCommand = {
           color: 0x000000,
           title: "Verify your Nexora account",
           description:
-            "Open Nexora's secure verification tab, authorize Discord, and receive the official role directly.\n\n**No Discord password is shared.** Nexora checks only the Discord identity connected through official authorization.",
+            "Press the button below to open **nexorarank.tech/verify**. Authorize Discord there, confirm your connected account, and complete the website check to receive server access.\n\n**No Discord password is shared.** Nexora uses Discord's official authorization flow.",
           fields: [
             {
               name: "1 · Open",
-              value: "Press **Verify in browser** below.",
+              value: "Press **Verify with Nexora** below.",
               inline: true,
             },
             {
-              name: "2 · Authorize",
-              value: "Sign in with Discord and finish verification.",
+              name: "2 · Verify",
+              value: "Authorize Discord and press **Verify me now** on the website.",
               inline: true,
             },
           ],

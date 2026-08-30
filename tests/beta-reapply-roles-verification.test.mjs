@@ -35,5 +35,7 @@ test("official Discord verification opens and completes in the browser", async (
   assert.match(page, /Continue with Discord/);
   assert.match(action, /assignDiscordGuildRole/);
   assert.match(panel, /\/verify/);
-  assert.match(panel, /Verify in browser/);
+  assert.match(panel, /Verify with Nexora/);
+  assert.match(panel, /\$\{config\.siteUrl\}\/verify/);
+  assert.doesNotMatch(panel, /setCustomId/);
 });
