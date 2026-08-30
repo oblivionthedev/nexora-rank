@@ -1,13 +1,32 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+
+const resourcePages = new Set([
+  "activity",
+  "applications",
+  "automations",
+  "communications",
+  "operations",
+  "ranking",
+  "settings",
+]);
 
 export function ResourceAutoRefresh() {
   const router = useRouter();
+  const pathname = usePathname();
+  const resourcePage = resourcePages.has(
+    pathname.split("/").filter(Boolean).at(-1) || "",
+  );
   useEffect(() => {
-    const interval = window.setInterval(() => router.refresh(), 60_000);
+    if (!resourcePage) return;
+    const refresh = () => {
+      if (document.visibilityState === "visible" && navigator.onLine)
+        router.refresh();
+    };
+    const interval = window.setInterval(refresh, 60_000);
     return () => window.clearInterval(interval);
-  }, [router]);
+  }, [resourcePage, router]);
   return null;
 }
