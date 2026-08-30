@@ -162,6 +162,8 @@ export function createNexoraService(config, logger) {
       const messages = {
         code_invalid_or_expired:
           "That link code is invalid or expired. Create a new code in the Nexora dashboard.",
+        code_plan_changed:
+          "That code belongs to an older workspace plan. Create a new plan-matched code in the Nexora dashboard.",
         link_failed:
           "This server could not be connected. It may already belong to another workspace.",
       };

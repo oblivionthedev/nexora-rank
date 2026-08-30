@@ -50,6 +50,35 @@ test("API keys keep the required length and valid prefix", async () => {
   assert.match(sql, /ranks:write/);
 });
 
+test("Discord link codes are one-time and matched to the workspace plan", async () => {
+  const [sql, dashboard, bot] = await Promise.all([
+    readFile(
+      new URL(
+        "../supabase/migrations/20260830141459_add_plan_scoped_discord_link_codes.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL("../components/discord-link-code.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../Nexora-Bot/src/commands/link.js", import.meta.url),
+      "utf8",
+    ),
+  ]);
+  assert.match(sql, /NX-' \|\| upper\(current_tier\)/);
+  assert.match(sql, /FREE\|BASIC\|PLUS\|PREMIUM\|PRO\|ENTERPRISE/);
+  assert.match(sql, /current_plan <> code_row\.plan_key/);
+  assert.match(sql, /claimed_at is null/);
+  assert.match(sql, /expires_at > now\(\)/);
+  assert.match(dashboard, /plan code/);
+  assert.match(dashboard, /works once/);
+  assert.match(bot, /setMinLength\(24\)/);
+  assert.match(bot, /plan_tier/);
+});
+
 test("workspace themes and restrictions are enforced across UI and database", async () => {
   const [sql, shell, connections, editor] = await Promise.all([
     readFile(

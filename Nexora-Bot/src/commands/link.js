@@ -6,7 +6,7 @@ export const linkCommand = {
   data: new SlashCommandBuilder()
     .setName("link")
     .setDescription("Connect this Discord server to a Nexora workspace")
-    .addStringOption((option) => option.setName("code").setDescription("The NX- code shown in your dashboard").setRequired(true).setMinLength(15).setMaxLength(15))
+    .addStringOption((option) => option.setName("code").setDescription("The plan-specific NX code shown in your dashboard").setRequired(true).setMinLength(24).setMaxLength(32))
     .setDMPermission(false),
   async execute(interaction, { nexora }) {
     if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
@@ -14,6 +14,7 @@ export const linkCommand = {
     }
     const code = interaction.options.getString("code", true).trim().toUpperCase();
     const workspace = await nexora.claimLink({ code, guildId: interaction.guildId, guildName: interaction.guild.name, discordUserId: interaction.user.id });
-    await interaction.editReply({ embeds: [embed("Server connected", `**${interaction.guild.name}** is now linked to **${workspace.workspace_name}**.\n\nWorkspace ID: \`${workspace.workspace_id}\``, colors.success)] });
+    const plan = workspace.plan_tier ? `${workspace.plan_tier.charAt(0).toUpperCase()}${workspace.plan_tier.slice(1)} plan` : "workspace plan";
+    await interaction.editReply({ embeds: [embed("Server connected", `**${interaction.guild.name}** is now linked to **${workspace.workspace_name}** with its **${plan}** code.\n\nWorkspace ID: \`${workspace.workspace_id}\``, colors.success)] });
   },
 };

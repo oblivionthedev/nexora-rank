@@ -37,3 +37,11 @@ test("applications supports listing, decisions, and announcements", () => {
   const applications = commands.find((command) => command.data.name === "applications").data.toJSON();
   assert.deepEqual(applications.options.map((option) => option.name), ["list", "decide", "announce"]);
 });
+
+test("link accepts plan-specific dashboard codes", () => {
+  const link = commands.find((command) => command.data.name === "link").data.toJSON();
+  const code = link.options.find((option) => option.name === "code");
+  assert.equal(code.min_length, 24);
+  assert.equal(code.max_length, 32);
+  assert.match(code.description, /plan-specific/i);
+});

@@ -17,6 +17,8 @@ import { listRobloxGroups } from "@/lib/roblox-membership";
 export type LinkCodeState = {
   code?: string;
   expiresAt?: string;
+  planKey?: string;
+  planTier?: string;
   error?: string;
 };
 async function context(publicId: string) {
@@ -61,9 +63,19 @@ export async function createDiscordCode(
         ? "Workspace connections are locked while restricted."
         : "Could not create a link code.",
     };
-  const result = data as { code?: string; expires_at?: string } | null;
+  const result = data as {
+    code?: string;
+    expires_at?: string;
+    plan_key?: string;
+    plan_tier?: string;
+  } | null;
   return result?.code
-    ? { code: result.code, expiresAt: result.expires_at }
+    ? {
+        code: result.code,
+        expiresAt: result.expires_at,
+        planKey: result.plan_key,
+        planTier: result.plan_tier,
+      }
     : { error: "Could not create a link code." };
 }
 
