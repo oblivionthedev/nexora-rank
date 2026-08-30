@@ -90,7 +90,7 @@ export async function submitBetaApplication(
     content: "",
     embed: {
       title: "New Nexora Beta application",
-      description: `**Name**\n${name}\n\n**Email address**\n${email}\n\n**Age**\n${age}\n\n**Discord**\nVerified with Nexora`,
+      description: `**Name**\n${name}\n\n**Email address**\n${email}\n\n**Age**\n${age}\n\n**Discord**\nOptional during application`,
       color: 0x000000,
       author: nexoraLogBrand("Nexora Beta"),
       footer: {

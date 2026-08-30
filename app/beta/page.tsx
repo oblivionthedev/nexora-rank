@@ -68,8 +68,11 @@ export default async function BetaPage({
         <div className="beta-access-notice" role="status">
           <LockKeyhole />
           <div>
-            <strong>Dashboard access is currently invitation-only.</strong>
-            <span>Apply below or check your Beta status. Selected applicants can sign in as soon as access is approved.</span>
+            <strong>Beta applications are open.</strong>
+            <span>
+              Anyone can apply below. Dashboard access and new workspace
+              creation remain restricted until Nexora approves and opens them.
+            </span>
           </div>
         </div>
       ) : null}

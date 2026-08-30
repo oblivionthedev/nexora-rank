@@ -70,17 +70,6 @@ export function BetaApplicationForm({
               applicants can still check their selection status below.
             </p>
           </div>
-        ) : !discordIdentity ? (
-          <div className="beta-data-notice" role="status">
-            <b>Connect Discord before applying</b>
-            <p>
-              Your Discord account is used to prevent duplicate applications and
-              to grant the Beta role automatically if you are selected.
-            </p>
-            <Link href="/login?next=/beta" className="beta-inline-action">
-              Continue with Discord
-            </Link>
-          </div>
         ) : applyState.success && applyState.code ? (
           <div className="beta-confirmation">
             <span>
@@ -153,7 +142,13 @@ export function BetaApplicationForm({
                 also stored.
               </p>
               <p>
-                Signed in as <b>{discordIdentity}</b>.
+                {discordIdentity ? (
+                  <>
+                    Signed in as <b>{discordIdentity}</b>.
+                  </>
+                ) : (
+                  "Discord sign-in is optional when applying. If selected, you can connect Discord later to receive server access."
+                )}
               </p>
             </div>
             <label className="beta-consent">
