@@ -123,7 +123,7 @@ const panels = {
               { name: "Built for operators", value: "Applications · Activity · Ranking requests · Communications · Workflows · Staff accountability", inline: false },
               { name: "Need assistance?", value: "Use the Support panel and message the separate Nexora Support bot. Your conversation stays private between you and authorized Support agents.", inline: false },
             )
-            .setThumbnail("https://www.nexorarank.tech/icon.png"),
+            .setThumbnail(`${config.siteUrl}/nexora-discord-logo.png`),
           "Community & Support",
         ),
       ],
