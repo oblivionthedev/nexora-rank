@@ -49,3 +49,31 @@ test("Beta availability is database-backed and enforced server-side", async () =
   assert.match(page, /force-dynamic/);
   assert.match(form, /Applications are currently closed/);
 });
+
+test("Beta applications require a verified Discord server member", async () => {
+  const [migration, action, page, form, discord] = await Promise.all([
+    readFile(
+      new URL(
+        "../supabase/migrations/20260831140035_require_verified_discord_for_beta.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(new URL("../app/beta/actions.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/beta/page.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../components/beta-application-form.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../lib/discord-resources.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(migration, /actor is null/);
+  assert.match(migration, /verified_at is not null/);
+  assert.match(migration, /from public, anon/);
+  assert.match(action, /checkDiscordGuildMembership/);
+  assert.match(action, /Join the Nexora Community & Support server/);
+  assert.match(page, /discordMember/);
+  assert.match(form, /Discord verification required/);
+  assert.match(form, /Join the Nexora Discord server/);
+  assert.match(discord, /guilds\/\$\{guildId\}\/members\/\$\{userId\}/);
+});

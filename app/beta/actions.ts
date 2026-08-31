@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { sendDiscordChannelMessage } from "@/lib/discord-messages";
 import { NEXORA_LOG_CHANNELS, nexoraLogBrand } from "@/lib/operational-logs";
+import { checkDiscordGuildMembership } from "@/lib/discord-resources";
+import { NEXORA_DISCORD_GUILD_ID } from "@/lib/nexora-discord";
 
 const BETA_CHANNEL_ID = NEXORA_LOG_CHANNELS.betaSubmissions;
 
@@ -48,6 +50,37 @@ export async function submitBetaApplication(
     };
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return {
+      error: "Verify your Discord account before submitting a Beta application.",
+    };
+  const { data: discordLink } = await supabase
+    .from("account_links")
+    .select("provider_user_id,username,display_name,verified_at")
+    .eq("user_id", user.id)
+    .eq("provider", "discord")
+    .maybeSingle();
+  if (!discordLink?.provider_user_id || !discordLink.verified_at)
+    return {
+      error: "Verify your Discord account before submitting a Beta application.",
+    };
+  const membership = await checkDiscordGuildMembership({
+    guildId: NEXORA_DISCORD_GUILD_ID,
+    userId: discordLink.provider_user_id,
+  });
+  if (!membership.available)
+    return {
+      error:
+        "Nexora could not confirm your Discord server membership. Please try again shortly.",
+    };
+  if (!membership.member)
+    return {
+      error:
+        "Join the Nexora Community & Support server before submitting your application.",
+    };
   const { data, error } = await supabase.rpc("submit_beta_application", {
     applicant_name: name,
     applicant_email: email,
@@ -74,7 +107,7 @@ export async function submitBetaApplication(
             : result.error === "reapply_wait"
               ? `You can reapply 24 hours after your previous decision${result.retry_at ? ` — after ${new Date(result.retry_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" })} UTC` : ""}.`
               : result.error === "discord_required"
-                ? "Sign in with Discord before submitting a Beta application."
+                ? "Verify your Discord account before submitting a Beta application."
                 : "Check your information and try again.",
     };
   if (!result.application_id || !result.lookup_code)
@@ -90,7 +123,7 @@ export async function submitBetaApplication(
     content: "",
     embed: {
       title: "New Nexora Beta application",
-      description: `**Name**\n${name}\n\n**Email address**\n${email}\n\n**Age**\n${age}\n\n**Discord**\nOptional during application`,
+      description: `**Name**\n${name}\n\n**Email address**\n${email}\n\n**Age**\n${age}\n\n**Discord**\n${discordLink.display_name || discordLink.username || "Verified member"} (<@${discordLink.provider_user_id}>)`,
       color: 0x000000,
       author: nexoraLogBrand("Nexora Beta"),
       footer: {

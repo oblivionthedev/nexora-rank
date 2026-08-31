@@ -2,7 +2,15 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { Check, Clipboard, LoaderCircle, Search } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Clipboard,
+  ExternalLink,
+  LoaderCircle,
+  Search,
+  ShieldCheck,
+} from "lucide-react";
 import {
   checkBetaStatus,
   submitBetaApplication,
@@ -38,9 +46,13 @@ const statusCopy: Record<string, { label: string; text: string }> = {
 export function BetaApplicationForm({
   betaEnabled,
   discordIdentity,
+  discordVerified,
+  discordMember,
 }: {
   betaEnabled: boolean;
   discordIdentity: string | null;
+  discordVerified: boolean;
+  discordMember: boolean;
 }) {
   const [applyState, applyAction, applying] = useActionState(
     submitBetaApplication,
@@ -69,6 +81,40 @@ export function BetaApplicationForm({
               Nexora is not accepting new Beta applications right now. Existing
               applicants can still check their selection status below.
             </p>
+          </div>
+        ) : !discordVerified ? (
+          <div className="beta-data-notice beta-discord-gate" role="status">
+            <ShieldCheck />
+            <div>
+              <b>Discord verification required</b>
+              <p>
+                Verify your Discord identity before applying. This connects
+                your application to the account that will receive Beta access.
+              </p>
+              <Link href="/verify">
+                Verify with Discord <ArrowRight />
+              </Link>
+            </div>
+          </div>
+        ) : !discordMember ? (
+          <div className="beta-data-notice beta-discord-gate" role="status">
+            <ShieldCheck />
+            <div>
+              <b>Join the Nexora Discord server</b>
+              <p>
+                Your Discord account is verified as <strong>{discordIdentity}</strong>,
+                but you must be in the Nexora Community &amp; Support server so
+                the bot can deliver your Verified and Beta roles.
+              </p>
+              <a
+                href="https://discord.gg/YY9nXqqWTk"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Join the server <ExternalLink />
+              </a>
+              <Link href="/beta#apply">I joined — check again</Link>
+            </div>
           </div>
         ) : applyState.success && applyState.code ? (
           <div className="beta-confirmation">
@@ -135,20 +181,14 @@ export function BetaApplicationForm({
             <div className="beta-data-notice">
               <b>What is shared</b>
               <p>
-                Your name, email address, and age are stored for Beta review.
-                The same three details are sent by the Nexora bot to a private
-                Staff Discord channel so the team can review and contact
-                selected applicants. Your review status and submission time are
-                also stored.
+                Your name, email address, age, and verified Discord account are
+                stored for Beta review. These details are sent by the Nexora bot
+                to a private Staff Discord channel so the team can review and
+                contact selected applicants. Your review status and submission
+                time are also stored.
               </p>
               <p>
-                {discordIdentity ? (
-                  <>
-                    Signed in as <b>{discordIdentity}</b>.
-                  </>
-                ) : (
-                  "Discord sign-in is optional when applying. If selected, you can connect Discord later to receive server access."
-                )}
+                Verified Discord member: <b>{discordIdentity}</b>.
               </p>
             </div>
             <label className="beta-consent">

@@ -431,13 +431,13 @@ export const legalDocuments: LegalDocument[] = [
       {
         heading: "1. Information collected",
         paragraphs: [
-          "Effective August 29, 2026. A Beta application asks for your full name, email address, and age. Nexora also records submission dates, review status, whether the private Discord notification was delivered, and a one-way hash of the private status code shown after submission.",
+          "Effective August 31, 2026. A Beta application asks for your full name, email address, age, and a verified Discord identity. Applicants must be members of the Nexora Community & Support server so Nexora can deliver verification and Beta roles. Nexora also records submission dates, review status, whether the private Discord notification was delivered, and a one-way hash of the private status code shown after submission.",
         ],
       },
       {
         heading: "2. Private Discord notification",
         paragraphs: [
-          "When you submit, the Nexora bot sends your name, email address, and age in a black embed to a private Staff Discord channel used for Beta review. This allows the Nexora team to review applications and contact selected applicants. The notification is not posted publicly and is not sent to community workspaces.",
+          "When you submit, the Nexora bot sends your name, email address, age, and verified Discord account in a black embed to a private Staff Discord channel used for Beta review. This allows the Nexora team to review applications, assign access roles, and contact selected applicants. The notification is not posted publicly and is not sent to community workspaces.",
         ],
       },
       {
@@ -481,7 +481,7 @@ export const legalDocuments: LegalDocument[] = [
       {
         heading: "1. Application and selection",
         paragraphs: [
-          "Applying does not guarantee selection, access, a response by a particular date, or continued participation. Nexora may select participants in stages based on capacity, community fit, testing needs, safety, and the usefulness of expected feedback.",
+          "Applicants must be at least 13 years old, verify their Discord identity, and remain members of the official Nexora Community & Support server so verification and Beta roles can be delivered. Applying does not guarantee selection, access, a response by a particular date, or continued participation. Nexora may select participants in stages based on capacity, community fit, testing needs, safety, and the usefulness of expected feedback.",
         ],
       },
       {

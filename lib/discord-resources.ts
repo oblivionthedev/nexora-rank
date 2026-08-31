@@ -13,11 +13,45 @@ export type DiscordChannelOption = {
   position: number;
 };
 
+export type DiscordGuildMembership = {
+  member: boolean;
+  available: boolean;
+};
+
 type DiscordRole = DiscordRoleOption & { managed?: boolean };
 type DiscordChannel = DiscordChannelOption & {
   type: number;
   parent_id?: string;
 };
+
+export async function checkDiscordGuildMembership({
+  guildId,
+  userId,
+}: {
+  guildId: string;
+  userId: string;
+}): Promise<DiscordGuildMembership> {
+  const token = process.env.DISCORD_BOT_TOKEN?.trim();
+  if (!token || !guildId || !userId)
+    return { member: false, available: false };
+
+  try {
+    const response = await fetch(
+      `${DISCORD_API}/guilds/${guildId}/members/${userId}`,
+      {
+        headers: { Authorization: `Bot ${token}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
+    if (response.status === 404) return { member: false, available: true };
+    return response.ok
+      ? { member: true, available: true }
+      : { member: false, available: false };
+  } catch {
+    return { member: false, available: false };
+  }
+}
 
 export async function listDiscordWorkspaceResources(guildId?: string | null) {
   const token = process.env.DISCORD_BOT_TOKEN?.trim();

@@ -13,6 +13,8 @@ import {
 import { BrandMark } from "@/components/brand-mark";
 import { BetaApplicationForm } from "@/components/beta-application-form";
 import { createClient } from "@/lib/supabase/server";
+import { checkDiscordGuildMembership } from "@/lib/discord-resources";
+import { NEXORA_DISCORD_GUILD_ID } from "@/lib/nexora-discord";
 
 export const metadata: Metadata = {
   title: "Nexora Beta",
@@ -35,11 +37,18 @@ export default async function BetaPage({
   const { data: discordLink } = auth.user
     ? await supabase
         .from("account_links")
-        .select("display_name,username")
+        .select("provider_user_id,display_name,username,verified_at")
         .eq("user_id", auth.user.id)
         .eq("provider", "discord")
         .maybeSingle()
     : { data: null };
+  const discordMembership =
+    discordLink?.provider_user_id && discordLink.verified_at
+      ? await checkDiscordGuildMembership({
+          guildId: NEXORA_DISCORD_GUILD_ID,
+          userId: discordLink.provider_user_id,
+        })
+      : { member: false, available: true };
   const betaEnabled = Boolean(
     data &&
     typeof data === "object" &&
@@ -158,6 +167,8 @@ export default async function BetaPage({
           discordIdentity={
             discordLink?.display_name || discordLink?.username || null
           }
+          discordVerified={Boolean(discordLink?.verified_at)}
+          discordMember={discordMembership.member}
         />
       </section>
       <footer className="beta-footer">
