@@ -3,27 +3,30 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import {
   ArrowRight,
+  BadgeCheck,
+  Building2,
   Check,
-  CircleDollarSign,
   Coffee,
+  Fingerprint,
   Gamepad2,
   KeyRound,
-  LockKeyhole,
+  LayoutDashboard,
+  Rocket,
   ShieldCheck,
   Sparkles,
   UserRound,
-  UsersRound,
   Webhook,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { OnboardingIdentityAction } from "@/components/onboarding-identity-actions";
+import { OnboardingSubmitButton } from "@/components/onboarding-submit-button";
+import { OnboardingWorkspaceForm } from "@/components/onboarding-workspace-form";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { listRobloxGroups } from "@/lib/roblox-membership";
 import {
   saveOwnerProfile,
   selectFreePlan,
-  createOnboardingWorkspace,
   selectRobloxGroup,
 } from "./actions";
 import { signOut } from "@/app/dashboard/actions";
@@ -136,6 +139,8 @@ export default async function OnboardingPage({
   const accessState = dashboardAccess as {
     blocked?: boolean;
     reason?: string;
+    beta_selected?: boolean;
+    staff?: boolean;
   } | null;
   if (accessState?.blocked || accessState?.reason === "security_blocked") {
     await supabase.auth.signOut();
@@ -177,14 +182,20 @@ export default async function OnboardingPage({
               : workspaceStep;
   const steps = groupStepRequired
     ? [
-        "Accounts",
-        "Roblox group",
-        "Owner profile",
-        "Free plan",
-        "Workspace",
-        "Launch",
+        { label: "Accounts", icon: Fingerprint },
+        { label: "Roblox group", icon: Gamepad2 },
+        { label: "Owner profile", icon: UserRound },
+        { label: "Beta plan", icon: Sparkles },
+        { label: "Workspace", icon: LayoutDashboard },
+        { label: "Launch", icon: Rocket },
       ]
-    : ["Accounts", "Owner profile", "Free plan", "Workspace", "Launch"];
+    : [
+        { label: "Accounts", icon: Fingerprint },
+        { label: "Owner profile", icon: UserRound },
+        { label: "Beta plan", icon: Sparkles },
+        { label: "Workspace", icon: LayoutDashboard },
+        { label: "Launch", icon: Rocket },
+      ];
   const authEmail = user.email ?? "";
   const defaultFirstName = profile?.first_name ?? "";
   const defaultLastName = profile?.last_name ?? "";
@@ -198,7 +209,7 @@ export default async function OnboardingPage({
           <span>Nexora Rank</span>
         </Link>
         <div className="setup-topbar-actions">
-          <span className="setup-beta">Private beta</span>
+          <span className="setup-beta"><i /> Beta access active</span>
           <Link href="/status">System status</Link>
           <form action={signOut}>
             <button type="submit">Sign out</button>
@@ -209,19 +220,27 @@ export default async function OnboardingPage({
       <div className="setup-shell">
         <aside className="setup-rail">
           <div>
-            <span className="setup-eyebrow">Nexora onboarding</span>
-            <h1>Build your community control room.</h1>
+            <div className="setup-access-card">
+              <BadgeCheck />
+              <span>
+                <b>{isStaff ? "Staff access confirmed" : "You’re in the Beta"}</b>
+                <small>Workspace creation is unlocked</small>
+              </span>
+            </div>
+            <span className="setup-eyebrow">Workspace setup</span>
+            <h1>Your new control room starts here.</h1>
             <p>
-              A focused setup for connected accounts, ownership, plan limits,
-              and the workspace your team will run from.
+              We’ll confirm your accounts, owner details, plan, and community.
+              Most teams finish in under three minutes.
             </p>
           </div>
           <ol className="setup-steps">
-            {steps.map((label, index) => (
+            {steps.map(({ label, icon: Icon }, index) => (
               <SetupRailStep
                 key={label}
                 number={index + 1}
                 label={label}
+                icon={<Icon />}
                 active={activeStep === index + 1}
                 done={activeStep > index + 1}
               />
@@ -232,8 +251,8 @@ export default async function OnboardingPage({
             <div>
               <b>Protected by design</b>
               <span>
-                OAuth credentials stay with their providers. Nexora stores only
-                the account details needed to operate your workspace.
+                Your provider passwords never touch Nexora. Every workspace
+                action is permission checked and recorded.
               </span>
             </div>
           </div>
@@ -249,9 +268,9 @@ export default async function OnboardingPage({
           </div>
           <div className="setup-stage-head">
             <span>
-              Step {activeStep} of {totalSteps}
+              Setup step {activeStep} of {totalSteps}
             </span>
-            <b>{Math.round((activeStep / totalSteps) * 100)}% complete</b>
+            <b>{Math.round((activeStep / totalSteps) * 100)}% · about {Math.max(1, totalSteps - activeStep)} min left</b>
           </div>
           {errorMessage ? (
             <div className="onboarding-error" role="alert">
@@ -262,13 +281,13 @@ export default async function OnboardingPage({
           {activeStep === 1 ? (
             <section className="setup-card">
               <div className="setup-icon">
-                <LockKeyhole />
+                <Fingerprint />
               </div>
               <span className="setup-kicker">Account connections</span>
-              <h2>Connect Discord to continue.</h2>
+              <h2>First, let’s recognize you.</h2>
               <p>
-                Discord powers server access. Roblox is optional for now and can
-                be connected later when OAuth approval is ready.
+                Discord confirms your Beta access and connects the server you’ll
+                manage. Roblox stays optional until official OAuth approval is ready.
               </p>
               <div className="provider-stack">
                 <ProviderStatus
@@ -366,9 +385,10 @@ export default async function OnboardingPage({
                       account. A single owned group is selected automatically.
                     </small>
                   </label>
-                  <Button type="submit" className="button-glow h-12 rounded-xl">
-                    Use this community <ArrowRight />
-                  </Button>
+                  <OnboardingSubmitButton
+                    idleLabel="Use this community"
+                    pendingLabel="Saving your community…"
+                  />
                 </form>
               ) : (
                 <div className="onboarding-error" role="status">
@@ -383,10 +403,10 @@ export default async function OnboardingPage({
           {activeStep === profileStep ? (
             <section className="setup-card">
               <div className="setup-icon">
-                <UserRound />
+                <Building2 />
               </div>
               <span className="setup-kicker">Owner profile & security</span>
-              <h2>Tell the workspace who owns it.</h2>
+              <h2>Put a real person behind the workspace.</h2>
               <p>
                 This information is used for account notices, audit attribution,
                 and billing contacts when paid plans arrive.
@@ -451,9 +471,10 @@ export default async function OnboardingPage({
                     never by Nexora.
                   </small>
                 </label>
-                <Button type="submit" className="button-glow h-12 rounded-xl">
-                  Save and continue <ArrowRight />
-                </Button>
+                <OnboardingSubmitButton
+                  idleLabel="Save owner details"
+                  pendingLabel="Saving your details…"
+                />
               </form>
             </section>
           ) : null}
@@ -461,10 +482,10 @@ export default async function OnboardingPage({
           {activeStep === planStep ? (
             <section className="setup-card">
               <div className="setup-icon">
-                <CircleDollarSign />
+                <Sparkles />
               </div>
-              <span className="setup-kicker">Plan & billing</span>
-              <h2>A useful free plan—not tiny, not excessive.</h2>
+              <span className="setup-kicker">Your Beta plan</span>
+              <h2>Everything you need to start is included.</h2>
               <p>
                 No payment method is needed. Paid checkout will only appear
                 after billing, cancellation, and refund flows are ready.
@@ -509,12 +530,11 @@ export default async function OnboardingPage({
                 </div>
               </article>
               <form action={selectFreePlan}>
-                <Button
-                  type="submit"
-                  className="button-glow h-12 w-full rounded-xl"
-                >
-                  Choose Beta Free <ArrowRight />
-                </Button>
+                <OnboardingSubmitButton
+                  idleLabel="Activate Beta Free"
+                  pendingLabel="Activating your plan…"
+                  fullWidth
+                />
               </form>
               <aside className="setup-support">
                 <Coffee />
@@ -548,7 +568,7 @@ export default async function OnboardingPage({
           {activeStep === workspaceStep ? (
             <section className="setup-card">
               <div className="setup-icon">
-                <UsersRound />
+                <LayoutDashboard />
               </div>
               <span className="setup-kicker">Create workspace</span>
               <h2>
@@ -562,34 +582,9 @@ export default async function OnboardingPage({
                   : "We are reviewing the first Beta members before opening workspace setup. You can stay signed in, and your selected Beta access remains active."}
               </p>
               {workspaceCreationAvailable ? (
-                <form action={createOnboardingWorkspace} className="setup-form">
-                  <label>
-                    <span>Workspace name</span>
-                    <input
-                      name="name"
-                      required
-                      minLength={2}
-                      maxLength={64}
-                      placeholder="Nexora Community"
-                    />
-                  </label>
-                  <label>
-                    <span>Workspace URL</span>
-                    <div className="setup-slug">
-                      <small>nexorarank.tech/w/</small>
-                      <input
-                        name="slug"
-                        required
-                        pattern="[a-z0-9][a-z0-9-]{1,46}[a-z0-9]"
-                        placeholder="nexora-community"
-                      />
-                    </div>
-                    <small>Lowercase letters, numbers and hyphens only.</small>
-                  </label>
-                  <Button type="submit" className="button-glow h-12 rounded-xl">
-                    Create workspace <ArrowRight />
-                  </Button>
-                </form>
+                <OnboardingWorkspaceForm
+                  communityName={profile?.selected_roblox_group_name}
+                />
               ) : (
                 <div className="onboarding-error" role="status">
                   New workspaces are paused during the Beta intake. No action is
@@ -618,18 +613,23 @@ export default async function OnboardingPage({
 function SetupRailStep({
   number,
   label,
+  icon,
   active,
   done,
 }: {
   number: number;
   label: string;
+  icon: React.ReactNode;
   active: boolean;
   done: boolean;
 }) {
   return (
     <li className={active ? "active" : done ? "done" : ""}>
-      <span>{done ? <Check /> : number}</span>
-      <b>{label}</b>
+      <span>{done ? <Check /> : active ? icon : number}</span>
+      <div>
+        <b>{label}</b>
+        <small>{done ? "Complete" : active ? "In progress" : "Up next"}</small>
+      </div>
     </li>
   );
 }

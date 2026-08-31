@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Check, Code2, Gamepad2, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, Code2, Gamepad2, Rocket, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { CopyField } from "@/components/copy-field";
 import { Button } from "@/components/ui/button";
@@ -51,12 +51,12 @@ export default async function OnboardingCompletePage() {
         <div className="setup-success-mark">
           <Check />
         </div>
-        <span className="setup-kicker">Workspace ready</span>
-        <h1>{workspace.name} is live.</h1>
+        <span className="setup-kicker">Launch complete</span>
+        <h1>Welcome to {workspace.name}.</h1>
         <p>
-          Your account, free plan, and workspace are now connected. The
-          letters-and-numbers workspace ID is permanent; your private API key
-          can be created and replaced from the dashboard.
+          Your workspace is ready and your owner access is active. Open the
+          dashboard to invite your team, connect a Discord server, and shape
+          the way your community operates.
         </p>
         <div className="setup-copy-stack">
           <CopyField label="Workspace ID" value={workspace.public_id} />
@@ -97,11 +97,11 @@ export default async function OnboardingCompletePage() {
           </article>
         </div>
         <div className="setup-complete-actions">
-          <Link href="/dashboard">
-            <Button className="button-glow h-12 rounded-xl">
-              Open dashboard <ArrowRight />
-            </Button>
-          </Link>
+          <Button asChild className="setup-primary-button">
+            <Link href="/dashboard">
+              <Rocket /> Enter your workspace <ArrowRight />
+            </Link>
+          </Button>
           {!robloxConnected ? (
             <span className="setup-secondary-link">
               Roblox is optional during private beta
