@@ -23,6 +23,11 @@ export default async function StaffLoginPage({
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
+      const { data: blockState } = await supabase.rpc("account_block_state");
+      if ((blockState as { blocked?: boolean } | null)?.blocked) {
+        await supabase.auth.signOut();
+        redirect("/login?error=security_blocked");
+      }
       const { data } = await supabase.rpc("staff_access_state");
       if ((data as { authorized?: boolean } | null)?.authorized)
         redirect("/staff");

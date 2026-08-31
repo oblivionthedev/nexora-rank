@@ -18,15 +18,20 @@ export default async function DashboardLayout({
   }
 
   const { data: access } = await supabase.rpc("dashboard_access_state");
-  const allowed = Boolean((access as { allowed?: boolean } | null)?.allowed);
+  const accessState = access as { allowed?: boolean; reason?: string } | null;
+  const allowed = Boolean(accessState?.allowed);
   if (!allowed) {
-    await supabase.rpc("report_security_incident", {
-      requested_scope: "dashboard_access",
-      requested_target: "/dashboard",
-      requested_details: { reason: "beta_selection_required" },
-    });
+    if (accessState?.reason !== "security_blocked") {
+      await supabase.rpc("report_security_incident", {
+        requested_scope: "dashboard_access",
+        requested_target: "/dashboard",
+        requested_details: {
+          reason: accessState?.reason || "beta_selection_required",
+        },
+      });
+    }
     await supabase.auth.signOut();
-    redirect("/beta?access=selection_required");
+    redirect("/login?error=security_blocked");
   }
 
   return children;

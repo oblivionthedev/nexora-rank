@@ -33,7 +33,8 @@ export const getWorkspaceControl = cache(async function getWorkspaceControl(publ
       requested_target: publicId.slice(0, 160),
       requested_details: { reason: error?.message || "workspace_not_found" },
     });
-    redirect("/dashboard");
+    await supabase.auth.signOut();
+    redirect("/login?error=security_blocked");
   }
   return { supabase, user, state: data as unknown as WorkspaceControl };
 });

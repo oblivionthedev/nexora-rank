@@ -32,6 +32,8 @@ const authErrors: Record<string, string> = {
     "This Roblox account is already linked to another Nexora Rank user.",
   beta_selection_required:
     "Dashboard access is temporarily limited to selected Beta applicants and Nexora Staff.",
+  security_blocked:
+    "This email is blocked from protected Nexora areas for 24 hours after an unauthorized access attempt. Contact Nexora Staff if this was a mistake.",
 };
 
 const setupSteps = [

@@ -133,6 +133,14 @@ export default async function OnboardingPage({
   const isStaff = Boolean(
     (dashboardAccess as { staff?: boolean } | null)?.staff,
   );
+  const accessState = dashboardAccess as {
+    blocked?: boolean;
+    reason?: string;
+  } | null;
+  if (accessState?.blocked || accessState?.reason === "security_blocked") {
+    await supabase.auth.signOut();
+    redirect("/login?error=security_blocked");
+  }
   const workspaceCreationAvailable = workspaceCreationEnabled || isStaff;
   const robloxAvailable =
     process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";

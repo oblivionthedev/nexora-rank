@@ -34,6 +34,7 @@ function errorCode(message?: string) {
     "invalid_suspension_days",
     "invalid_moderation_request",
     "invalid_beta_status",
+    "security_block_not_found",
   ];
   return known.find((code) => message?.includes(code)) ?? "action_failed";
 }
@@ -279,4 +280,21 @@ export async function resolveSecurityIncident(formData: FormData) {
   if (error) redirect(`/staff?error=${errorCode(error.message)}#security-incidents`);
   revalidatePath("/staff");
   redirect("/staff?notice=security_resolved#security-incidents");
+}
+
+export async function unblockSecurityAccount(formData: FormData) {
+  const blockId = Number(clean(formData.get("block_id")));
+  if (!Number.isSafeInteger(blockId))
+    redirect("/staff?error=invalid_security_block#security-incidents");
+  const supabase = await authenticatedClient();
+  const { data, error } = await supabase.rpc(
+    "staff_unblock_security_account",
+    { requested_block_id: blockId },
+  );
+  if (error)
+    redirect(`/staff?error=${errorCode(error.message)}#security-incidents`);
+  if (!data)
+    redirect("/staff?error=security_block_not_found#security-incidents");
+  revalidatePath("/staff");
+  redirect("/staff?notice=security_unblocked#security-incidents");
 }

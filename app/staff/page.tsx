@@ -24,6 +24,7 @@ import {
   removePartner,
   resolveSecurityIncident,
   staffSignOut,
+  unblockSecurityAccount,
   updateBetaApplication,
 } from "@/app/staff/actions";
 
@@ -118,6 +119,8 @@ type SecurityIncidentRow = {
   id: number; scope: string; target_ref: string | null; actor_email: string | null;
   occurrence_count: number; first_seen_at: string; last_seen_at: string;
   resolved_at: string | null; details: Record<string, unknown>;
+  block_id: number | null; blocked_until: string | null; block_active: boolean;
+  unblocked_at: string | null;
 };
 
 const notices: Record<string, string> = {
@@ -134,6 +137,7 @@ const notices: Record<string, string> = {
   beta_archived: "Beta application archived.",
   beta_deleted: "Beta application permanently deleted.",
   security_resolved: "Security incident resolved. Repeated alerts have stopped.",
+  security_unblocked: "The 24-hour email block was removed.",
 };
 const errors: Record<string, string> = {
   beta_role_sync_failed:
@@ -161,6 +165,8 @@ const errors: Record<string, string> = {
     "Enter a Roblox group or community link and a valid Discord invite.",
   invalid_group_listing: "Enter a valid Roblox group and optional Discord invite.",
   invalid_security_incident: "That security incident could not be found.",
+  invalid_security_block: "That security block could not be found.",
+  security_block_not_found: "That block already expired or was removed.",
   roblox_group_not_found: "Roblox could not find that group.",
   action_failed: "The action could not be completed.",
 };
@@ -183,6 +189,11 @@ export default async function StaffPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/staff");
+  const { data: blockState } = await supabase.rpc("account_block_state");
+  if ((blockState as { blocked?: boolean } | null)?.blocked) {
+    await supabase.auth.signOut();
+    redirect("/login?error=security_blocked");
+  }
   const status = ["active", "suspended", "banned"].includes(params.status ?? "")
     ? params.status!
     : "all";
@@ -214,7 +225,8 @@ export default async function StaffPage({
       requested_target: "/staff",
       requested_details: { reason: error?.message || "staff_access_denied" },
     });
-    redirect("/staff/login?error=staff_access_denied");
+    await supabase.auth.signOut();
+    redirect("/login?error=security_blocked");
   }
   const state = data as unknown as ConsoleState;
   const groupResults = (groupData ?? []) as unknown as GroupResult[];
@@ -499,10 +511,10 @@ export default async function StaffPage({
         </section>
 
         <section id="security-incidents" className="mt-8 rounded-[28px] border border-red-300/12 bg-red-300/[.025] p-4 sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-red-200/70">Access protection</p><h2 className="mt-3 text-2xl font-extrabold">Unauthorized access incidents</h2><p className="mt-2 text-sm text-white/45">Unresolved attempts alert the security channel every 60 seconds until Staff resolves them here.</p></div><span className="rounded-full border border-red-300/15 px-3 py-1.5 text-xs font-bold text-red-100/60">{securityIncidents.filter((item) => !item.resolved_at).length} unresolved</span></div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-red-200/70">Access protection</p><h2 className="mt-3 text-2xl font-extrabold">Unauthorized access incidents</h2><p className="mt-2 text-sm text-white/45">Every confirmed attempt blocks that account email for 24 hours. Alerts continue every 60 seconds until Staff resolves the incident; owners and admins can remove a block if it was a mistake.</p></div><span className="rounded-full border border-red-300/15 px-3 py-1.5 text-xs font-bold text-red-100/60">{securityIncidents.filter((item) => !item.resolved_at).length} unresolved</span></div>
           <div className="mt-6 grid gap-3">{securityIncidents.length ? securityIncidents.map((incident) => <article key={incident.id} className="grid gap-4 rounded-2xl border border-white/8 bg-black/25 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div><div className="flex flex-wrap gap-2"><b className="capitalize">{incident.scope.replaceAll("_", " ")}</b><span className={incident.resolved_at ? "text-xs text-emerald-200/60" : "text-xs text-red-200"}>{incident.resolved_at ? "Resolved" : "Alerting"}</span></div><p className="mt-2 text-sm text-white/50">{incident.actor_email || "Unknown signed-in account"}{incident.target_ref ? ` · ${incident.target_ref}` : ""}</p><p className="mt-1 text-xs text-white/30">{incident.occurrence_count} attempt(s) · last seen {formatDate(incident.last_seen_at)}</p></div>
-            {!incident.resolved_at ? <form action={resolveSecurityIncident}><input type="hidden" name="incident_id" value={incident.id} /><button className="min-h-11 rounded-xl bg-white px-4 text-sm font-extrabold text-black">Resolve &amp; stop alerts</button></form> : null}
+            <div><div className="flex flex-wrap gap-2"><b className="capitalize">{incident.scope.replaceAll("_", " ")}</b><span className={incident.resolved_at ? "text-xs text-emerald-200/60" : "text-xs text-red-200"}>{incident.resolved_at ? "Resolved" : "Alerting"}</span>{incident.block_active ? <span className="rounded-full border border-red-300/20 bg-red-300/8 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-red-100">Email blocked</span> : null}</div><p className="mt-2 text-sm text-white/50">{incident.actor_email || "Unknown signed-in account"}{incident.target_ref ? ` · ${incident.target_ref}` : ""}</p><p className="mt-1 text-xs text-white/30">{incident.occurrence_count} attempt(s) · last seen {formatDate(incident.last_seen_at)}{incident.block_active && incident.blocked_until ? ` · blocked until ${formatDate(incident.blocked_until)}` : ""}</p></div>
+            <div className="flex flex-col gap-2 sm:flex-row">{incident.block_active && incident.block_id && (state.access.role === "owner" || state.access.role === "admin") ? <form action={unblockSecurityAccount}><input type="hidden" name="block_id" value={incident.block_id} /><button className="min-h-11 rounded-xl border border-red-300/20 px-4 text-sm font-extrabold text-red-100">Unblock email</button></form> : null}{!incident.resolved_at ? <form action={resolveSecurityIncident}><input type="hidden" name="incident_id" value={incident.id} /><button className="min-h-11 rounded-xl bg-white px-4 text-sm font-extrabold text-black">Resolve &amp; stop alerts</button></form> : null}</div>
           </article>) : <p className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/40">No unauthorized access incidents.</p>}</div>
         </section>
 

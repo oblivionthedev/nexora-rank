@@ -1625,6 +1625,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      account_block_state: { Args: never; Returns: Json };
       dashboard_access_state: { Args: never; Returns: Json };
       report_security_incident: {
         Args: {
@@ -1637,6 +1638,10 @@ export type Database = {
       staff_security_incidents: { Args: never; Returns: Json };
       staff_resolve_security_incident: {
         Args: { incident_id: number };
+        Returns: boolean;
+      };
+      staff_unblock_security_account: {
+        Args: { requested_block_id: number };
         Returns: boolean;
       };
       bot_claim_security_incidents: { Args: never; Returns: Json };

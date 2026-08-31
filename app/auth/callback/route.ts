@@ -23,14 +23,20 @@ export async function GET(request: NextRequest) {
   await supabase.rpc("sync_auth_identities");
   if (safeNext.startsWith("/dashboard") || safeNext.startsWith("/onboarding")) {
     const { data: access } = await supabase.rpc("dashboard_access_state");
-    if (!(access as { allowed?: boolean } | null)?.allowed) {
-      await supabase.rpc("report_security_incident", {
-        requested_scope: "dashboard_access",
-        requested_target: safeNext.slice(0, 160),
-        requested_details: { reason: "beta_selection_required", source: "oauth_callback" },
-      });
+    const accessState = access as { allowed?: boolean; reason?: string } | null;
+    if (!accessState?.allowed) {
+      if (accessState?.reason !== "security_blocked") {
+        await supabase.rpc("report_security_incident", {
+          requested_scope: "dashboard_access",
+          requested_target: safeNext.slice(0, 160),
+          requested_details: {
+            reason: accessState?.reason || "beta_selection_required",
+            source: "oauth_callback",
+          },
+        });
+      }
       await supabase.auth.signOut();
-      return NextResponse.redirect(new URL("/beta?access=selection_required", url.origin));
+      return NextResponse.redirect(new URL("/login?error=security_blocked", url.origin));
     }
   }
   return NextResponse.redirect(new URL(safeNext, url.origin));

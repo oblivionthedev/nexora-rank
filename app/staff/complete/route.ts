@@ -24,10 +24,11 @@ export async function GET(request: NextRequest) {
   }
   const response = NextResponse.redirect(
     new URL(
-      !error && authorized ? "/staff" : "/staff/login?error=invalid_code",
+      !error && authorized ? "/staff" : "/login?error=security_blocked",
       url.origin,
     ),
   );
+  if (error || !authorized) await supabase.auth.signOut();
   response.cookies.set("nexora_staff_code", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
