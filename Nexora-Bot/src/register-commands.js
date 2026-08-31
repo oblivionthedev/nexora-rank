@@ -1,11 +1,11 @@
 import { REST, Routes } from "discord.js";
 import { loadConfig } from "../config/index.js";
-import { commands } from "./commands/index.js";
+import { officialServerCommands, publicCommands } from "./commands/index.js";
 
 const config = loadConfig();
 const rest = new REST({ version: "10" }).setToken(config.discordToken);
-const publicBody = commands.filter((command) => !command.staffOnly).map((command) => command.data.toJSON());
-const staffBody = commands.filter((command) => command.staffOnly).map((command) => command.data.toJSON());
+const publicBody = publicCommands.map((command) => command.data.toJSON());
+const staffBody = officialServerCommands.map((command) => command.data.toJSON());
 
 if (config.discordGuildId) {
   await rest.put(Routes.applicationGuildCommands(config.discordClientId, config.discordGuildId), { body: config.discordGuildId === config.staffGuildId ? [...publicBody, ...staffBody] : publicBody });

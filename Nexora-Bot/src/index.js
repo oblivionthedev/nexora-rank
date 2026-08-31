@@ -8,7 +8,11 @@ import {
   Routes,
 } from "discord.js";
 import { loadConfig } from "../config/index.js";
-import { commands, commandMap } from "./commands/index.js";
+import {
+  commandMap,
+  officialServerCommands,
+  publicCommands,
+} from "./commands/index.js";
 import { UserError } from "./lib/errors.js";
 import { consumeCooldown } from "./lib/cooldown.js";
 import { startHealthServer } from "./lib/health-server.js";
@@ -92,12 +96,10 @@ async function pollSecurityIncidents() {
 
 async function registerCommands() {
   const rest = new REST({ version: "10" }).setToken(config.discordToken);
-  const publicBody = commands
-    .filter((command) => !command.staffOnly)
-    .map((command) => command.data.toJSON());
-  const staffBody = commands
-    .filter((command) => command.staffOnly)
-    .map((command) => command.data.toJSON());
+  const publicBody = publicCommands.map((command) => command.data.toJSON());
+  const staffBody = officialServerCommands.map((command) =>
+    command.data.toJSON(),
+  );
 
   await rest.put(Routes.applicationCommands(config.discordClientId), { body: publicBody });
   await rest.put(
@@ -156,6 +158,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const command = commandMap.get(interaction.commandName);
   if (!command) return;
+
+  // Keep official-server commands private even while Discord is still
+  // propagating a global command update or an old command definition exists.
+  if (command.staffOnly && interaction.guildId !== config.staffGuildId) {
+    await interaction.reply({
+      content: "This command is available only in the official Nexora server.",
+      flags: MessageFlags.Ephemeral,
+    });
+    logger.warn("Blocked official command outside the Nexora server", {
+      command: interaction.commandName,
+      guildId: interaction.guildId,
+      userId: interaction.user.id,
+    });
+    return;
+  }
 
   const remaining = consumeCooldown(
     `${interaction.user.id}:${interaction.commandName}`,

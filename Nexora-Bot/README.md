@@ -1,6 +1,6 @@
 # Nexora Bot
 
-The official Node.js Discord bot for Nexora Rank. It uses slash commands, the existing Nexora workspace database, and the website's secure 10-minute linking flow.
+The official Node.js Discord bot for Nexora Rank. It can be installed in customer servers, uses the existing Nexora workspace database, and supports secure one-time 10-minute linking codes.
 
 ## Included commands
 
@@ -19,6 +19,8 @@ The official Node.js Discord bot for Nexora Rank. It uses slash commands, the ex
 - `/rules`, `/faq`, `/welcome`, `/getting-started`, `/resources`, `/about` — publish polished official information panels in the current channel. These Staff-only commands require **Manage Server** and work only in the official Nexora server.
 
 All replies are private. Every command reads the workspace status before doing work. A suspended or banned workspace cannot use operational bot commands.
+
+Customer servers receive only the standard workspace commands. `/login`, `/toggle`, `/verifypanel`, and the official channel-format commands are registered only in the official Nexora server and are also blocked by the bot if an old Discord command definition is invoked elsewhere.
 
 ## 1. Requirements
 
@@ -77,7 +79,8 @@ Hoster settings:
 
 - The Discord token and Supabase service key are validated at startup and are never printed.
 - The service key is used only by the private Node.js process, never by Discord messages or browser code.
-- `/link` uses the existing Nexora website endpoint and its single-use, hashed, 10-minute code.
+- `/link` claims the single-use, hashed, 10-minute code directly through the private bot database connection, avoiding a fragile website round-trip.
+- `/unlink` requires Discord **Manage Server** permission but does not require the server administrator to already be a Nexora workspace member.
 - Workspace membership and Nexora role are checked server-side for every operation.
 - Suspended and banned workspaces are blocked before mutations.
 - Important bot operations write to `workspace_logs` with source `discord`.

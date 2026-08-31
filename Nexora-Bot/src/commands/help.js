@@ -6,11 +6,12 @@ export const helpCommand = {
     .setName("help")
     .setDescription("Show the Nexora command guide")
     .setDMPermission(false),
-  async execute(interaction) {
+  async execute(interaction, { config }) {
     const response = embed(
       "Nexora commands",
       "Manage your connected Roblox community without leaving Discord.",
-    ).addFields(
+    );
+    response.addFields(
       {
         name: "Connection",
         value:
@@ -32,16 +33,18 @@ export const helpCommand = {
           "Support is handled by the separate **Nexora Support** bot. Use the Support panel in the official server and send that bot a DM.",
       },
       {
-        name: "Official channel panels · Nexora Staff",
-        value:
-          "`/rules` · `/faq` · `/welcome` · `/getting-started` · `/resources` · `/about` — publish polished public information panels in the official Nexora server.",
-      },
-      {
         name: "Private by default",
         value:
           "Command replies are only visible to you. Workspace roles decide which operations you can use.",
       },
     );
+    if (interaction.guildId === config.staffGuildId) {
+      response.addFields({
+        name: "Official Nexora server tools",
+        value:
+          "`/login create` · `/toggle` · `/verifypanel` · `/rules` · `/faq` · `/welcome` · `/getting-started` · `/resources` · `/about`",
+      });
+    }
     await interaction.editReply({ embeds: [response] });
   },
 };

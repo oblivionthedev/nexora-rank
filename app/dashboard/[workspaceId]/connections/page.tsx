@@ -69,7 +69,8 @@ export default async function Connections({
       <div className="mt-8 grid gap-5 xl:grid-cols-2">
         <Connection icon={Bot} title="Discord server">
           <p className="text-sm leading-7 text-white/48">
-            Add the bot, create a code here, then run <code>/link CODE</code>.
+            Add the bot, create a code here, type <code>/link</code> in your
+            server, and paste the code into Discord&apos;s <b>code</b> field.
             Installation is separate from website sign-in.
           </p>
           <a

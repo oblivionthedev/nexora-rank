@@ -144,38 +144,32 @@ export function createNexoraService(config, logger) {
   }
 
   async function claimLink({ code, guildId, guildName, discordUserId }) {
-    const response = await fetch(`${config.siteUrl}/api/discord/link`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        accept: "application/json",
-      },
-      body: JSON.stringify({
-        code,
-        guild_id: guildId,
-        guild_name: guildName,
-        discord_user_id: discordUserId,
-      }),
-      signal: AbortSignal.timeout(10000),
+    const { data, error } = await database.rpc("claim_discord_link_code", {
+      raw_code: code,
+      guild_id: guildId,
+      guild_name: guildName,
+      discord_user_id: discordUserId,
     });
-    const payload = await response
-      .json()
-      .catch(() => ({ ok: false, error: "invalid_response" }));
-    if (!response.ok || !payload.ok) {
+    if (error) {
       const messages = {
-        code_invalid_or_expired:
+        link_code_invalid_or_expired:
           "That link code is invalid or expired. Create a new code in the Nexora dashboard.",
-        code_plan_changed:
+        link_code_plan_changed:
           "That code belongs to an older workspace plan. Create a new plan-matched code in the Nexora dashboard.",
-        link_failed:
+        discord_server_already_linked:
           "This server could not be connected. It may already belong to another workspace.",
+        workspace_restricted:
+          "That workspace is currently restricted and cannot accept connections.",
       };
+      const reason = Object.keys(messages).find((key) =>
+        error.message?.includes(key),
+      );
       throw new UserError(
-        messages[payload.error] || "Nexora could not link this server.",
-        payload.error || "link_failed",
+        messages[reason] || "Nexora could not link this server. Create a fresh code and try again.",
+        reason || error.code || "link_failed",
       );
     }
-    return payload.workspace;
+    return data;
   }
 
   async function createStaffAccessCode({
@@ -267,9 +261,8 @@ export function createNexoraService(config, logger) {
   }
 
   async function disconnectGuild(guildId, discordUserId) {
-    const { workspace, actor } = await context(guildId, discordUserId, [
-      "admin",
-    ]);
+    const workspace = await getWorkspace(guildId, { allowRestricted: true });
+    const identity = await getDiscordIdentity(discordUserId);
     const { error } = await database
       .from("workspaces")
       .update({ discord_guild_id: null, discord_guild_name: null })
@@ -282,7 +275,7 @@ export function createNexoraService(config, logger) {
       .eq("provider", "discord");
     await writeLog(
       workspace.id,
-      actor.profileId,
+      identity?.user_id ?? null,
       "discord.disconnected",
       `Discord server ${guildId} disconnected`,
       { guild_id: guildId },

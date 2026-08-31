@@ -18,7 +18,7 @@ import { toggleCommand } from "./toggle.js";
 import { verifyPanelCommand } from "./verifypanel.js";
 import { channelFormatCommands } from "./channel-formats.js";
 
-export const commands = [
+export const publicCommands = [
   helpCommand,
   setupCommand,
   diagnosticsCommand,
@@ -34,11 +34,16 @@ export const commands = [
   activityCommand,
   quotaCommand,
   applicationsCommand,
+];
+
+export const officialServerCommands = [
   loginCommand,
   toggleCommand,
   verifyPanelCommand,
   ...channelFormatCommands,
 ];
+
+export const commands = [...publicCommands, ...officialServerCommands];
 export const commandMap = new Map(
   commands.map((command) => [command.data.name, command]),
 );

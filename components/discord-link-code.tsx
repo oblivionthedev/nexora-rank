@@ -42,11 +42,11 @@ export function DiscordLinkCode({
           </div>
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/30 p-3">
             <code className="break-all text-base font-bold text-white sm:text-lg">
-              /link {state.code}
+              {state.code}
             </code>
             <button
               type="button"
-              onClick={() => navigator.clipboard.writeText(`/link ${state.code || ""}`)}
+              onClick={() => navigator.clipboard.writeText(state.code || "")}
               className="ml-auto shrink-0 rounded-lg p-2 text-white/50 hover:bg-white/5"
               aria-label="Copy link command"
             >
@@ -54,8 +54,8 @@ export function DiscordLinkCode({
             </button>
           </div>
           <p className="mt-2 text-xs leading-5 text-white/40">
-            Expires in 10 minutes and works once. If the workspace plan changes,
-            create a new matching code.
+            Copy the code, type <b>/link</b> in your server, and paste it into
+            the <b>code</b> field. It expires in 10 minutes and works once.
           </p>
         </div>
       ) : null}

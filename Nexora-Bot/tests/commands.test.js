@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { commands } from "../src/commands/index.js";
+import {
+  commands,
+  officialServerCommands,
+  publicCommands,
+} from "../src/commands/index.js";
 
 test("all command names are unique and valid", () => {
   const names = commands.map((command) => command.data.name);
@@ -38,6 +42,16 @@ test("private platform commands include login, switches, verification, and chann
   ]);
 });
 
+test("customer servers receive only standard workspace commands", () => {
+  assert.ok(publicCommands.length > officialServerCommands.length);
+  assert.ok(publicCommands.every((command) => !command.staffOnly));
+  assert.ok(officialServerCommands.every((command) => command.staffOnly));
+  assert.deepEqual(
+    commands,
+    [...publicCommands, ...officialServerCommands],
+  );
+});
+
 test("verification panel sends members to the official website", async () => {
   const panel = commands.find((command) => command.data.name === "verifypanel");
   assert.ok(panel);
@@ -66,6 +80,6 @@ test("link accepts plan-specific dashboard codes", () => {
   const link = commands.find((command) => command.data.name === "link").data.toJSON();
   const code = link.options.find((option) => option.name === "code");
   assert.equal(code.min_length, 24);
-  assert.equal(code.max_length, 32);
+  assert.equal(code.max_length, 64);
   assert.match(code.description, /plan-specific/i);
 });
