@@ -25,6 +25,34 @@ const nexora = createNexoraService(config, logger);
 const healthServer = startHealthServer({ port: config.port, client, logger });
 let securityTimer;
 let securityPollActive = false;
+let roleSyncTimer;
+let roleSyncActive = false;
+
+async function pollDiscordRoleSync() {
+  if (roleSyncActive || !client.isReady()) return;
+  roleSyncActive = true;
+  try {
+    const jobs = await nexora.claimDiscordRoleSync();
+    for (const job of jobs) {
+      const method = job.operation === "remove" ? "DELETE" : "PUT";
+      const response = await fetch(
+        `https://discord.com/api/v10/guilds/${job.guild_id}/members/${job.discord_user_id}/roles/${job.role_id}`,
+        { method, headers: { Authorization: `Bot ${config.discordToken}` }, signal: AbortSignal.timeout(10_000) },
+      );
+      const succeeded = response.ok || (method === "DELETE" && response.status === 404);
+      const failure = succeeded ? null : `discord_http_${response.status}`;
+      await nexora.completeDiscordRoleSync(job.id, succeeded, failure);
+      logger[succeeded ? "info" : "warn"]("Discord role sync processed", {
+        queueId: job.id, operation: job.operation, roleId: job.role_id,
+        userId: job.discord_user_id, succeeded, failure,
+      });
+    }
+  } catch (error) {
+    logger.error("Discord role sync poll failed", { error: error?.stack || String(error) });
+  } finally {
+    roleSyncActive = false;
+  }
+}
 
 async function pollSecurityIncidents() {
   if (securityPollActive || !client.isReady()) return;
@@ -62,7 +90,7 @@ async function pollSecurityIncidents() {
   }
 }
 
-async function registerCommands(guildId = config.discordGuildId) {
+async function registerCommands() {
   const rest = new REST({ version: "10" }).setToken(config.discordToken);
   const publicBody = commands
     .filter((command) => !command.staffOnly)
@@ -71,43 +99,16 @@ async function registerCommands(guildId = config.discordGuildId) {
     .filter((command) => command.staffOnly)
     .map((command) => command.data.toJSON());
 
-  if (guildId) {
-    await rest.put(
-      Routes.applicationGuildCommands(config.discordClientId, guildId),
-      {
-        body:
-          guildId === config.staffGuildId
-            ? [...publicBody, ...staffBody]
-            : publicBody,
-      },
-    );
-    logger.info("Discord commands registered", {
-      count: publicBody.length,
-      scope: "server",
-      guildId,
-    });
-  } else {
-    await rest.put(Routes.applicationCommands(config.discordClientId), {
-      body: publicBody,
-    });
-    logger.info("Discord commands registered", {
-      count: publicBody.length,
-      scope: "global",
-    });
-  }
-  if (guildId !== config.staffGuildId) {
-    await rest.put(
-      Routes.applicationGuildCommands(
-        config.discordClientId,
-        config.staffGuildId,
-      ),
-      { body: [...publicBody, ...staffBody] },
-    );
-    logger.info("Private Staff commands registered", {
-      count: staffBody.length,
-      guildId: config.staffGuildId,
-    });
-  }
+  await rest.put(Routes.applicationCommands(config.discordClientId), { body: publicBody });
+  await rest.put(
+    Routes.applicationGuildCommands(config.discordClientId, config.staffGuildId),
+    { body: [...publicBody, ...staffBody] },
+  );
+  logger.info("Standard commands registered globally", { count: publicBody.length });
+  logger.info("Official Nexora server commands registered", {
+    count: publicBody.length + staffBody.length,
+    guildId: config.staffGuildId,
+  });
 }
 
 client.once(Events.ClientReady, async (readyClient) => {
@@ -123,8 +124,11 @@ client.once(Events.ClientReady, async (readyClient) => {
     commands: commandMap.size,
   });
   await pollSecurityIncidents();
+  await pollDiscordRoleSync();
   securityTimer = setInterval(pollSecurityIncidents, 60_000);
   securityTimer.unref();
+  roleSyncTimer = setInterval(pollDiscordRoleSync, 5_000);
+  roleSyncTimer.unref();
 });
 
 client.on(Events.GuildCreate, (guild) =>
@@ -210,6 +214,7 @@ process.on("uncaughtException", (error) =>
 async function shutdown(signal) {
   logger.info("Shutting down Nexora Bot", { signal });
   if (securityTimer) clearInterval(securityTimer);
+  if (roleSyncTimer) clearInterval(roleSyncTimer);
   healthServer.close();
   client.destroy();
   process.exit(0);

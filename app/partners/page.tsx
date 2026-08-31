@@ -15,7 +15,7 @@ export default async function PartnersPage() {
   const { data } = await supabase
     .from("partners")
     .select(
-      "id,roblox_group_id,roblox_group_name,roblox_group_logo_url,roblox_member_count,roblox_owner_username,roblox_owner_display_name,discord_invite_url",
+      "id,roblox_group_id,roblox_group_name,roblox_group_logo_url,roblox_group_banner_url,roblox_member_count,roblox_owner_username,roblox_owner_display_name,discord_invite_url",
     )
     .eq("published", true)
     .order("created_at", { ascending: false });
@@ -53,7 +53,10 @@ export default async function PartnersPage() {
               "Roblox member";
             return (
               <article key={partner.id} className="partner-card">
-                <div className="partner-card-art">
+                <div
+                  className="partner-card-art"
+                  style={partner.roblox_group_banner_url ? { backgroundImage: `linear-gradient(rgba(5,3,3,.28),rgba(5,3,3,.72)),url(${partner.roblox_group_banner_url})` } : undefined}
+                >
                   {partner.roblox_group_logo_url ? (
                     <img
                       src={partner.roblox_group_logo_url}

@@ -221,6 +221,22 @@ export function createNexoraService(config, logger) {
     return Array.isArray(data) ? data : [];
   }
 
+  async function claimDiscordRoleSync() {
+    const { data, error } = await database.rpc("bot_claim_discord_role_sync");
+    throwIfError(error, "Nexora could not claim Discord role updates.");
+    return Array.isArray(data) ? data : [];
+  }
+
+  async function completeDiscordRoleSync(queueId, succeeded, failureReason) {
+    const { data, error } = await database.rpc("bot_complete_discord_role_sync", {
+      queue_id: queueId,
+      succeeded,
+      failure_reason: failureReason || null,
+    });
+    throwIfError(error, "Nexora could not complete a Discord role update.");
+    return Boolean(data);
+  }
+
   async function workspaceSummary(guildId, discordUserId) {
     const workspace = await getWorkspace(guildId, { allowRestricted: true });
     const actor = await getActor(workspace.id, discordUserId);
@@ -621,6 +637,8 @@ export function createNexoraService(config, logger) {
     setBetaEnabled,
     setWorkspaceCreationEnabled,
     claimSecurityIncidents,
+    claimDiscordRoleSync,
+    completeDiscordRoleSync,
     getWorkspace,
     workspaceSummary,
     disconnectGuild,

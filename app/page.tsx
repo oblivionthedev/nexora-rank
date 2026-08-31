@@ -121,6 +121,7 @@ export default async function Home({ searchParams }: HomeProps) {
               More <ChevronDown />
             </summary>
             <div>
+              <Link href="/groups">Communities using Nexora</Link>
               <Link href="/verify">Discord verification</Link>
               <Link href="https://discord.gg/YY9nXqqWTk" target="_blank">
                 Community &amp; support

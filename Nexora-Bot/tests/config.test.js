@@ -48,6 +48,6 @@ test("configuration pins the only authorization-code owner", () => {
 
 test("configuration pins security alert routing", () => {
   const config = loadConfig(valid);
-  assert.equal(config.securityAlertChannelId, "1543592799981535302");
+  assert.equal(config.securityAlertChannelId, "1543907082363867229");
   assert.equal(config.securityPingRoleId, "1543625600919404604");
 });

@@ -604,6 +604,7 @@ export type Database = {
           id: number;
           published: boolean;
           roblox_group_id: string;
+          roblox_group_banner_url: string | null;
           roblox_group_logo_url: string | null;
           roblox_group_name: string;
           roblox_member_count: number;
@@ -619,6 +620,7 @@ export type Database = {
           id?: never;
           published?: boolean;
           roblox_group_id: string;
+          roblox_group_banner_url?: string | null;
           roblox_group_logo_url?: string | null;
           roblox_group_name: string;
           roblox_member_count?: number;
@@ -634,6 +636,7 @@ export type Database = {
           id?: never;
           published?: boolean;
           roblox_group_id?: string;
+          roblox_group_banner_url?: string | null;
           roblox_group_logo_url?: string | null;
           roblox_group_name?: string;
           roblox_member_count?: number;
@@ -660,6 +663,7 @@ export type Database = {
           id: string;
           published: boolean;
           roblox_group_id: string;
+          roblox_group_banner_url: string | null;
           roblox_group_logo_url: string | null;
           roblox_group_name: string;
           roblox_member_count: number;
@@ -675,6 +679,7 @@ export type Database = {
           id?: string;
           published?: boolean;
           roblox_group_id: string;
+          roblox_group_banner_url?: string | null;
           roblox_group_logo_url?: string | null;
           roblox_group_name: string;
           roblox_member_count?: number;
@@ -690,6 +695,7 @@ export type Database = {
           id?: string;
           published?: boolean;
           roblox_group_id?: string;
+          roblox_group_banner_url?: string | null;
           roblox_group_logo_url?: string | null;
           roblox_group_name?: string;
           roblox_member_count?: number;
@@ -1645,12 +1651,20 @@ export type Database = {
         Returns: boolean;
       };
       bot_claim_security_incidents: { Args: never; Returns: Json };
+      request_verified_role: { Args: never; Returns: Json };
+      request_workspace_owner_role: { Args: never; Returns: Json };
+      bot_claim_discord_role_sync: { Args: never; Returns: Json };
+      bot_complete_discord_role_sync: {
+        Args: { queue_id: number; succeeded: boolean; failure_reason?: string };
+        Returns: boolean;
+      };
       staff_nexora_groups: { Args: never; Returns: Json };
       staff_add_nexora_group: {
         Args: {
           group_id: string;
           group_name: string;
           group_logo_url: string;
+          group_banner_url: string;
           member_count: number;
           owner_user_id: string;
           owner_username: string;
@@ -1762,6 +1776,7 @@ export type Database = {
           group_id: string;
           group_name: string;
           group_logo_url: string;
+          group_banner_url: string;
           member_count: number;
           owner_user_id: string;
           owner_username: string;

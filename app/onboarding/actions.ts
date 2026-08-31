@@ -215,16 +215,17 @@ export async function createOnboardingWorkspace(formData: FormData) {
   if (workspace) {
     const { data: discordLink } = await supabase
       .from("account_links")
-      .select("provider_user_id")
+      .select("provider_user_id, verified_at")
       .eq("user_id", user.id)
       .eq("provider", "discord")
       .maybeSingle();
-    if (discordLink?.provider_user_id) {
+    if (discordLink?.provider_user_id && discordLink.verified_at) {
       await assignDiscordGuildRole({
         guildId: NEXORA_DISCORD_GUILD_ID,
         userId: discordLink.provider_user_id,
         roleId: NEXORA_WORKSPACE_OWNER_ROLE_ID,
       });
+      await supabase.rpc("request_workspace_owner_role");
     }
     await sendNexoraOperationalLog(NEXORA_LOG_CHANNELS.workspacesCreated, {
       title: "Workspace created",

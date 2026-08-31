@@ -175,8 +175,9 @@ export async function updateBetaApplication(formData: FormData) {
             userId: result.discord_user_id,
             roleId: NEXORA_BETA_ROLE_ID,
           });
-    if (!roleResult.ok)
-      redirect("/staff?error=beta_role_sync_failed#beta-applications");
+    // The database has also queued this role change for the bot worker. A
+    // failed direct request is therefore retried instead of losing the role.
+    void roleResult;
   }
   revalidatePath("/staff");
   redirect("/staff?notice=beta_updated#beta-applications");
@@ -191,11 +192,12 @@ function robloxGroupId(value: string) {
 export async function addPartner(formData: FormData) {
   const groupId = robloxGroupId(clean(formData.get("roblox_group")));
   const discordUrl = clean(formData.get("discord_invite"));
+  const bannerUrl = clean(formData.get("group_banner_url"));
   if (
     !groupId ||
     !/^https:\/\/(?:www\.)?(?:discord\.gg|discord\.com\/invite)\/[A-Za-z0-9_-]+\/?$/.test(
       discordUrl,
-    )
+    ) || (bannerUrl && !/^https:\/\//.test(bannerUrl))
   ) {
     redirect("/staff?error=invalid_partner#partners");
   }
@@ -206,6 +208,7 @@ export async function addPartner(formData: FormData) {
     group_id: group.id,
     group_name: group.name,
     group_logo_url: group.iconUrl || "",
+    group_banner_url: bannerUrl,
     member_count: group.memberCount,
     owner_user_id: group.owner?.userId || "",
     owner_username: group.owner?.username || "",
@@ -234,13 +237,15 @@ export async function removePartner(formData: FormData) {
 export async function addNexoraGroup(formData: FormData) {
   const groupId = robloxGroupId(clean(formData.get("roblox_group")));
   const discordUrl = clean(formData.get("discord_invite"));
-  if (!groupId || (discordUrl && !/^https:\/\/(?:www\.)?(?:discord\.gg|discord\.com\/invite)\/[A-Za-z0-9_-]+\/?$/.test(discordUrl)))
+  const bannerUrl = clean(formData.get("group_banner_url"));
+  if (!groupId || (discordUrl && !/^https:\/\/(?:www\.)?(?:discord\.gg|discord\.com\/invite)\/[A-Za-z0-9_-]+\/?$/.test(discordUrl)) || (bannerUrl && !/^https:\/\//.test(bannerUrl)))
     redirect("/staff?error=invalid_group_listing#nexora-groups");
   const group = await getRobloxGroupDetails(groupId);
   if (!group) redirect("/staff?error=roblox_group_not_found#nexora-groups");
   const supabase = await authenticatedClient();
   const { error } = await supabase.rpc("staff_add_nexora_group", {
     group_id: group.id, group_name: group.name, group_logo_url: group.iconUrl || "",
+    group_banner_url: bannerUrl,
     member_count: group.memberCount, owner_user_id: group.owner?.userId || "",
     owner_username: group.owner?.username || "", owner_display_name: group.owner?.displayName || "",
     discord_url: discordUrl,
@@ -276,8 +281,9 @@ export async function resolveSecurityIncident(formData: FormData) {
   const incidentId = Number(clean(formData.get("incident_id")));
   if (!Number.isSafeInteger(incidentId)) redirect("/staff?error=invalid_security_incident#security-incidents");
   const supabase = await authenticatedClient();
-  const { error } = await supabase.rpc("staff_resolve_security_incident", { incident_id: incidentId });
+  const { data, error } = await supabase.rpc("staff_resolve_security_incident", { incident_id: incidentId });
   if (error) redirect(`/staff?error=${errorCode(error.message)}#security-incidents`);
+  if (!data) redirect("/staff?error=security_incident_not_open#security-incidents");
   revalidatePath("/staff");
   redirect("/staff?notice=security_resolved#security-incidents");
 }

@@ -83,7 +83,7 @@ Hoster settings:
 - Important bot operations write to `workspace_logs` with source `discord`.
 - Authorization and Beta controls are available only to Discord user `1515743540259328202` inside the private Staff server.
 - Verification buttons open `${NEXORA_SITE_URL}/verify`; role assignment happens only after the website confirms the connected Discord account and server membership.
-- Unresolved unauthorized-access incidents are sent to channel `1543592799981535302`, ping role `1543625600919404604`, and repeat every 60 seconds until Staff resolves them.
+- Unresolved unauthorized-access incidents are sent to channel `1543907082363867229`, ping role `1543625600919404604`, and repeat every 60 seconds until Staff resolves them.
 
 Nexora Support now runs from the separate `Nexora-Support-Bot` folder with its own Discord application, token, and host.
 

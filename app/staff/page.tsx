@@ -104,6 +104,7 @@ type PartnerRow = {
   roblox_group_id: string;
   roblox_group_name: string;
   roblox_group_logo_url: string | null;
+  roblox_group_banner_url: string | null;
   roblox_member_count: number;
   roblox_owner_display_name: string | null;
   roblox_owner_username: string | null;
@@ -167,6 +168,7 @@ const errors: Record<string, string> = {
   invalid_security_incident: "That security incident could not be found.",
   invalid_security_block: "That security block could not be found.",
   security_block_not_found: "That block already expired or was removed.",
+  security_incident_not_open: "That incident was already resolved. The Security queue has been refreshed.",
   roblox_group_not_found: "Roblox could not find that group.",
   action_failed: "The action could not be completed.",
 };
@@ -498,9 +500,10 @@ export default async function StaffPage({
             <div><p className="microlabel">Public customer directory</p><h2 className="mt-3 text-2xl font-extrabold">Groups using Nexora</h2><p className="mt-2 max-w-2xl text-sm leading-7 text-white/50">Publish verified Roblox groups that actively use Nexora. This is separate from partnerships.</p></div>
             <span className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-white/45">{nexoraGroups.length} published</span>
           </div>
-          {(state.access.role === "owner" || state.access.role === "admin") ? <form action={addNexoraGroup} className="mt-6 grid gap-3 rounded-2xl border border-[#d79a9a]/18 bg-[#d79a9a]/[.045] p-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+          {(state.access.role === "owner" || state.access.role === "admin") ? <form action={addNexoraGroup} className="mt-6 grid gap-3 rounded-2xl border border-[#d79a9a]/18 bg-[#d79a9a]/[.045] p-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
             <label><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">Roblox group</span><input name="roblox_group" required placeholder="Group ID or community link" className="min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4" /></label>
             <label><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">Discord invite · optional</span><input name="discord_invite" type="url" placeholder="https://discord.gg/your-server" className="min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4" /></label>
+            <label><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">Banner image · optional</span><input name="group_banner_url" type="url" placeholder="https://.../banner.png" className="min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4" /></label>
             <button className="min-h-12 rounded-xl bg-white px-6 text-sm font-extrabold text-black">Add group</button>
           </form> : null}
           <div className="mt-5 grid gap-3 md:grid-cols-2">{nexoraGroups.length ? nexoraGroups.map((group) => <article key={group.id} className="flex items-center gap-4 rounded-2xl border border-white/8 bg-black/20 p-4">
@@ -540,7 +543,7 @@ export default async function StaffPage({
           {state.access.role === "owner" || state.access.role === "admin" ? (
             <form
               action={addPartner}
-              className="mt-6 grid gap-3 rounded-2xl border border-[#d79a9a]/18 bg-[#d79a9a]/[.045] p-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end"
+              className="mt-6 grid gap-3 rounded-2xl border border-[#d79a9a]/18 bg-[#d79a9a]/[.045] p-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end"
             >
               <label className="block">
                 <span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">
@@ -552,6 +555,10 @@ export default async function StaffPage({
                   placeholder="Group ID or Roblox community link"
                   className="min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-base outline-none focus:border-[#d79a9a]/50"
                 />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">Banner image · optional</span>
+                <input name="group_banner_url" type="url" placeholder="https://.../banner.png" className="min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-base outline-none focus:border-[#d79a9a]/50" />
               </label>
               <label className="block">
                 <span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-white/55">

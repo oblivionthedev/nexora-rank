@@ -66,7 +66,7 @@ export default async function VerifyPage({
             <BadgeCheck />
             <div>
               <b>You are verified</b>
-              <span>Your official Nexora Verified role is active.</span>
+              <span>Your official Nexora Verified role is active or queued for delivery by the bot.</span>
             </div>
           </div>
         ) : null}
