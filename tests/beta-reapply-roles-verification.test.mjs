@@ -64,6 +64,20 @@ test("member directory has separate searchable workspace and group controls", as
   assert.match(groups, /findRobloxGroupMember/);
 });
 
+test("every workspace group is selected from the connected Roblox owner's groups", async () => {
+  const [page, actions] = await Promise.all([
+    read("app/dashboard/[workspaceId]/connections/page.tsx"),
+    read("app/dashboard/[workspaceId]/actions.ts"),
+  ]);
+  assert.match(page, /Select a group you own/);
+  assert.match(page, /Select another group you own/);
+  assert.doesNotMatch(page, /placeholder="Roblox group ID"/);
+  assert.match(page, /availableAdditionalGroups/);
+  assert.match(actions, /open_cloud_ready/);
+  assert.match(actions, /group\.id === groupId && group\.roleRank === 255/);
+  assert.match(actions, /manager_required/);
+});
+
 test("Discord and Roblox resource choices refresh every minute", async () => {
   const [refresh, roles, ranking, settings] = await Promise.all([
     read("components/resource-auto-refresh.tsx"),

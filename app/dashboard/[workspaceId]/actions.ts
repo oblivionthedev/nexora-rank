@@ -863,17 +863,41 @@ function validHttpUrl(candidate: string) {
 export async function addWorkspaceRobloxGroup(formData: FormData) {
   const publicId = value(formData, "public_id");
   const groupId = value(formData, "group_id");
+  const purpose = value(formData, "purpose") || "community";
   if (!/^\d{1,20}$/.test(groupId))
     redirect(`/dashboard/${publicId}/connections?error=invalid_group`);
+  if (!["community", "department", "division", "training"].includes(purpose))
+    redirect(`/dashboard/${publicId}/connections?error=save_failed`);
+  const { supabase, user, state } = await context(publicId);
+  if (!["owner", "admin"].includes(state.workspace.role))
+    redirect(`/dashboard/${publicId}/connections?error=manager_required`);
+  const { data: link } = await supabase
+    .from("account_links")
+    .select("provider_user_id, metadata")
+    .eq("user_id", user.id)
+    .eq("provider", "roblox")
+    .maybeSingle();
+  if (!link)
+    redirect(`/dashboard/${publicId}/connections?error=roblox_identity_required`);
+  const metadata = link.metadata as { open_cloud_ready?: boolean } | null;
+  if (!metadata?.open_cloud_ready)
+    redirect(`/dashboard/${publicId}/connections?error=roblox_reconnect_required`);
+  const groups = await listRobloxGroups(link.provider_user_id);
+  const owned = groups.ok
+    ? groups.groups.find((group) => group.id === groupId && group.roleRank === 255)
+    : null;
+  if (!owned)
+    redirect(`/dashboard/${publicId}/connections?error=group_owner_required`);
+  if (groupId === state.workspace.roblox_group_id)
+    redirect(`/dashboard/${publicId}/connections?error=save_failed`);
   const details = await getRobloxGroupDetails(groupId);
   if (!details)
     redirect(`/dashboard/${publicId}/connections?error=group_not_found`);
-  const { supabase, state } = await context(publicId);
   const { error } = await supabase.from("workspace_roblox_groups").insert({
     workspace_id: state.workspace.id,
     group_id: details.id,
     group_name: details.name,
-    purpose: value(formData, "purpose") || "community",
+    purpose,
     is_primary: false,
   });
   await finish(publicId, "connections", error);

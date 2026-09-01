@@ -61,6 +61,13 @@ export default async function Connections({
   const owned = groups?.ok
     ? groups.groups.filter((g) => g.roleRank === 255)
     : [];
+  const connectedGroupIds = new Set([
+    ...(w.roblox_group_id ? [w.roblox_group_id] : []),
+    ...((extraGroups ?? []).map((group) => String(group.group_id))),
+  ]);
+  const availableAdditionalGroups = owned.filter(
+    (group) => !connectedGroupIds.has(group.id),
+  );
   const canManage = ["owner", "admin"].includes(w.role);
   const robloxEnabled =
     process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
@@ -183,34 +190,66 @@ export default async function Connections({
         </Connection>
         <Connection icon={Gamepad2} title="Additional groups">
           <p className="text-sm leading-7 text-white/48">
-            Add division, department, or training groups to the same workspace.
+            Choose another community owned by the connected Roblox account for
+            a division, department, or training group.
           </p>
-          <form action={addWorkspaceRobloxGroup} className="mt-5 grid gap-3">
-            <input type="hidden" name="public_id" value={w.public_id} />
-            <input
-              name="group_id"
-              required
-              inputMode="numeric"
-              pattern="[0-9]+"
-              placeholder="Roblox group ID"
-              className="min-h-12 rounded-xl border border-white/10 bg-black/20 px-4"
-            />
-            <select
-              name="purpose"
-              className="min-h-12 rounded-xl border border-white/10 bg-[#0e0909] px-4"
+          {!robloxReady && canManage && robloxEnabled ? (
+            <a
+              href={`/auth/roblox/start?next=/dashboard/${w.public_id}/connections`}
+              className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-black"
             >
-              <option value="community">Community</option>
-              <option value="department">Department</option>
-              <option value="division">Division</option>
-              <option value="training">Training</option>
-            </select>
-            <button
-              disabled={!canManage}
-              className="min-h-12 rounded-xl bg-white px-5 text-sm font-bold text-black disabled:opacity-40"
-            >
-              Add group
-            </button>
-          </form>
+              {roblox ? "Reconnect Roblox permissions" : "Connect Roblox"}
+              <ExternalLink className="size-4" />
+            </a>
+          ) : null}
+          {robloxReady ? (
+            <form action={addWorkspaceRobloxGroup} className="mt-5 grid gap-3">
+              <input type="hidden" name="public_id" value={w.public_id} />
+              {availableAdditionalGroups.length ? (
+                <select
+                  name="group_id"
+                  required
+                  defaultValue=""
+                  className="min-h-12 rounded-xl border border-white/10 bg-[#0e0909] px-4"
+                >
+                  <option value="" disabled>
+                    Select another group you own
+                  </option>
+                  {availableAdditionalGroups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} · {group.id}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="rounded-xl border border-white/8 bg-black/20 px-4 py-3 text-sm text-white/50">
+                  Every group owned by this account is already connected, or
+                  this account does not own another group.
+                </p>
+              )}
+              <select
+                name="purpose"
+                disabled={!availableAdditionalGroups.length}
+                className="min-h-12 rounded-xl border border-white/10 bg-[#0e0909] px-4 disabled:opacity-40"
+              >
+                <option value="community">Community</option>
+                <option value="department">Department</option>
+                <option value="division">Division</option>
+                <option value="training">Training</option>
+              </select>
+              <button
+                disabled={!canManage || !availableAdditionalGroups.length}
+                className="min-h-12 rounded-xl bg-white px-5 text-sm font-bold text-black disabled:opacity-40"
+              >
+                Add selected group
+              </button>
+            </form>
+          ) : (
+            <p className="mt-5 rounded-xl border border-white/8 bg-black/20 px-4 py-3 text-sm text-white/50">
+              Connect Roblox first. Nexora will then load only the groups that
+              account owns.
+            </p>
+          )}
           <div className="mt-5 space-y-3">
             {extraGroups?.map((group) => (
               <div
