@@ -7,14 +7,21 @@ const rest = new REST({ version: "10" }).setToken(config.discordToken);
 const publicBody = publicCommands.map((command) => command.data.toJSON());
 const staffBody = officialServerCommands.map((command) => command.data.toJSON());
 
-if (config.discordGuildId) {
-  await rest.put(Routes.applicationGuildCommands(config.discordClientId, config.discordGuildId), { body: config.discordGuildId === config.staffGuildId ? [...publicBody, ...staffBody] : publicBody });
-  console.log(`Registered ${publicBody.length} public commands in development server ${config.discordGuildId}.`);
-} else {
-  await rest.put(Routes.applicationCommands(config.discordClientId), { body: publicBody });
-  console.log(`Registered ${publicBody.length} global commands.`);
+await rest.put(Routes.applicationCommands(config.discordClientId), { body: publicBody });
+await rest.put(
+  Routes.applicationGuildCommands(config.discordClientId, config.staffGuildId),
+  { body: staffBody },
+);
+
+// Remove old guild-scoped public commands left by the former development mode.
+// Their global definitions remain available in every server, including this one.
+if (config.discordGuildId && config.discordGuildId !== config.staffGuildId) {
+  await rest.put(
+    Routes.applicationGuildCommands(config.discordClientId, config.discordGuildId),
+    { body: [] },
+  );
+  console.log(`Cleared legacy guild commands from ${config.discordGuildId}.`);
 }
-if (config.discordGuildId !== config.staffGuildId) {
-  await rest.put(Routes.applicationGuildCommands(config.discordClientId, config.staffGuildId), { body: [...publicBody, ...staffBody] });
-  console.log(`Registered ${publicBody.length + staffBody.length} commands in the Nexora Staff server.`);
-}
+
+console.log(`Registered ${publicBody.length} public commands globally.`);
+console.log(`Registered ${staffBody.length} private commands in the Nexora server.`);

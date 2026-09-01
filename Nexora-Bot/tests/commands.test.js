@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
+  commandAllowedInGuild,
   commands,
   officialServerCommands,
   publicCommands,
@@ -50,6 +51,17 @@ test("customer servers receive only standard workspace commands", () => {
     commands,
     [...publicCommands, ...officialServerCommands],
   );
+});
+
+test("runtime command scope blocks private commands outside the Nexora server", () => {
+  const publicCommand = publicCommands[0];
+  const privateCommand = officialServerCommands[0];
+  const officialGuildId = "1542617161825255474";
+
+  assert.equal(commandAllowedInGuild(publicCommand, "111111111111111111", officialGuildId), true);
+  assert.equal(commandAllowedInGuild(privateCommand, officialGuildId, officialGuildId), true);
+  assert.equal(commandAllowedInGuild(privateCommand, "111111111111111111", officialGuildId), false);
+  assert.equal(commandAllowedInGuild(privateCommand, null, officialGuildId), false);
 });
 
 test("verification panel sends members to the official website", async () => {

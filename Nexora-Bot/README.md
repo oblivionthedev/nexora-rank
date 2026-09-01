@@ -42,7 +42,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_real_service_role_key
 
 `DISCORD_CLIENT_ID`, `SUPABASE_URL`, and the Nexora site URL are already filled in. Never send or commit `config/.env`. The example file is safe to share.
 
-For instant command updates during development, put your test server ID in `DISCORD_GUILD_ID`. Leave it blank when registering commands globally for production.
+`DISCORD_GUILD_ID` is retained only to clean up commands from an older test-server deployment. Leave it blank for normal hosting.
 
 ## 3. Install and verify
 
@@ -60,7 +60,7 @@ Run this after the first upload and whenever command definitions change:
 npm run register
 ```
 
-With `DISCORD_GUILD_ID` filled in, updates appear only in that server and usually appear immediately. With it blank, commands are registered globally and Discord may take time to show them everywhere.
+The registration script always publishes standard workspace commands globally and publishes private platform commands only in the official Nexora server. Private server commands update immediately; Discord can take time to synchronize global commands across every server.
 
 ## 5. Start the bot
 

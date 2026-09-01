@@ -47,3 +47,7 @@ export const commands = [...publicCommands, ...officialServerCommands];
 export const commandMap = new Map(
   commands.map((command) => [command.data.name, command]),
 );
+
+export function commandAllowedInGuild(command, guildId, staffGuildId) {
+  return !command?.staffOnly || guildId === staffGuildId;
+}

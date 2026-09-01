@@ -9,6 +9,7 @@ import {
 } from "discord.js";
 import { loadConfig } from "../config/index.js";
 import {
+  commandAllowedInGuild,
   commandMap,
   officialServerCommands,
   publicCommands,
@@ -104,11 +105,11 @@ async function registerCommands() {
   await rest.put(Routes.applicationCommands(config.discordClientId), { body: publicBody });
   await rest.put(
     Routes.applicationGuildCommands(config.discordClientId, config.staffGuildId),
-    { body: [...publicBody, ...staffBody] },
+    { body: staffBody },
   );
   logger.info("Standard commands registered globally", { count: publicBody.length });
   logger.info("Official Nexora server commands registered", {
-    count: publicBody.length + staffBody.length,
+    count: staffBody.length,
     guildId: config.staffGuildId,
   });
 }
@@ -144,6 +145,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isAutocomplete()) {
     const command = commandMap.get(interaction.commandName);
     if (!command?.autocomplete) return;
+    if (!commandAllowedInGuild(command, interaction.guildId, config.staffGuildId)) {
+      await interaction.respond([]).catch(() => undefined);
+      return;
+    }
     try {
       await command.autocomplete(interaction, { config, nexora, logger });
     } catch (error) {
@@ -161,7 +166,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   // Keep official-server commands private even while Discord is still
   // propagating a global command update or an old command definition exists.
-  if (command.staffOnly && interaction.guildId !== config.staffGuildId) {
+  if (!commandAllowedInGuild(command, interaction.guildId, config.staffGuildId)) {
     await interaction.reply({
       content: "This command is available only in the official Nexora server.",
       flags: MessageFlags.Ephemeral,
