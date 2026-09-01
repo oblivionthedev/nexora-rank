@@ -18,6 +18,66 @@ export type RobloxGroupRole = {
   memberCount: number;
 };
 
+export type RobloxGroupMember = {
+  userId: string;
+  username: string;
+  displayName: string;
+  roleId: string;
+  roleName: string;
+  roleRank: number;
+};
+
+export type RobloxGroupMembersPage = {
+  members: RobloxGroupMember[];
+  nextCursor: string | null;
+  previousCursor: string | null;
+};
+
+export async function getRobloxGroupMembers(
+  groupId?: string | null,
+  cursor?: string | null,
+): Promise<RobloxGroupMembersPage> {
+  if (!groupId || !/^\d+$/.test(groupId))
+    return { members: [], nextCursor: null, previousCursor: null };
+  const safeCursor = cursor?.trim().slice(0, 500) || null;
+  try {
+    const query = new URLSearchParams({ sortOrder: "Desc", limit: "100" });
+    if (safeCursor) query.set("cursor", safeCursor);
+    const response = await fetch(
+      `https://groups.roblox.com/v1/groups/${groupId}/users?${query}`,
+      { cache: "no-store", signal: AbortSignal.timeout(8_000) },
+    );
+    if (!response.ok)
+      return { members: [], nextCursor: null, previousCursor: null };
+    const payload = (await response.json()) as {
+      data?: Array<{
+        user?: { userId?: number; username?: string; displayName?: string };
+        role?: { id?: number; name?: string; rank?: number };
+      }>;
+      nextPageCursor?: string | null;
+      previousPageCursor?: string | null;
+    };
+    return {
+      members: (payload.data ?? []).flatMap((entry) => {
+        if (!entry.user?.userId || !entry.role?.id || !entry.role.name)
+          return [];
+        return [{
+          userId: String(entry.user.userId),
+          username: entry.user.username || String(entry.user.userId),
+          displayName: entry.user.displayName || entry.user.username || "Roblox member",
+          roleId: String(entry.role.id),
+          roleName: entry.role.name,
+          roleRank: Number(entry.role.rank) || 0,
+        }];
+      }),
+      nextCursor: payload.nextPageCursor || null,
+      previousCursor: payload.previousPageCursor || null,
+    };
+  } catch {
+    return { members: [], nextCursor: null, previousCursor: null };
+  }
+}
+
 export async function getRobloxHeadshots(userIds: string[]) {
   const unique = [...new Set(userIds.filter((id) => /^\d+$/.test(id)))].slice(0, 100);
   if (!unique.length) return new Map<string, string>();

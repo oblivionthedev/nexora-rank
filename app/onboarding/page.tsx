@@ -149,9 +149,9 @@ export default async function OnboardingPage({
   const workspaceCreationAvailable = workspaceCreationEnabled || isStaff;
   const robloxAvailable =
     process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
-  // Roblox remains optional while the live membership policy is disabled.
-  // Once approval is complete, enabling that policy restores the required gate.
-  const robloxRequired = membershipEnforced && robloxAvailable;
+  // Before provider approval Roblox remains optional. Turning the provider on
+  // makes the one-time Open Cloud authorization part of setup automatically.
+  const robloxRequired = robloxAvailable;
   const identityReady =
     discordConnected && (!robloxRequired || robloxConnected);
   if (membership && params.manage !== "identities")
@@ -287,7 +287,8 @@ export default async function OnboardingPage({
               <h2>First, let’s recognize you.</h2>
               <p>
                 Discord confirms your Beta access and connects the server you’ll
-                manage. Roblox stays optional until official OAuth approval is ready.
+                manage. Once Roblox OAuth is approved, one secure connection
+                unlocks group selection and rank operations.
               </p>
               <div className="provider-stack">
                 <ProviderStatus
@@ -309,8 +310,8 @@ export default async function OnboardingPage({
                   name="Roblox"
                   description={
                     robloxRequired
-                      ? "Required for groups, ranking and in-game activity"
-                      : "Optional for now — connect later when OAuth approval is ready"
+                      ? "Required once for groups, ranking and verified staff operations"
+                      : "Optional until Roblox approves the Nexora OAuth application"
                   }
                   state={
                     robloxConnected

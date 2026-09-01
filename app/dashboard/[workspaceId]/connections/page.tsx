@@ -14,6 +14,9 @@ const errors: Record<string, string> = {
   invalid_group: "Enter a valid Roblox group ID.",
   group_not_found: "That Roblox group could not be found.",
   group_owner_required: "Your connected Roblox account must own that group.",
+  roblox_identity_required: "Connect Roblox before selecting a group.",
+  roblox_reconnect_required:
+    "Reconnect Roblox to approve secure group management permissions.",
   manager_required: "Only owners and admins can change connections.",
   save_failed: "The connection could not be saved.",
 };
@@ -32,7 +35,7 @@ export default async function Connections({
   const [{ data: roblox }, { data: extraGroups }] = await Promise.all([
     supabase
       .from("account_links")
-      .select("provider_user_id")
+      .select("provider_user_id, metadata")
       .eq("user_id", user.id)
       .eq("provider", "roblox")
       .maybeSingle(),
@@ -49,6 +52,12 @@ export default async function Connections({
     ? groups.groups.filter((g) => g.roleRank === 255)
     : [];
   const canManage = ["owner", "admin"].includes(w.role);
+  const robloxEnabled =
+    process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
+  const robloxMetadata = roblox?.metadata as {
+    open_cloud_ready?: boolean;
+  } | null;
+  const robloxReady = Boolean(roblox && robloxMetadata?.open_cloud_ready);
   return (
     <>
       <PageHeading
@@ -102,13 +111,24 @@ export default async function Connections({
         </Connection>
         <Connection icon={Gamepad2} title="Primary Roblox group">
           <p className="text-sm leading-7 text-white/48">
-            {roblox
-              ? "Only groups owned by your connected Roblox account are available."
-              : "Roblox authentication is deferred. Public group configuration works, but live ranking remains disabled until ownership verification is approved."}
+            {robloxReady
+              ? "Connected with secure group permissions. Only groups owned by this Roblox account are available."
+              : robloxEnabled
+                ? "Connect Roblox once to approve group access, ownership checks, and rank management."
+                : "Roblox approval is pending. The connection button will activate as soon as the app is approved."}
           </p>
+          {canManage && robloxEnabled && !robloxReady ? (
+            <a
+              href={`/auth/roblox/start?next=/dashboard/${w.public_id}/connections`}
+              className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-black"
+            >
+              {roblox ? "Reconnect Roblox permissions" : "Connect Roblox"}
+              <ExternalLink className="size-4" />
+            </a>
+          ) : null}
           <form action={connectRobloxGroup} className="mt-5 space-y-3">
             <input type="hidden" name="public_id" value={w.public_id} />
-            {owned.length ? (
+            {robloxReady && owned.length ? (
               <select
                 name="group_id"
                 required
@@ -125,18 +145,14 @@ export default async function Connections({
                 ))}
               </select>
             ) : (
-              <input
-                name="group_id"
-                required
-                inputMode="numeric"
-                pattern="[0-9]+"
-                defaultValue={w.roblox_group_id || ""}
-                placeholder="Roblox group ID"
-                className="min-h-12 w-full rounded-xl border border-white/10 bg-black/20 px-4"
-              />
+              <p className="rounded-xl border border-white/8 bg-black/20 px-4 py-3 text-sm text-white/50">
+                {robloxReady
+                  ? "This Roblox account does not own any groups."
+                  : "Connect Roblox to load the groups you own."}
+              </p>
             )}
             <button
-              disabled={!canManage}
+              disabled={!canManage || !robloxReady || !owned.length}
               className="min-h-12 w-full rounded-xl bg-white px-5 text-sm font-bold text-black disabled:opacity-40"
             >
               Save primary group

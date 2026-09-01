@@ -2,7 +2,7 @@
 
 Nexora Rank is a modern Roblox community operations platform for group ranking, staff activity, applications, automations, and Discord/Roblox account linking.
 
-This repository contains the production Nexora website, workspace dashboard, Supabase schema, and Discord integration. Roblox ranking execution remains gated until the official OAuth and Open Cloud approvals are available.
+This repository contains the production Nexora website, workspace dashboard, Supabase schema, Discord integration, and an approval-ready Roblox OAuth/Open Cloud execution layer.
 
 ## Included in this milestone
 
@@ -46,6 +46,11 @@ For the separate server-side Roblox Open Cloud flow, set these server-only varia
 
 - `ROBLOX_CLIENT_ID`
 - `ROBLOX_CLIENT_SECRET`
+- `ROBLOX_TOKEN_ENCRYPTION_KEY` (optional dedicated 32+ character key; `CRON_SECRET` is the fallback)
+
+After Roblox approves the application, register the exact production callback URL (`https://www.nexorarank.tech/auth/roblox/callback`), approve `openid profile group:read group:write`, and set `NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED=true`. Users then connect Roblox once. Nexora stores only AES-GCM-encrypted tokens, refreshes rotating credentials server-side, verifies group ownership, performs rank changes through Open Cloud, re-reads the membership after every mutation, and records the outcome in the workspace audit log.
+
+Promote, demote, and terminate-to-lowest-rank are ready. Roblox Open Cloud does not currently expose a supported OAuth endpoint for removing a member from a group, so Nexora deliberately does not claim that “Kick” succeeded. Never substitute a `.ROBLOSECURITY` cookie.
 
 In Supabase Auth, enable Discord and add these application callback URLs:
 
@@ -73,12 +78,12 @@ The existing `/auth/roblox/callback` URLs belong only to the separate direct Ope
 
 The repository includes `vercel.json` so Vercel uses a standard Next.js build. Connect the GitHub repository in Vercel and deploy with the default Node.js runtime.
 
-## Remaining backend milestones
+## Remaining external activation and backend milestones
 
 1. Apply the prepared migration to a dedicated Nexora Supabase project
 2. Configure the Discord app, provider credentials, commands, and bot installation
-3. Add Roblox OAuth/Open Cloud group authorization
-4. Add a signed job queue for rank operations and retries
+3. Receive Roblox OAuth approval, enable the production flag, and complete a live test with a test group
+4. Move immediate rank execution to a durable retry worker when operation volume requires it
 5. Add activity SDK ingestion with anti-replay validation
 6. Wire dashboard queries and mutations to the prepared tables
 7. Activate Lemon Squeezy with an eligible merchant owner and signed webhooks

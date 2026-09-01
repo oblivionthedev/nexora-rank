@@ -14,23 +14,23 @@ export function OnboardingIdentityAction({ provider }: { provider: Provider }) {
   async function connect() {
     setBusy(true);
     setMessage(null);
+    if (isRoblox) {
+      window.location.assign("/auth/roblox/start?next=/onboarding");
+      return;
+    }
     const supabase = createClient();
     const { error } = await supabase.auth.linkIdentity({
       provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
-        scopes: isRoblox
-          ? "openid profile"
-          : "identify email guilds guilds.members.read",
+        scopes: "identify email guilds guilds.members.read",
       },
     });
 
     if (error) {
       setBusy(false);
       setMessage(
-        isRoblox
-          ? "Roblox sign-in could not start. The approved OAuth provider must be enabled in Supabase."
-          : "Discord linking could not start. Manual account linking may need to be enabled in Supabase.",
+        "Discord linking could not start. Manual account linking may need to be enabled in Supabase.",
       );
     }
   }

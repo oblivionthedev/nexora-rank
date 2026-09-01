@@ -13,6 +13,7 @@ import {
   getRobloxGroupRoles,
 } from "@/lib/roblox-groups";
 import { listRobloxGroups } from "@/lib/roblox-membership";
+import { executeRobloxGroupMemberAction } from "@/lib/roblox-action-executor";
 
 export type LinkCodeState = {
   code?: string;
@@ -92,24 +93,27 @@ export async function connectRobloxGroup(formData: FormData) {
     redirect(`/dashboard/${publicId}/connections?error=group_not_found`);
   const { data: link } = await supabase
     .from("account_links")
-    .select("provider_user_id")
+    .select("provider_user_id, metadata")
     .eq("user_id", user.id)
     .eq("provider", "roblox")
     .maybeSingle();
-  if (link) {
-    const groups = await listRobloxGroups(link.provider_user_id);
-    const owned = groups.ok
-      ? groups.groups.find((g) => g.id === groupId && g.roleRank === 255)
-      : null;
-    if (!owned)
-      redirect(`/dashboard/${publicId}/connections?error=group_owner_required`);
-  }
+  if (!link)
+    redirect(`/dashboard/${publicId}/connections?error=roblox_identity_required`);
+  const metadata = link.metadata as { open_cloud_ready?: boolean } | null;
+  if (!metadata?.open_cloud_ready)
+    redirect(`/dashboard/${publicId}/connections?error=roblox_reconnect_required`);
+  const groups = await listRobloxGroups(link.provider_user_id);
+  const owned = groups.ok
+    ? groups.groups.find((g) => g.id === groupId && g.roleRank === 255)
+    : null;
+  if (!owned)
+    redirect(`/dashboard/${publicId}/connections?error=group_owner_required`);
   const { error } = await supabase.rpc("set_workspace_roblox_group", {
     target_workspace_id: state.workspace.id,
     group_id: details.id,
     group_name: details.name,
     icon_url: details.iconUrl || "",
-    oauth_verified: Boolean(link),
+    oauth_verified: true,
   });
   if (error) redirect(`/dashboard/${publicId}/connections?error=save_failed`);
   revalidatePath(`/dashboard/${publicId}`);
@@ -198,6 +202,71 @@ export async function manageMember(formData: FormData) {
     requested_action: value(formData, "action"),
   });
   await finish(publicId, "members", error);
+}
+export async function requestGroupMemberAction(formData: FormData) {
+  const publicId = value(formData, "public_id");
+  const requestedAction = value(formData, "group_action");
+  const currentRoleRank = Number(value(formData, "current_role_rank"));
+  const requestedRoleRankValue = value(formData, "requested_role_rank");
+  const requestedRoleRank = requestedRoleRankValue
+    ? Number(requestedRoleRankValue)
+    : null;
+  if (
+    !["promote", "demote", "terminate"].includes(requestedAction) ||
+    !Number.isInteger(currentRoleRank) ||
+    (requestedRoleRank !== null && !Number.isInteger(requestedRoleRank))
+  )
+    redirect(`/dashboard/${publicId}/members?tab=group&error=invalid_action`);
+  const { supabase, state } = await context(publicId);
+  if (!state.workspace.roblox_group_id)
+    redirect(`/dashboard/${publicId}/members?tab=group&error=roblox_group_required`);
+  const roles = await getRobloxGroupRoles(state.workspace.roblox_group_id);
+  const currentRole = roles.find(
+    (role) => role.id === value(formData, "current_role_id"),
+  );
+  let requestedRole = roles.find(
+    (role) => role.id === value(formData, "requested_role_id"),
+  );
+  if (requestedAction === "terminate") {
+    requestedRole = roles
+      .filter((role) => role.rank > 0 && role.rank < 255)
+      .sort((left, right) => left.rank - right.rank)[0];
+  }
+  if (
+    !currentRole ||
+    !requestedRole ||
+    (requestedAction === "promote" && requestedRole.rank <= currentRole.rank) ||
+    (["demote", "terminate"].includes(requestedAction) &&
+      requestedRole.rank >= currentRole.rank)
+  )
+    redirect(`/dashboard/${publicId}/members?tab=group&error=invalid_action`);
+
+  const { data: actionId, error } = await supabase.rpc("request_group_member_action", {
+    target_workspace_id: state.workspace.id,
+    target_roblox_user_id: value(formData, "roblox_user_id"),
+    target_username: value(formData, "roblox_username"),
+    current_role_id: currentRole.id,
+    current_role_name: currentRole.name,
+    current_role_rank: currentRole.rank,
+    requested_action: requestedAction,
+    requested_role_id: requestedRole.id,
+    requested_role_name: requestedRole.name,
+    requested_role_rank: requestedRole.rank,
+    request_reason: value(formData, "reason"),
+  });
+  if (error || !actionId)
+    redirect(`/dashboard/${publicId}/members?tab=group&error=save_failed`);
+  const execution = await executeRobloxGroupMemberAction(supabase, actionId);
+  if (!execution.ok) {
+    const code = execution.error.includes("reconnect")
+      ? "roblox_reconnect_required"
+      : execution.error.includes("403")
+        ? "roblox_permission_denied"
+        : "roblox_execution_failed";
+    redirect(`/dashboard/${publicId}/members?tab=group&error=${code}`);
+  }
+  revalidatePath(`/dashboard/${publicId}/members`);
+  redirect(`/dashboard/${publicId}/members?tab=group&saved=roblox_action`);
 }
 export async function transferOwnership(formData: FormData) {
   const publicId = value(formData, "public_id");

@@ -1814,6 +1814,78 @@ export type Database = {
         };
         Returns: boolean;
       };
+      request_group_member_action: {
+        Args: {
+          current_role_id: string;
+          current_role_name: string;
+          current_role_rank: number;
+          request_reason: string;
+          requested_action: string;
+          requested_role_id: string | null;
+          requested_role_name: string | null;
+          requested_role_rank: number | null;
+          target_roblox_user_id: string;
+          target_username: string;
+          target_workspace_id: string;
+        };
+        Returns: string;
+      };
+      store_roblox_oauth_credential: {
+        Args: {
+          provider_user_id: string;
+          provider_username: string;
+          provider_display_name: string;
+          provider_avatar_url: string;
+          access_token_ciphertext: string;
+          refresh_token_ciphertext: string;
+          token_expires_at: string;
+          token_scopes: string[];
+          resource_snapshot: Json;
+        };
+        Returns: boolean;
+      };
+      claim_group_member_action: {
+        Args: { candidate_secret: string; target_action_id: string };
+        Returns: {
+          action_id: string;
+          workspace_id: string;
+          roblox_group_id: string;
+          target_roblox_user_id: string;
+          action_type: string;
+          requested_role_id: string | null;
+          requested_role_name: string | null;
+          requested_role_rank: number | null;
+          credential_user_id: string;
+          credential_provider_user_id: string;
+          access_token_ciphertext: string;
+          refresh_token_ciphertext: string;
+          token_expires_at: string;
+          token_scopes: string[];
+        }[];
+      };
+      rotate_roblox_oauth_credential: {
+        Args: {
+          candidate_secret: string;
+          target_action_id: string;
+          target_credential_user_id: string;
+          access_token_ciphertext: string;
+          refresh_token_ciphertext: string;
+          token_expires_at: string;
+          token_scopes: string[];
+        };
+        Returns: boolean;
+      };
+      complete_group_member_action: {
+        Args: {
+          candidate_secret: string;
+          target_action_id: string;
+          execution_succeeded: boolean;
+          execution_error_code: string | null;
+          observed_role_id: string | null;
+          observed_role_name: string | null;
+        };
+        Returns: boolean;
+      };
       transfer_workspace_ownership: {
         Args: { target_workspace_id: string; target_user_id: string };
         Returns: boolean;

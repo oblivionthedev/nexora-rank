@@ -2,8 +2,19 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   ROBLOX_OAUTH_TOKEN_URL,
   ROBLOX_OAUTH_USERINFO_URL,
+  ROBLOX_OAUTH_RESOURCES_URL,
   hasRobloxOAuthCredentials,
 } from "@/lib/roblox-oauth";
+import {
+  parseRobloxScopes,
+  robloxTokenExpiry,
+  type RobloxOAuthTokenSet,
+} from "@/lib/roblox-open-cloud";
+import {
+  encryptRobloxToken,
+  hasRobloxTokenEncryption,
+} from "@/lib/roblox-token-crypto";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -20,7 +31,7 @@ export async function GET(request: NextRequest) {
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
-  if (!hasRobloxOAuthCredentials() || !code || !state || state !== expectedState || !verifier) {
+  if (!hasRobloxOAuthCredentials() || !hasRobloxTokenEncryption() || !code || !state || state !== expectedState || !verifier) {
     destination.searchParams.set("roblox", "oauth_not_ready");
     return cleanupAndRedirect(destination, url.origin, true);
   }
@@ -43,10 +54,10 @@ export async function GET(request: NextRequest) {
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
-  const tokenData = (await tokenResponse.json()) as { access_token?: string };
+  const tokenData = (await tokenResponse.json()) as Partial<RobloxOAuthTokenSet>;
   const accessToken = tokenData.access_token;
 
-  if (!accessToken) {
+  if (!accessToken || !tokenData.refresh_token) {
     destination.searchParams.set("roblox", "oauth_failed");
     return cleanupAndRedirect(destination, url.origin, true);
   }
@@ -69,23 +80,61 @@ export async function GET(request: NextRequest) {
     email?: string;
   };
 
-  const response = NextResponse.redirect(new URL(nextPath, url.origin));
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite: "lax" as const,
-    secure: url.protocol === "https:",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  };
+  if (!profile.sub || !/^\d{1,20}$/.test(profile.sub)) {
+    destination.searchParams.set("roblox", "oauth_failed");
+    return cleanupAndRedirect(destination, url.origin, true);
+  }
 
-  response.cookies.set("nexora_roblox_identity", JSON.stringify({
-    provider: "roblox",
-    providerUserId: profile.sub ?? "",
-    username: profile.preferred_username ?? profile.nickname ?? profile.name ?? "Roblox user",
-    displayName: profile.name ?? profile.nickname ?? profile.preferred_username ?? "Roblox user",
-    picture: profile.picture ?? null,
-    email: profile.email ?? null,
-  }), cookieOptions);
+  const resourceResponse = await fetch(ROBLOX_OAUTH_RESOURCES_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      token: accessToken,
+      client_id: process.env.ROBLOX_CLIENT_ID!,
+      client_secret: process.env.ROBLOX_CLIENT_SECRET!,
+    }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!resourceResponse.ok) {
+    destination.searchParams.set("roblox", "resource_access_failed");
+    return cleanupAndRedirect(destination, url.origin, true);
+  }
+  const resourceSnapshot = (await resourceResponse.json()) as Record<string, unknown>;
+  const scopes = parseRobloxScopes(tokenData.scope);
+  const requiredScopes = ["openid", "profile", "group:read", "group:write"];
+  if (!requiredScopes.every((scope) => scopes.includes(scope))) {
+    destination.searchParams.set("roblox", "permissions_required");
+    return cleanupAndRedirect(destination, url.origin, true);
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    destination.searchParams.set("roblox", "session_required");
+    return cleanupAndRedirect(destination, url.origin, true);
+  }
+  const { error: storeError } = await supabase.rpc(
+    "store_roblox_oauth_credential",
+    {
+      provider_user_id: profile.sub,
+      provider_username:
+        profile.preferred_username ?? profile.nickname ?? profile.name ?? profile.sub,
+      provider_display_name:
+        profile.name ?? profile.nickname ?? profile.preferred_username ?? profile.sub,
+      provider_avatar_url: profile.picture ?? "",
+      access_token_ciphertext: await encryptRobloxToken(accessToken),
+      refresh_token_ciphertext: await encryptRobloxToken(tokenData.refresh_token),
+      token_expires_at: robloxTokenExpiry(tokenData.expires_in),
+      token_scopes: scopes,
+      resource_snapshot: resourceSnapshot,
+    },
+  );
+  if (storeError) {
+    destination.searchParams.set("roblox", "connection_save_failed");
+    return cleanupAndRedirect(destination, url.origin, true);
+  }
+
+  const response = NextResponse.redirect(new URL(nextPath, url.origin));
   response.cookies.delete("nexora_roblox_state");
   response.cookies.delete("nexora_roblox_verifier");
   response.cookies.delete("nexora_roblox_next");

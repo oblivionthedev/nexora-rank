@@ -1,6 +1,8 @@
 export const ROBLOX_OAUTH_AUTHORIZE_URL = "https://apis.roblox.com/oauth/v1/authorize";
 export const ROBLOX_OAUTH_TOKEN_URL = "https://apis.roblox.com/oauth/v1/token";
 export const ROBLOX_OAUTH_USERINFO_URL = "https://apis.roblox.com/oauth/v1/userinfo";
+export const ROBLOX_OAUTH_RESOURCES_URL = "https://apis.roblox.com/oauth/v1/token/resources";
+export const ROBLOX_OAUTH_SCOPES = "openid profile group:read group:write";
 
 export function hasRobloxOAuthCredentials() {
   return Boolean(process.env.ROBLOX_CLIENT_ID && process.env.ROBLOX_CLIENT_SECRET);

@@ -1,17 +1,32 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
   ROBLOX_OAUTH_AUTHORIZE_URL,
+  ROBLOX_OAUTH_SCOPES,
   createCodeChallenge,
   hasRobloxOAuthCredentials,
   randomState,
 } from "@/lib/roblox-oauth";
+import { hasRobloxTokenEncryption } from "@/lib/roblox-token-crypto";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
-  const nextPath = url.searchParams.get("next")?.startsWith("/") ? url.searchParams.get("next")! : "/onboarding?provider=roblox";
+  const requestedNext = url.searchParams.get("next");
+  const nextPath =
+    requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
+      ? requestedNext
+      : "/onboarding?provider=roblox";
 
-  if (!hasRobloxOAuthCredentials()) {
+  if (!hasRobloxOAuthCredentials() || !hasRobloxTokenEncryption()) {
     return NextResponse.redirect(new URL("/login?error=roblox_not_ready", url.origin));
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    const login = new URL("/login", url.origin);
+    login.searchParams.set("next", nextPath);
+    return NextResponse.redirect(login);
   }
 
   const clientId = process.env.ROBLOX_CLIENT_ID!;
@@ -25,7 +40,7 @@ export async function GET(request: NextRequest) {
   authorizeUrl.searchParams.set("client_id", clientId);
   authorizeUrl.searchParams.set("redirect_uri", redirectUri);
   authorizeUrl.searchParams.set("response_type", "code");
-  authorizeUrl.searchParams.set("scope", "openid profile");
+  authorizeUrl.searchParams.set("scope", ROBLOX_OAUTH_SCOPES);
   authorizeUrl.searchParams.set("state", state);
   authorizeUrl.searchParams.set("code_challenge", challenge);
   authorizeUrl.searchParams.set("code_challenge_method", "S256");

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-test("keeps Roblox optional until OAuth and membership enforcement are enabled", async () => {
+test("requires the one-time Roblox connection as soon as approved OAuth is enabled", async () => {
   const onboarding = await readFile(
     path.join(root, "app/onboarding/page.tsx"),
     "utf8",
@@ -18,7 +18,7 @@ test("keeps Roblox optional until OAuth and membership enforcement are enabled",
   );
   assert.match(
     onboarding,
-    /const robloxRequired = membershipEnforced && robloxAvailable;/,
+    /const robloxRequired = robloxAvailable;/,
   );
   assert.match(
     onboarding,
