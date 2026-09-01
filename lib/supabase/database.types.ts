@@ -1745,6 +1745,10 @@ export type Database = {
         Args: { application_id: string; requested_status: string };
         Returns: Json;
       };
+      staff_bypass_beta_reapply_wait: {
+        Args: { application_id: string; bypass_reason: string };
+        Returns: boolean;
+      };
       staff_access_state: { Args: never; Returns: Json };
       staff_console_state: {
         Args: { search_query?: string; status_filter?: string };

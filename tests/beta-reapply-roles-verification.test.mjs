@@ -13,6 +13,28 @@ test("declined Beta applicants can reapply only after 24 hours", async () => {
   assert.match(migration, /status = 'submitted'/);
 });
 
+test("Staff can grant an audited one-use bypass of the Beta reapply wait", async () => {
+  const [migration, actions, panel] = await Promise.all([
+    read("supabase/migrations/20260901181933_fix_workspace_access_and_beta_reapply_override.sql"),
+    read("app/staff/actions.ts"),
+    read("components/beta-reapply-override-dialog.tsx"),
+  ]);
+  assert.match(migration, /staff_bypass_beta_reapply_wait/);
+  assert.match(migration, /actor_role not in \('owner', 'admin'\)/);
+  assert.match(migration, /beta_reapply_wait_bypassed/);
+  assert.match(migration, /existing\.reapply_wait_bypassed_at is null/);
+  assert.match(actions, /bypassBetaReapplyWait/);
+  assert.match(panel, /Bypass 24h wait/);
+});
+
+test("existing workspace members keep dashboard access", async () => {
+  const migration = await read(
+    "supabase/migrations/20260901181933_fix_workspace_access_and_beta_reapply_override.sql",
+  );
+  assert.match(migration, /workspace_member boolean := false/);
+  assert.match(migration, /staff_role is not null or beta_selected or workspace_member/);
+});
+
 test("Discord and Roblox resource choices refresh every minute", async () => {
   const [refresh, roles, ranking, settings] = await Promise.all([
     read("components/resource-auto-refresh.tsx"),

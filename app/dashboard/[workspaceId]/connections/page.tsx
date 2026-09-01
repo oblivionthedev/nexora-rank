@@ -17,6 +17,16 @@ const errors: Record<string, string> = {
   roblox_identity_required: "Connect Roblox before selecting a group.",
   roblox_reconnect_required:
     "Reconnect Roblox to approve secure group management permissions.",
+  roblox_authorization_declined:
+    "Roblox connection was cancelled. Your Nexora session remains active.",
+  roblox_oauth_failed:
+    "Roblox could not complete the secure connection. Please try again.",
+  roblox_resource_access_failed:
+    "Roblox did not return the approved group permissions.",
+  roblox_permissions_required:
+    "Approve all requested Roblox group permissions to manage ranks.",
+  roblox_connection_save_failed:
+    "Roblox connected, but Nexora could not save it securely.",
   manager_required: "Only owners and admins can change connections.",
   save_failed: "The connection could not be saved.",
 };

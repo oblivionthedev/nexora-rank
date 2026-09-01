@@ -53,6 +53,16 @@ const messages: Record<string, string> = {
     "Complete the earlier setup steps before creating a workspace.",
   roblox_not_ready:
     "Roblox OAuth is waiting for app approval and provider configuration.",
+  roblox_authorization_declined:
+    "Roblox connection was cancelled. Your Discord session is still active.",
+  roblox_oauth_failed:
+    "Roblox could not complete the secure connection. Please try again.",
+  roblox_resource_access_failed:
+    "Roblox did not return the approved group permissions.",
+  roblox_permissions_required:
+    "Approve all requested Roblox group permissions to continue.",
+  roblox_connection_save_failed:
+    "Roblox connected, but Nexora could not save it securely.",
   roblox_identity_required: "Connect Roblox before creating a free workspace.",
   roblox_membership_required:
     "The workspace owner must join the Nexora Roblox community before creating a free workspace.",

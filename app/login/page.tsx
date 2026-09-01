@@ -72,9 +72,7 @@ function DiscordMark() {
 }
 
 export default function LoginPage() {
-  const [busyProvider, setBusyProvider] = useState<
-    "discord" | "custom:roblox" | null
-  >(null);
+  const [busyProvider, setBusyProvider] = useState<"discord" | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   // Read straight from location rather than useSearchParams so this page never
@@ -89,7 +87,7 @@ export default function LoginPage() {
     }
   }, []);
 
-  async function continueWith(provider: "discord" | "custom:roblox") {
+  async function continueWith(provider: "discord") {
     setAuthMessage(null);
 
     if (!isSupabaseConfigured()) {
@@ -109,17 +107,14 @@ export default function LoginPage() {
       provider,
       options: {
         redirectTo,
-        scopes:
-          provider === "discord"
-            ? "identify email guilds guilds.members.read"
-            : "openid profile",
+        scopes: "identify email guilds guilds.members.read",
       },
     });
 
     if (error) {
       setBusyProvider(null);
       setAuthMessage(
-        `${provider === "discord" ? "Discord" : "Roblox"} sign-in could not start. Please try again in a moment.`,
+        "Discord sign-in could not start. Please try again in a moment.",
       );
     }
   }
@@ -184,7 +179,8 @@ export default function LoginPage() {
           <span className="signin-eyebrow">Selected Beta access</span>
           <h2>Sign in to your invitation</h2>
           <p className="signin-action-lede">
-            Discord sign-in is available to selected applicants and Nexora Staff. Roblox remains optional while provider approval is pending.
+            Sign in with Discord first. You will connect Roblox securely inside
+            Nexora, where it cannot replace or interrupt your login session.
           </p>
 
           <button
@@ -202,22 +198,10 @@ export default function LoginPage() {
               : "Continue with Discord"}
           </button>
 
-          <button
-            className="roblox-pending pill"
-            onClick={() => continueWith("custom:roblox")}
-            disabled={busyProvider !== null}
-          >
-            {busyProvider === "custom:roblox" ? (
-              <LoaderCircle className="animate-spin" aria-hidden="true" />
-            ) : (
-              <RobloxMark />
-            )}
-            <b>
-              {busyProvider === "custom:roblox"
-                ? "Opening Roblox…"
-                : "Continue with Roblox"}
-            </b>
-          </button>
+          <div className="roblox-pending pill" aria-label="Roblox connects after Discord sign-in">
+            <RobloxMark />
+            <b>Connect Roblox after sign-in</b>
+          </div>
 
           {authMessage && (
             <div role="alert" className="signin-alert">

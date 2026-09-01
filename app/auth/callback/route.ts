@@ -30,18 +30,15 @@ export async function GET(request: NextRequest) {
           new URL("/beta?access=selection_required#apply", url.origin),
         );
       }
-      if (accessState?.reason !== "security_blocked") {
-        await supabase.rpc("report_security_incident", {
-          requested_scope: "dashboard_access",
-          requested_target: safeNext.slice(0, 160),
-          requested_details: {
-            reason: accessState?.reason || "beta_selection_required",
-            source: "oauth_callback",
-          },
-        });
+      if (accessState?.reason === "security_blocked") {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(
+          new URL("/login?error=security_blocked", url.origin),
+        );
       }
-      await supabase.auth.signOut();
-      return NextResponse.redirect(new URL("/login?error=security_blocked", url.origin));
+      return NextResponse.redirect(
+        new URL("/beta?access=selection_required#apply", url.origin),
+      );
     }
   }
   return NextResponse.redirect(new URL(safeNext, url.origin));

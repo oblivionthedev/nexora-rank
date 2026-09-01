@@ -37,7 +37,8 @@ test("Beta launch access is invite-only and unauthorized access remains alertabl
   assert.match(onboarding, /workspace_creation_enabled/);
   assert.match(onboarding, /workspace_creation_paused/);
   assert.match(creationControl, /guard_beta_workspace_creation/);
-  assert.match(callback, /report_security_incident/);
+  assert.doesNotMatch(callback, /report_security_incident/);
+  assert.match(callback, /accessState\?\.reason === "security_blocked"/);
   assert.match(migration, /interval '60 seconds'/);
   assert.match(bot, /securityPingRoleId/);
   assert.match(bot, /60_000/);

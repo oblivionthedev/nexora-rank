@@ -15,10 +15,12 @@ import {
   UsersRound,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { BetaReapplyOverrideDialog } from "@/components/beta-reapply-override-dialog";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import {
   addNexoraGroup,
   addPartner,
+  bypassBetaReapplyWait,
   manageBetaApplication,
   removeNexoraGroup,
   removePartner,
@@ -98,6 +100,8 @@ type BetaRow = {
   discord_name: string | null;
   created_at: string;
   updated_at: string;
+  reapply_wait_bypassed_at: string | null;
+  reapply_wait_bypass_reason: string | null;
 };
 type PartnerRow = {
   id: string;
@@ -137,6 +141,7 @@ const notices: Record<string, string> = {
   group_removed: "Group removed from the Nexora directory.",
   beta_archived: "Beta application archived.",
   beta_deleted: "Beta application permanently deleted.",
+  beta_reapply_unlocked: "The 24-hour reapplication wait was bypassed for this applicant.",
   security_resolved: "Security incident resolved. Repeated alerts have stopped.",
   security_unblocked: "The 24-hour email block was removed.",
 };
@@ -161,6 +166,7 @@ const errors: Record<string, string> = {
   staff_member_not_found: "That staff member was not found.",
   invalid_beta_request: "Choose a valid Beta application status.",
   invalid_beta_status: "Choose a valid Beta application status.",
+  invalid_bypass_reason: "Enter a clear reason between 3 and 300 characters.",
   invalid_staff_request: "Enter a valid account email and role.",
   invalid_partner:
     "Enter a Roblox group or community link and a valid Discord invite.",
@@ -222,13 +228,16 @@ export default async function StaffPage({
     supabase.rpc("staff_security_incidents"),
   ]);
   if (error || !data) {
-    await supabase.rpc("report_security_incident", {
-      requested_scope: "staff_access",
-      requested_target: "/staff",
-      requested_details: { reason: error?.message || "staff_access_denied" },
-    });
-    await supabase.auth.signOut();
-    redirect("/login?error=security_blocked");
+    if (error?.message.includes("staff_access_denied")) {
+      await supabase.rpc("report_security_incident", {
+        requested_scope: "staff_access",
+        requested_target: "/staff",
+        requested_details: { reason: "staff_access_denied" },
+      });
+      await supabase.auth.signOut();
+      redirect("/login?error=security_blocked");
+    }
+    redirect("/staff/login?error=temporarily_unavailable");
   }
   const state = data as unknown as ConsoleState;
   const groupResults = (groupData ?? []) as unknown as GroupResult[];
@@ -479,6 +488,15 @@ export default async function StaffPage({
                       Save
                     </button>
                   </form>
+                  {application.status === "declined" &&
+                  (state.access.role === "owner" || state.access.role === "admin") ? (
+                    <BetaReapplyOverrideDialog
+                      applicationId={application.id}
+                      applicantName={application.full_name}
+                      alreadyBypassed={Boolean(application.reapply_wait_bypassed_at)}
+                      action={bypassBetaReapplyWait}
+                    />
+                  ) : null}
                   <form action={manageBetaApplication} className="flex gap-2">
                     <input type="hidden" name="application_id" value={application.id} />
                     <button name="manage_action" value="archive" className="min-h-11 rounded-xl border border-white/10 px-3 text-xs font-bold text-white/60">Archive</button>

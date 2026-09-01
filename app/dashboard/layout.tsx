@@ -24,17 +24,11 @@ export default async function DashboardLayout({
     if (accessState?.reason === "beta_selection_required") {
       redirect("/beta?access=selection_required#apply");
     }
-    if (accessState?.reason !== "security_blocked") {
-      await supabase.rpc("report_security_incident", {
-        requested_scope: "dashboard_access",
-        requested_target: "/dashboard",
-        requested_details: {
-          reason: accessState?.reason || "beta_selection_required",
-        },
-      });
+    if (accessState?.reason === "security_blocked") {
+      await supabase.auth.signOut();
+      redirect("/login?error=security_blocked");
     }
-    await supabase.auth.signOut();
-    redirect("/login?error=security_blocked");
+    redirect("/beta?access=selection_required#apply");
   }
 
   return children;

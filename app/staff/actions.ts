@@ -35,6 +35,7 @@ function errorCode(message?: string) {
     "invalid_moderation_request",
     "invalid_beta_status",
     "security_block_not_found",
+    "invalid_bypass_reason",
   ];
   return known.find((code) => message?.includes(code)) ?? "action_failed";
 }
@@ -181,6 +182,22 @@ export async function updateBetaApplication(formData: FormData) {
   }
   revalidatePath("/staff");
   redirect("/staff?notice=beta_updated#beta-applications");
+}
+
+export async function bypassBetaReapplyWait(formData: FormData) {
+  const applicationId = clean(formData.get("application_id"));
+  const reason = clean(formData.get("bypass_reason"));
+  if (!applicationId || reason.length < 3 || reason.length > 300)
+    redirect("/staff?error=invalid_bypass_reason#beta-applications");
+  const supabase = await authenticatedClient();
+  const { data, error } = await supabase.rpc(
+    "staff_bypass_beta_reapply_wait",
+    { application_id: applicationId, bypass_reason: reason },
+  );
+  if (error) redirect(`/staff?error=${errorCode(error.message)}#beta-applications`);
+  if (!data) redirect("/staff?error=invalid_beta_request#beta-applications");
+  revalidatePath("/staff");
+  redirect("/staff?notice=beta_reapply_unlocked#beta-applications");
 }
 
 function robloxGroupId(value: string) {

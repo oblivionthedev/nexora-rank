@@ -28,13 +28,14 @@ export const getWorkspaceControl = cache(async function getWorkspaceControl(publ
   if (!user) redirect(`/login?next=/dashboard/${encodeURIComponent(publicId)}`);
   const { data, error } = await supabase.rpc("workspace_control_state", { target_public_id: publicId });
   if (error || !data) {
-    await supabase.rpc("report_security_incident", {
-      requested_scope: "workspace_access",
-      requested_target: publicId.slice(0, 160),
-      requested_details: { reason: error?.message || "workspace_not_found" },
-    });
-    await supabase.auth.signOut();
-    redirect("/login?error=security_blocked");
+    if (error?.message.includes("workspace_access_denied")) {
+      await supabase.rpc("report_security_incident", {
+        requested_scope: "workspace_access",
+        requested_target: publicId.slice(0, 160),
+        requested_details: { reason: "workspace_access_denied" },
+      });
+    }
+    redirect("/dashboard?error=workspace_unavailable");
   }
   return { supabase, user, state: data as unknown as WorkspaceControl };
 });

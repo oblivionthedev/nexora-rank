@@ -18,21 +18,24 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
-  const destination = new URL("/login", url.origin);
+  const rawNext = request.cookies.get("nexora_roblox_next")?.value;
+  const nextPath = rawNext?.startsWith("/") && !rawNext.startsWith("//")
+    ? rawNext
+    : "/onboarding?provider=roblox";
+  const destination = new URL(nextPath, url.origin);
   const error = url.searchParams.get("error");
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const expectedState = request.cookies.get("nexora_roblox_state")?.value;
   const verifier = request.cookies.get("nexora_roblox_verifier")?.value;
-  const nextPath = request.cookies.get("nexora_roblox_next")?.value ?? "/onboarding?provider=roblox";
 
   if (error) {
-    destination.searchParams.set("roblox", "authorization_declined");
+    destination.searchParams.set("error", "roblox_authorization_declined");
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
   if (!hasRobloxOAuthCredentials() || !hasRobloxTokenEncryption() || !code || !state || state !== expectedState || !verifier) {
-    destination.searchParams.set("roblox", "oauth_not_ready");
+    destination.searchParams.set("error", "roblox_not_ready");
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
@@ -50,7 +53,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (!tokenResponse.ok) {
-    destination.searchParams.set("roblox", "oauth_failed");
+    destination.searchParams.set("error", "roblox_oauth_failed");
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
@@ -58,7 +61,7 @@ export async function GET(request: NextRequest) {
   const accessToken = tokenData.access_token;
 
   if (!accessToken || !tokenData.refresh_token) {
-    destination.searchParams.set("roblox", "oauth_failed");
+    destination.searchParams.set("error", "roblox_oauth_failed");
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
@@ -67,7 +70,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (!userinfoResponse.ok) {
-    destination.searchParams.set("roblox", "oauth_failed");
+    destination.searchParams.set("error", "roblox_oauth_failed");
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
@@ -81,7 +84,7 @@ export async function GET(request: NextRequest) {
   };
 
   if (!profile.sub || !/^\d{1,20}$/.test(profile.sub)) {
-    destination.searchParams.set("roblox", "oauth_failed");
+    destination.searchParams.set("error", "roblox_oauth_failed");
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
@@ -96,22 +99,24 @@ export async function GET(request: NextRequest) {
     signal: AbortSignal.timeout(10_000),
   });
   if (!resourceResponse.ok) {
-    destination.searchParams.set("roblox", "resource_access_failed");
+    destination.searchParams.set("error", "roblox_resource_access_failed");
     return cleanupAndRedirect(destination, url.origin, true);
   }
   const resourceSnapshot = (await resourceResponse.json()) as Record<string, unknown>;
   const scopes = parseRobloxScopes(tokenData.scope);
   const requiredScopes = ["openid", "profile", "group:read", "group:write"];
   if (!requiredScopes.every((scope) => scopes.includes(scope))) {
-    destination.searchParams.set("roblox", "permissions_required");
+    destination.searchParams.set("error", "roblox_permissions_required");
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    destination.searchParams.set("roblox", "session_required");
-    return cleanupAndRedirect(destination, url.origin, true);
+    const login = new URL("/login", url.origin);
+    login.searchParams.set("error", "session_required");
+    login.searchParams.set("next", nextPath);
+    return cleanupAndRedirect(login, url.origin, true);
   }
   const { error: storeError } = await supabase.rpc(
     "store_roblox_oauth_credential",
@@ -130,7 +135,7 @@ export async function GET(request: NextRequest) {
     },
   );
   if (storeError) {
-    destination.searchParams.set("roblox", "connection_save_failed");
+    destination.searchParams.set("error", "roblox_connection_save_failed");
     return cleanupAndRedirect(destination, url.origin, true);
   }
 
