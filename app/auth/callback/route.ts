@@ -25,6 +25,11 @@ export async function GET(request: NextRequest) {
     const { data: access } = await supabase.rpc("dashboard_access_state");
     const accessState = access as { allowed?: boolean; reason?: string } | null;
     if (!accessState?.allowed) {
+      if (accessState?.reason === "beta_selection_required") {
+        return NextResponse.redirect(
+          new URL("/beta?access=selection_required#apply", url.origin),
+        );
+      }
       if (accessState?.reason !== "security_blocked") {
         await supabase.rpc("report_security_incident", {
           requested_scope: "dashboard_access",

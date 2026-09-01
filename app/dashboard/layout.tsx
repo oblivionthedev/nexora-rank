@@ -21,6 +21,9 @@ export default async function DashboardLayout({
   const accessState = access as { allowed?: boolean; reason?: string } | null;
   const allowed = Boolean(accessState?.allowed);
   if (!allowed) {
+    if (accessState?.reason === "beta_selection_required") {
+      redirect("/beta?access=selection_required#apply");
+    }
     if (accessState?.reason !== "security_blocked") {
       await supabase.rpc("report_security_incident", {
         requested_scope: "dashboard_access",

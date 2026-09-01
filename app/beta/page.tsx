@@ -68,8 +68,8 @@ export default async function BetaPage({
             Home
           </Link>
           <Link href="/investors">Investors</Link>
-          <Link href="/login?next=/dashboard" className="beta-nav-cta">
-            Sign in <ArrowRight />
+          <Link href="/verify" className="beta-nav-cta">
+            Verify Discord <ArrowRight />
           </Link>
         </div>
       </nav>
