@@ -35,6 +35,35 @@ test("existing workspace members keep dashboard access", async () => {
   assert.match(migration, /staff_role is not null or beta_selected or workspace_member/);
 });
 
+test("a new Beta round reopens declined applications without deleting history", async () => {
+  const migration = await read(
+    "supabase/migrations/20260901183639_reopen_declined_beta_applications.sql",
+  );
+  assert.match(migration, /set beta_enabled = true/);
+  assert.match(migration, /where status = 'declined'/);
+  assert.match(migration, /reapply_wait_bypassed_at = now\(\)/);
+  assert.doesNotMatch(migration, /delete from nexora_private\.beta_applications/);
+});
+
+test("member directory has separate searchable workspace and group controls", async () => {
+  const [page, menu, groups] = await Promise.all([
+    read("app/dashboard/[workspaceId]/members/page.tsx"),
+    read("components/member-action-menu.tsx"),
+    read("lib/roblox-groups.ts"),
+  ]);
+  assert.match(page, />Workspace members</);
+  assert.match(page, />Group members</);
+  assert.match(page, /name="q"/);
+  assert.match(menu, /MoreHorizontal/);
+  assert.match(menu, /Update access/);
+  assert.match(menu, /Remove from workspace/);
+  assert.match(menu, /Promote/);
+  assert.match(menu, /Demote/);
+  assert.match(menu, /Terminate to lowest rank/);
+  assert.match(menu, /Kick · unavailable through Roblox OAuth/);
+  assert.match(groups, /findRobloxGroupMember/);
+});
+
 test("Discord and Roblox resource choices refresh every minute", async () => {
   const [refresh, roles, ranking, settings] = await Promise.all([
     read("components/resource-auto-refresh.tsx"),

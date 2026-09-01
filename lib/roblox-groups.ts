@@ -33,6 +33,54 @@ export type RobloxGroupMembersPage = {
   previousCursor: string | null;
 };
 
+export async function findRobloxGroupMember(
+  groupId: string | null | undefined,
+  query: string | null | undefined,
+): Promise<RobloxGroupMember | null> {
+  const username = query?.trim().replace(/^@/, "").slice(0, 50);
+  if (!groupId || !/^\d+$/.test(groupId) || !username) return null;
+  try {
+    const userResponse = await fetch("https://users.roblox.com/v1/usernames/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ usernames: [username], excludeBannedUsers: false }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!userResponse.ok) return null;
+    const users = (await userResponse.json()) as {
+      data?: Array<{ id?: number; name?: string; displayName?: string }>;
+    };
+    const user = users.data?.[0];
+    if (!user?.id) return null;
+    const membershipResponse = await fetch(
+      `https://groups.roblox.com/v1/users/${user.id}/groups/roles`,
+      { cache: "no-store", signal: AbortSignal.timeout(8_000) },
+    );
+    if (!membershipResponse.ok) return null;
+    const memberships = (await membershipResponse.json()) as {
+      data?: Array<{
+        group?: { id?: number };
+        role?: { id?: number; name?: string; rank?: number };
+      }>;
+    };
+    const membership = memberships.data?.find(
+      (entry) => String(entry.group?.id ?? "") === groupId,
+    );
+    if (!membership?.role?.id || !membership.role.name) return null;
+    return {
+      userId: String(user.id),
+      username: user.name || username,
+      displayName: user.displayName || user.name || username,
+      roleId: String(membership.role.id),
+      roleName: membership.role.name,
+      roleRank: Number(membership.role.rank) || 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getRobloxGroupMembers(
   groupId?: string | null,
   cursor?: string | null,
