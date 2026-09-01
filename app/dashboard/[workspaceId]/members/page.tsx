@@ -69,7 +69,7 @@ function Tab({ href, active, children }: { href: string; active: boolean; childr
 function WorkspaceMembers({ workspaceId, members, profiles, canManage, managerRole }: {
   workspaceId: string;
   members: Array<{ user_id: string; role: string; joined_at: string }>;
-  profiles: Map<string, { id: string; display_name: string; contact_email: string }>;
+  profiles: Map<string, { id: string; display_name: string | null; contact_email: string | null }>;
   canManage: boolean;
   managerRole: string;
 }) {

@@ -14,6 +14,7 @@ import {
   encryptRobloxToken,
   hasRobloxTokenEncryption,
 } from "@/lib/roblox-token-crypto";
+import type { Json } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
     destination.searchParams.set("error", "roblox_resource_access_failed");
     return cleanupAndRedirect(destination, url.origin, true);
   }
-  const resourceSnapshot = (await resourceResponse.json()) as Record<string, unknown>;
+  const resourceSnapshot = (await resourceResponse.json()) as Json;
   const scopes = parseRobloxScopes(tokenData.scope);
   const requiredScopes = ["openid", "profile", "group:read", "group:write"];
   if (!requiredScopes.every((scope) => scopes.includes(scope))) {
