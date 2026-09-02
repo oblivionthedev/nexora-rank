@@ -12,6 +12,10 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const requestedNext = url.searchParams.get("next");
+  // Older verification links must never ask members for group-management scopes.
+  if (requestedNext === "/verify" || requestedNext?.startsWith("/verify?")) {
+    return NextResponse.redirect(new URL("/auth/roblox/verify/start", url.origin));
+  }
   const nextPath =
     requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
       ? requestedNext

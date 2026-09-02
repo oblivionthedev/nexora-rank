@@ -4,6 +4,18 @@ export const ROBLOX_OAUTH_USERINFO_URL = "https://apis.roblox.com/oauth/v1/useri
 export const ROBLOX_OAUTH_RESOURCES_URL = "https://apis.roblox.com/oauth/v1/token/resources";
 export const ROBLOX_OAUTH_INTROSPECT_URL = "https://apis.roblox.com/oauth/v1/token/introspect";
 export const ROBLOX_OAUTH_SCOPES = "openid profile group:read group:write";
+export const ROBLOX_VERIFICATION_SCOPES = "openid profile";
+export const ROBLOX_VERIFICATION_CALLBACK = "/auth/roblox/verify/callback";
+
+export function hasRobloxVerificationCredentials() {
+  return Boolean(process.env.ROBLOX_VERIFICATION_CLIENT_ID && process.env.ROBLOX_VERIFICATION_CLIENT_SECRET);
+}
+
+export function isRobloxVerificationReady() {
+  return process.env.ROBLOX_VERIFICATION_ENABLED === "true"
+    && hasRobloxVerificationCredentials()
+    && Boolean(process.env.CRON_SECRET);
+}
 
 export function hasRobloxOAuthCredentials() {
   return Boolean(process.env.ROBLOX_CLIENT_ID && process.env.ROBLOX_CLIENT_SECRET);

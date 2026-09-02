@@ -1834,6 +1834,16 @@ export type Database = {
         };
         Returns: string;
       };
+      store_roblox_verification: {
+        Args: {
+          candidate_secret: string;
+          provider_user_id: string;
+          provider_username: string;
+          provider_display_name: string;
+          provider_avatar_url: string;
+        };
+        Returns: boolean;
+      };
       store_roblox_oauth_credential: {
         Args: {
           provider_user_id: string;

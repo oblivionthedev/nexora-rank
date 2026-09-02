@@ -48,7 +48,7 @@ For the separate server-side Roblox Open Cloud flow, set these server-only varia
 - `ROBLOX_CLIENT_SECRET`
 - `ROBLOX_TOKEN_ENCRYPTION_KEY` (optional dedicated 32+ character key; `CRON_SECRET` is the fallback)
 
-After Roblox approves the application, register the exact production callback URL (`https://www.nexorarank.tech/auth/roblox/callback`), approve `openid profile group:read group:write`, and set `NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED=true`. Users then connect Roblox once. Nexora stores only AES-GCM-encrypted tokens, refreshes rotating credentials server-side, verifies group ownership, performs rank changes through Open Cloud, re-reads the membership after every mutation, and records the outcome in the workspace audit log.
+The **group-management app** uses `https://www.nexorarank.tech/auth/roblox/callback` and `openid profile group:read group:write`. Keep its existing `ROBLOX_CLIENT_ID` and `ROBLOX_CLIENT_SECRET`. Nexora stores only AES-GCM-encrypted group tokens, refreshes rotating credentials server-side, verifies group ownership, performs rank changes through Open Cloud, re-reads the membership after every mutation, and records the outcome in the workspace audit log. Credential availability is checked server-side; the legacy `NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED` flag is not the activation switch.
 
 Promote, demote, and terminate-to-lowest-rank are ready. Roblox Open Cloud does not currently expose a supported OAuth endpoint for removing a member from a group, so Nexora deliberately does not claim that “Kick” succeeded. Never substitute a `.ROBLOSECURITY` cookie.
 
@@ -57,22 +57,24 @@ In Supabase Auth, enable Discord and add these application callback URLs:
 - Local: `http://localhost:3000/auth/callback`
 - Production: `https://YOUR_DOMAIN/auth/callback`
 
-For Roblox sign-in, create a Supabase **Custom Provider** with these settings:
+### Separate Roblox verification app
 
-- Configuration: Auto-discovery (OIDC)
-- Name: `Roblox`
-- Identifier: `custom:roblox`
-- Issuer URL: `https://apis.roblox.com/oauth/`
-- Scopes: `openid profile`
-- Email optional: enabled
-- PKCE: enabled
-- Client ID and Client Secret: copy them from the Roblox OAuth application
+The `/verify` page uses a dedicated direct Roblox OAuth flow after Discord sign-in. It does not use a Supabase custom Roblox provider, does not request group permissions, and does not persist verification tokens.
 
-Register Supabase's callback URL in the Roblox OAuth application:
+Configure the new app with **only** `openid` and `profile`. Entry link: `https://www.nexorarank.tech/verify`. Privacy: `https://www.nexorarank.tech/legal/privacy`. Terms: `https://www.nexorarank.tech/legal/terms-of-service`.
 
-- Production: `https://oomtmrfmqnndmwjqdpsj.supabase.co/auth/v1/callback`
+Register these exact redirect URLs for the domains you use (no trailing slash):
 
-The existing `/auth/roblox/callback` URLs belong only to the separate direct Open Cloud flow. They do not replace the Supabase callback used by `custom:roblox` sign-in. Never expose the Roblox client secret in a `NEXT_PUBLIC_` variable.
+- `https://www.nexorarank.tech/auth/roblox/verify/callback`
+- `https://nexorarank.tech/auth/roblox/verify/callback`
+- `https://nexora-rank.petrovicdusan350.chatgpt.site/auth/roblox/verify/callback`
+- Optional local development: `http://localhost:3000/auth/roblox/verify/callback`
+
+Set server-only `ROBLOX_VERIFICATION_CLIENT_ID` and `ROBLOX_VERIFICATION_CLIENT_SECRET` in each hosting environment. Keep `ROBLOX_VERIFICATION_ENABLED=false` until approval; then set it to `true` and redeploy. The existing `CRON_SECRET` must match the database's server-secret verifier. Apply `separate_roblox_verification_app` before activation. Never reuse or replace the group app's credentials for verification.
+
+Verification uses its own state/PKCE cookies, checks the same signed-in Nexora user on return, and saves only Roblox profile information through a server-authenticated RPC. Existing verified profiles remain valid. A verification-only profile does not create group credentials. Users with an active group connection must verify the same Roblox account, or disconnect their group connection before switching.
+
+After approval, test with a Discord member: `/verify` → Roblox → consent → return → Finish verification. Confirm only profile scopes appear and the Verified role is assigned. Separately test owner group authorization from Connections. Live verification cannot be confirmed until the new app is approved and configured.
 
 ## Vercel deployment
 

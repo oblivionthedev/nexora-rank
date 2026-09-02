@@ -6,6 +6,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { checkDiscordGuildMembership } from "@/lib/discord-resources";
 import { NEXORA_DISCORD_GUILD_ID } from "@/lib/nexora-discord";
 import { createClient } from "@/lib/supabase/server";
+import { isRobloxVerificationReady } from "@/lib/roblox-oauth";
 import { verifyNexoraMember } from "./actions";
 
 export const metadata: Metadata = { title: "Account Verification", description: "Link Discord and Roblox securely to verify with Nexora Rank." };
@@ -23,10 +24,17 @@ const errorMessages: Record<string, string> = {
   roblox_oauth_failed: "Roblox could not complete the secure connection. Please try again.",
   roblox_permissions_required: "Approve the requested Roblox identity permissions to verify.",
   roblox_not_ready: "Roblox verification is temporarily unavailable. Please try again shortly.",
+  roblox_verification_pending: "The dedicated Roblox verification app is awaiting activation. Group management uses a separate connection.",
+  verification_session_changed: "Your sign-in session changed. Start verification again from this page.",
+  roblox_permission_check_failed: "Roblox permissions could not be confirmed. Please try again shortly.",
+  roblox_connection_save_failed: "Your Roblox connection could not be saved. Please try again.",
+  roblox_account_already_linked: "This Roblox account is already connected to another Nexora account.",
+  roblox_group_account_mismatch: "Use the Roblox account connected for group management. To switch accounts, disconnect that group-management connection first.",
 };
 
 export default async function VerifyPage({ searchParams }: { searchParams: Promise<{ verified?: string; error?: string }> }) {
   const query = await searchParams;
+  const verificationAvailable = isRobloxVerificationReady();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: links = [] } = user
@@ -64,7 +72,8 @@ export default async function VerifyPage({ searchParams }: { searchParams: Promi
         </article>
         <article className={roblox ? "complete" : membership.member ? "current" : "locked"}>
           <StepHeading number="3" complete={Boolean(roblox)} label="Roblox identity" title={roblox ? "Account connected" : "Connect your Roblox"} />
-          {roblox ? <><IdentityCard label="Roblox" accent="roblox" account={roblox} /><Link href="/auth/roblox/start?next=/verify" className="verify-switch">Switch Roblox account</Link></> : membership.member ? <Link href="/auth/roblox/start?next=/verify" className="verify-button roblox">Continue with Roblox <ArrowRight /></Link> : <p className="verify-step-note">Complete the Discord steps first. Roblox opens in its official authorization page.</p>}
+          {roblox ? <><IdentityCard label="Roblox" accent="roblox" account={roblox} />{verificationAvailable ? <a href="/auth/roblox/verify/start" className="verify-switch">Switch Roblox account</a> : null}</> : !verificationAvailable ? <p className="verify-step-note">Roblox verification is awaiting activation. Once approved, you can connect here without granting group-management permissions.</p> : membership.member ? <a href="/auth/roblox/verify/start" className="verify-button roblox">Continue with Roblox <ArrowRight /></a> : <p className="verify-step-note">Complete the Discord steps first. Roblox opens in its official authorization page.</p>}
+          <p className="verify-step-note">Verification reads your Roblox user ID, username and profile picture only. Managing a group requires separate authorization in your workspace.</p>
         </article>
         <article className={completed ? "complete" : ready ? "current" : "locked"}>
           <StepHeading number="4" complete={completed} label="Finish" title={completed ? "Verification complete" : "Activate your access"} />

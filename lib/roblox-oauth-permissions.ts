@@ -1,7 +1,5 @@
-import { ROBLOX_OAUTH_INTROSPECT_URL, ROBLOX_OAUTH_SCOPES } from "@/lib/roblox-oauth";
+import { ROBLOX_OAUTH_INTROSPECT_URL, ROBLOX_OAUTH_SCOPES, ROBLOX_VERIFICATION_SCOPES } from "@/lib/roblox-oauth";
 import { parseRobloxScopes } from "@/lib/roblox-open-cloud";
-
-const requiredScopes = ROBLOX_OAUTH_SCOPES.split(" ");
 
 export class RobloxPermissionError extends Error {
   constructor(
@@ -17,11 +15,14 @@ export async function resolveRobloxGrantedScopes({
   accessToken,
   tokenScope,
   expectedUserId,
+  purpose = "group",
 }: {
   accessToken: string;
   tokenScope: unknown;
   expectedUserId: string;
+  purpose?: "group" | "verification";
 }): Promise<string[]> {
+  const requiredScopes = (purpose === "verification" ? ROBLOX_VERIFICATION_SCOPES : ROBLOX_OAUTH_SCOPES).split(" ");
   const tokenScopes = parseRobloxScopes(tokenScope);
   if (requiredScopes.every((scope) => tokenScopes.includes(scope))) {
     return tokenScopes;
@@ -29,8 +30,8 @@ export async function resolveRobloxGrantedScopes({
 
   // An absent/incomplete scope field in the token response is not evidence that
   // the user declined permission. Ask Roblox for the actual token claims.
-  const clientId = process.env.ROBLOX_CLIENT_ID;
-  const clientSecret = process.env.ROBLOX_CLIENT_SECRET;
+  const clientId = purpose === "verification" ? process.env.ROBLOX_VERIFICATION_CLIENT_ID : process.env.ROBLOX_CLIENT_ID;
+  const clientSecret = purpose === "verification" ? process.env.ROBLOX_VERIFICATION_CLIENT_SECRET : process.env.ROBLOX_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
     throw new RobloxPermissionError("roblox_permission_check_failed");
   }
