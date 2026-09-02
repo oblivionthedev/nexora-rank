@@ -16,6 +16,7 @@ import { userCommand } from "./user.js";
 import { loginCommand } from "./login.js";
 import { toggleCommand } from "./toggle.js";
 import { verifyPanelCommand } from "./verifypanel.js";
+import { switchCommand, verifyCommand } from "./verification.js";
 import { channelFormatCommands } from "./channel-formats.js";
 
 export const publicCommands = [
@@ -37,6 +38,8 @@ export const publicCommands = [
 ];
 
 export const officialServerCommands = [
+  verifyCommand,
+  switchCommand,
   loginCommand,
   toggleCommand,
   verifyPanelCommand,

@@ -32,22 +32,15 @@ export async function checkDiscordGuildMembership({
   userId: string;
 }): Promise<DiscordGuildMembership> {
   const token = process.env.DISCORD_BOT_TOKEN?.trim();
-  if (!token || !guildId || !userId)
-    return { member: false, available: false };
-
+  if (!token || !guildId || !userId) return { member: false, available: false };
   try {
-    const response = await fetch(
-      `${DISCORD_API}/guilds/${guildId}/members/${userId}`,
-      {
-        headers: { Authorization: `Bot ${token}` },
-        cache: "no-store",
-        signal: AbortSignal.timeout(10_000),
-      },
-    );
+    const response = await fetch(`${DISCORD_API}/guilds/${guildId}/members/${userId}`, {
+      headers: { Authorization: `Bot ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
     if (response.status === 404) return { member: false, available: true };
-    return response.ok
-      ? { member: true, available: true }
-      : { member: false, available: false };
+    return response.ok ? { member: true, available: true } : { member: false, available: false };
   } catch {
     return { member: false, available: false };
   }
@@ -124,6 +117,85 @@ export async function assignDiscordGuildRole({
     return response.ok
       ? { ok: true as const }
       : { ok: false as const, error: "discord_role_failed" };
+  } catch {
+    return { ok: false as const, error: "discord_unavailable" };
+  }
+}
+
+export async function updateDiscordGuildNickname({
+  guildId,
+  userId,
+  nickname,
+}: {
+  guildId: string;
+  userId: string;
+  nickname: string;
+}) {
+  const token = process.env.DISCORD_BOT_TOKEN?.trim();
+  if (!token) return { ok: false as const, error: "bot_not_configured" };
+  const safeNickname = nickname.trim().slice(0, 32);
+  if (!safeNickname) return { ok: false as const, error: "nickname_missing" };
+  try {
+    const response = await fetch(`${DISCORD_API}/guilds/${guildId}/members/${userId}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bot ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ nick: safeNickname }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    return response.ok
+      ? { ok: true as const }
+      : { ok: false as const, error: response.status === 403 ? "nickname_permission_missing" : "nickname_update_failed" };
+  } catch {
+    return { ok: false as const, error: "discord_unavailable" };
+  }
+}
+
+export async function sendDiscordVerificationReceipt({
+  userId,
+  robloxUsername,
+  robloxAvatarUrl,
+}: {
+  userId: string;
+  robloxUsername: string;
+  robloxAvatarUrl?: string | null;
+}) {
+  const token = process.env.DISCORD_BOT_TOKEN?.trim();
+  if (!token) return { ok: false as const, error: "bot_not_configured" };
+  const headers = { Authorization: `Bot ${token}`, "Content-Type": "application/json" };
+  try {
+    const dmResponse = await fetch(`${DISCORD_API}/users/@me/channels`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ recipient_id: userId }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!dmResponse.ok) return { ok: false as const, error: "discord_dm_unavailable" };
+    const dm = (await dmResponse.json()) as { id?: string };
+    if (!dm.id) return { ok: false as const, error: "discord_dm_unavailable" };
+    const receipt = await fetch(`${DISCORD_API}/channels/${dm.id}/messages`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        embeds: [{
+          color: 0x050505,
+          title: "Verification complete",
+          description: `Your Discord account is now securely linked to Roblox **@${robloxUsername}**.`,
+          fields: [
+            { name: "Access", value: "Your Nexora Verified role is active.", inline: true },
+            { name: "Need help?", value: "[Open Community & Support](https://discord.gg/YY9nXqqWTk)", inline: true },
+          ],
+          thumbnail: robloxAvatarUrl ? { url: robloxAvatarUrl } : undefined,
+          footer: { text: "Nexora Rank · Official verification receipt" },
+          timestamp: new Date().toISOString(),
+        }],
+        allowed_mentions: { parse: [] },
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    return receipt.ok ? { ok: true as const } : { ok: false as const, error: "discord_dm_unavailable" };
   } catch {
     return { ok: false as const, error: "discord_unavailable" };
   }

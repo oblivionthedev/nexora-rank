@@ -31,6 +31,8 @@ test("private platform commands include login, switches, verification, and chann
     .filter((command) => command.staffOnly)
     .map((command) => command.data.name);
   assert.deepEqual(privateNames, [
+    "verify",
+    "switch",
     "login",
     "toggle",
     "verifypanel",

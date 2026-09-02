@@ -42,7 +42,7 @@ export const helpCommand = {
       response.addFields({
         name: "Official Nexora server tools",
         value:
-          "`/login create` · `/toggle` · `/verifypanel` · `/rules` · `/faq` · `/welcome` · `/getting-started` · `/resources` · `/about`",
+          "`/verify` · `/switch` · `/login create` · `/toggle` · `/verifypanel` · `/rules` · `/faq` · `/welcome` · `/getting-started` · `/resources` · `/about`",
       });
     }
     await interaction.editReply({ embeds: [response] });

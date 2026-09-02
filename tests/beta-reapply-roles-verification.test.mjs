@@ -92,15 +92,24 @@ test("Discord and Roblox resource choices refresh every minute", async () => {
 });
 
 test("official Discord verification opens and completes in the browser", async () => {
-  const [page, action, panel] = await Promise.all([
+  const [page, action, panel, migration] = await Promise.all([
     read("app/verify/page.tsx"),
     read("app/verify/actions.ts"),
     read("Nexora-Bot/src/commands/verifypanel.js"),
+    read("supabase/migrations/20260902155458_require_roblox_identity_for_verification.sql"),
   ]);
   assert.match(page, /Continue with Discord/);
+  assert.match(page, /Continue with Roblox/);
+  assert.match(page, /checkDiscordGuildMembership/);
+  assert.match(page, /Two trusted identities/);
   assert.match(action, /assignDiscordGuildRole/);
+  assert.match(action, /updateDiscordGuildNickname/);
+  assert.match(action, /sendDiscordVerificationReceipt/);
+  assert.match(action, /roblox_identity_required/);
   assert.match(panel, /\/verify/);
-  assert.match(panel, /Verify with Nexora/);
+  assert.match(panel, /Link accounts & verify/);
   assert.match(panel, /\$\{config\.siteUrl\}\/verify/);
   assert.doesNotMatch(panel, /setCustomId/);
+  assert.match(migration, /provider = 'roblox'/);
+  assert.match(migration, /roblox_not_verified/);
 });

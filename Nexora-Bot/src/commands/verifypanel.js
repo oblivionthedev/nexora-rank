@@ -28,7 +28,7 @@ export const verifyPanelCommand = {
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setLabel("Verify with Nexora")
+        .setLabel("Link accounts & verify")
         .setEmoji("✅")
         .setURL(`${config.siteUrl}/verify`)
         .setStyle(ButtonStyle.Link),
@@ -39,7 +39,7 @@ export const verifyPanelCommand = {
           color: 0x000000,
           title: "Verify your Nexora account",
           description:
-            "Press the button below to open **nexorarank.tech/verify**. Authorize Discord there, confirm your connected account, and complete the website check to receive server access.\n\n**No Discord password is shared.** Nexora uses Discord's official authorization flow.",
+            "Press the button below to open **nexorarank.tech/verify**. Connect Discord, authorize Roblox on Roblox's official OAuth page, and complete the membership check to receive server access.\n\n**No password or Roblox cookie is shared.**",
           fields: [
             {
               name: "1 · Open",
@@ -48,7 +48,12 @@ export const verifyPanelCommand = {
             },
             {
               name: "2 · Verify",
-              value: "Authorize Discord and press **Verify me now** on the website.",
+              value: "Connect both identities and press **Finish verification** on the website.",
+              inline: true,
+            },
+            {
+              name: "3 · Access",
+              value: "Receive the Verified role, Roblox nickname sync, and a private receipt.",
               inline: true,
             },
           ],
