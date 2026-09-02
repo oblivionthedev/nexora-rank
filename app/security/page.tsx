@@ -88,8 +88,8 @@ export default function SecurityPage() {
             Production infrastructure and monitored status checks are connected.
           </p>
           <p>
-            Roblox OAuth approval, recovery exercises, support contacts, and
-            independent legal/security review remain public-launch gates.
+            Roblox OAuth is active. Recovery exercises, support contacts, and
+            independent legal/security review remain ongoing readiness work.
           </p>
         </section>
       </article>

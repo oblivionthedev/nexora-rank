@@ -76,7 +76,7 @@ export default function LegalCenter() {
           <p>FREE PLAN ELIGIBILITY</p>
           <h2>Free workspace owners stay connected to Nexora.</h2>
           <span>
-            After Roblox OAuth approval, Free workspace owners must remain in
+            Free workspace owners using Roblox OAuth must remain in
             Roblox community 596263047. A confirmed departure provides 48 hours
             to rejoin before suspension on the next successful verification.
             Paid plans are exempt.

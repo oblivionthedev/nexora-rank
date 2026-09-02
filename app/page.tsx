@@ -73,7 +73,7 @@ const questions = [
   ],
   [
     "Is Roblox required right now?",
-    "No. Roblox OAuth is optional during the current beta while provider approval is being completed. You can create a workspace and use the available Discord and management tools without it.",
+    "Yes. Every workspace owner must connect Roblox through official OAuth and select a group they own before launch. Nexora never requests passwords or Roblox cookies.",
   ],
   [
     "Does the bot need Administrator?",
@@ -181,7 +181,7 @@ export default async function Home({ searchParams }: HomeProps) {
               <Check /> Free beta access
             </span>
             <span>
-              <Check /> Roblox optional for now
+              <Check /> Official Roblox OAuth required
             </span>
             <span>
               <Check /> No Administrator permission
@@ -493,10 +493,10 @@ export default async function Home({ searchParams }: HomeProps) {
               </span>
             </li>
             <li>
-              <Clock3 />
+              <Check />
               <span>
-                <b>Roblox is optional in beta</b>You can use Nexora while
-                official OAuth approval is pending.
+                <b>Verified Roblox ownership</b>Every workspace is connected to
+                a group selected from the owner’s authorized account.
               </span>
             </li>
           </ul>
@@ -652,7 +652,8 @@ export default async function Home({ searchParams }: HomeProps) {
           <p>
             Core workspace management, Discord connection, communications,
             ranking, activity, applications, automations, and history are
-            available. Billing and Roblox OAuth are not required today.
+            available. Roblox OAuth and verified group ownership are required;
+            the current Beta plan remains free.
           </p>
           <Link href="/login?next=/dashboard" className="home-primary">
             Open Nexora <ArrowRight />

@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import {
-  ArrowRight,
   BadgeCheck,
   Building2,
   Check,
@@ -21,10 +20,10 @@ import { BrandMark } from "@/components/brand-mark";
 import { OnboardingIdentityAction } from "@/components/onboarding-identity-actions";
 import { OnboardingSubmitButton } from "@/components/onboarding-submit-button";
 import { OnboardingWorkspaceForm } from "@/components/onboarding-workspace-form";
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { listRobloxGroups } from "@/lib/roblox-membership";
 import {
+  getOnboardingWorkspaceDraft,
   saveOwnerProfile,
   selectFreePlan,
   selectRobloxGroup,
@@ -52,7 +51,7 @@ const messages: Record<string, string> = {
   onboarding_incomplete:
     "Complete the earlier setup steps before creating a workspace.",
   roblox_not_ready:
-    "Roblox OAuth is waiting for app approval and provider configuration.",
+    "The required Roblox connection is temporarily unavailable. Please try again shortly.",
   roblox_authorization_declined:
     "Roblox connection was cancelled. Your Discord session is still active.",
   roblox_oauth_failed:
@@ -85,7 +84,12 @@ export default async function OnboardingPage({
       data: { user },
     },
     params,
-  ] = await Promise.all([supabase.auth.getUser(), searchParams]);
+    workspaceDraft,
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    searchParams,
+    getOnboardingWorkspaceDraft(),
+  ]);
   if (!user) redirect("/login?next=/onboarding");
 
   await supabase.rpc("sync_auth_identities");
@@ -101,13 +105,13 @@ export default async function OnboardingPage({
     supabase
       .from("profiles")
       .select(
-        "first_name, last_name, contact_email, plan_key, plan_selected_at, password_set_at, roblox_link_deferred_at, selected_roblox_group_id, selected_roblox_group_name, selected_roblox_group_role",
+        "first_name, last_name, contact_email, plan_key, plan_selected_at, password_set_at, selected_roblox_group_id, selected_roblox_group_name, selected_roblox_group_role",
       )
       .eq("id", user.id)
       .single(),
     supabase
       .from("account_links")
-      .select("provider, username, display_name, provider_user_id")
+      .select("provider, username, display_name, provider_user_id, metadata")
       .eq("user_id", user.id),
     supabase
       .from("workspace_members")
@@ -124,9 +128,10 @@ export default async function OnboardingPage({
     (links ?? []).map((link) => [link.provider, link]),
   );
   const discordConnected = providerMap.has("discord");
-  const robloxConnected = providerMap.has("roblox");
   const robloxIdentity = providerMap.get("roblox");
-  const robloxGroupsResult = robloxIdentity?.provider_user_id
+  const robloxMetadata = robloxIdentity?.metadata as { open_cloud_ready?: boolean } | null;
+  const robloxConnected = Boolean(robloxIdentity && robloxMetadata?.open_cloud_ready);
+  const robloxGroupsResult = robloxConnected && robloxIdentity?.provider_user_id
     ? await listRobloxGroups(robloxIdentity.provider_user_id)
     : null;
   const robloxGroups = robloxGroupsResult?.ok ? robloxGroupsResult.groups : [];
@@ -159,53 +164,39 @@ export default async function OnboardingPage({
   const workspaceCreationAvailable = workspaceCreationEnabled || isStaff;
   const robloxAvailable =
     process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
-  // Before provider approval Roblox remains optional. Turning the provider on
-  // makes the one-time Open Cloud authorization part of setup automatically.
-  const robloxRequired = robloxAvailable;
-  const identityReady =
-    discordConnected && (!robloxRequired || robloxConnected);
-  if (membership && params.manage !== "identities")
-    redirect(identityReady ? "/dashboard" : "/onboarding?manage=identities");
+  const identityReady = discordConnected && robloxConnected;
+  if (membership) {
+    if (identityReady) redirect("/dashboard");
+    if (params.manage !== "identities") redirect("/onboarding?manage=identities");
+  }
   const profileReady = Boolean(
     profile?.first_name && profile?.last_name && profile?.contact_email,
   );
-  const planReady =
-    profile?.plan_key === "free" && Boolean(profile.plan_selected_at);
-  const groupStepRequired = robloxConnected;
-  const groupReady =
-    !groupStepRequired || Boolean(profile?.selected_roblox_group_id);
-  const profileStep = groupStepRequired ? 3 : 2;
-  const planStep = profileStep + 1;
-  const workspaceStep = planStep + 1;
-  const totalSteps = workspaceStep + 1;
+  const groupReady = Boolean(profile?.selected_roblox_group_id);
+  const profileStep = 2;
+  const workspaceStep = 3;
+  const robloxStep = 4;
+  const groupStep = 5;
+  const planStep = 6;
+  const totalSteps = 7;
   const activeStep =
     params.manage === "identities"
-      ? 1
-      : !identityReady
-        ? 1
-        : !groupReady
-          ? 2
-          : !profileReady
-            ? profileStep
-            : !planReady
-              ? planStep
-              : workspaceStep;
-  const steps = groupStepRequired
-    ? [
-        { label: "Accounts", icon: Fingerprint },
-        { label: "Roblox group", icon: Gamepad2 },
-        { label: "Owner profile", icon: UserRound },
-        { label: "Beta plan", icon: Sparkles },
-        { label: "Workspace", icon: LayoutDashboard },
-        { label: "Launch", icon: Rocket },
-      ]
-    : [
-        { label: "Accounts", icon: Fingerprint },
-        { label: "Owner profile", icon: UserRound },
-        { label: "Beta plan", icon: Sparkles },
-        { label: "Workspace", icon: LayoutDashboard },
-        { label: "Launch", icon: Rocket },
-      ];
+      ? !discordConnected ? 1 : robloxStep
+      : !discordConnected ? 1
+      : !profileReady ? profileStep
+        : !workspaceDraft ? workspaceStep
+          : !robloxConnected ? robloxStep
+            : !groupReady ? groupStep
+              : planStep;
+  const steps = [
+    { label: "Account", icon: Fingerprint },
+    { label: "Owner profile", icon: UserRound },
+    { label: "Community", icon: LayoutDashboard },
+    { label: "Roblox", icon: Gamepad2 },
+    { label: "Group", icon: Building2 },
+    { label: "Plan & billing", icon: Sparkles },
+    { label: "Launch", icon: Rocket },
+  ];
   const authEmail = user.email ?? "";
   const defaultFirstName = profile?.first_name ?? "";
   const defaultLastName = profile?.last_name ?? "";
@@ -240,7 +231,7 @@ export default async function OnboardingPage({
             <span className="setup-eyebrow">Workspace setup</span>
             <h1>Your new control room starts here.</h1>
             <p>
-              We’ll confirm your accounts, owner details, plan, and community.
+              We’ll confirm your identity, community, Roblox group, and plan.
               Most teams finish in under three minutes.
             </p>
           </div>
@@ -296,9 +287,8 @@ export default async function OnboardingPage({
               <span className="setup-kicker">Account connections</span>
               <h2>First, let’s recognize you.</h2>
               <p>
-                Discord confirms your Beta access and connects the server you’ll
-                manage. Once Roblox OAuth is approved, one secure connection
-                unlocks group selection and rank operations.
+                Discord confirms your Beta access and gives Nexora the identity
+                used for server membership, roles, and workspace ownership.
               </p>
               <div className="provider-stack">
                 <ProviderStatus
@@ -315,48 +305,41 @@ export default async function OnboardingPage({
                     <OnboardingIdentityAction provider="discord" />
                   ) : null}
                 </ProviderStatus>
-                <ProviderStatus
-                  brand="roblox"
-                  name="Roblox"
-                  description={
-                    robloxRequired
-                      ? "Required once for groups, ranking and verified staff operations"
-                      : "Optional until Roblox approves the Nexora OAuth application"
-                  }
-                  state={
-                    robloxConnected
-                      ? "connected"
-                      : robloxRequired
-                        ? "required"
-                        : "optional"
-                  }
-                  username={
-                    providerMap.get("roblox")?.display_name ??
-                    providerMap.get("roblox")?.username
-                  }
-                >
-                  {!robloxConnected ? (
-                    robloxAvailable ? (
-                      <OnboardingIdentityAction provider="custom:roblox" />
-                    ) : (
-                      <span className="provider-availability">
-                        OAuth approval pending
-                      </span>
-                    )
-                  ) : null}
-                </ProviderStatus>
               </div>
-              {identityReady && membership ? (
-                <Button asChild className="button-glow h-12 rounded-xl">
-                  <Link href="/dashboard">
-                    Return to dashboard <ArrowRight />
-                  </Link>
-                </Button>
-              ) : null}
             </section>
           ) : null}
 
-          {groupStepRequired && activeStep === 2 ? (
+          {activeStep === robloxStep ? (
+            <section className="setup-card">
+              <div className="setup-icon"><Gamepad2 /></div>
+              <span className="setup-kicker">Required Roblox connection</span>
+              <h2>Connect the account that owns your community.</h2>
+              <p>
+                Nexora uses official Roblox OAuth to confirm ownership and load
+                the groups you can manage. Passwords and Roblox cookies are never requested.
+              </p>
+              <ProviderStatus
+                brand="roblox"
+                name="Roblox"
+                description="Required for group ownership, ranking, verification, and staff operations"
+                state={robloxConnected ? "connected" : "required"}
+                username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}
+              >
+                {!robloxConnected ? robloxAvailable ? (
+                  <OnboardingIdentityAction provider="custom:roblox" />
+                ) : (
+                  <span className="provider-availability">Roblox connection is temporarily unavailable</span>
+                ) : null}
+              </ProviderStatus>
+              <div className="setup-capabilities">
+                <span><ShieldCheck /> Official OAuth</span>
+                <span><KeyRound /> No cookies</span>
+                <span><BadgeCheck /> Ownership checked</span>
+              </div>
+            </section>
+          ) : null}
+
+          {activeStep === groupStep ? (
             <section className="setup-card">
               <div className="setup-icon">
                 <Gamepad2 />
@@ -365,8 +348,8 @@ export default async function OnboardingPage({
               <h2>Choose the group this workspace will run.</h2>
               <p>
                 Nexora checked the groups visible on your connected Roblox
-                account. This choice is separate from the Nexora support
-                community required by the Free plan after OAuth approval.
+                account. Only groups where this account has the owner rank are
+                available for selection.
               </p>
               {ownedRobloxGroups.length ? (
                 <form action={selectRobloxGroup} className="setup-form">
@@ -495,7 +478,7 @@ export default async function OnboardingPage({
               <div className="setup-icon">
                 <Sparkles />
               </div>
-              <span className="setup-kicker">Your Beta plan</span>
+              <span className="setup-kicker">Plan &amp; billing</span>
               <h2>Everything you need to start is included.</h2>
               <p>
                 No payment method is needed. Paid checkout will only appear
@@ -521,7 +504,7 @@ export default async function OnboardingPage({
                     "5,000 monthly API operations",
                     membershipEnforced
                       ? "Owner membership in the Nexora Roblox community"
-                      : "Roblox community rule activates after OAuth approval",
+                      : "Verified Roblox owner connection",
                     "30-day audit history",
                     "Ranking, activity and applications",
                   ].map((feature) => (
@@ -536,14 +519,14 @@ export default async function OnboardingPage({
                   <span>
                     {membershipEnforced
                       ? `If the owner later leaves community ${membershipPolicy?.group_id}, they have ${membershipPolicy?.grace_hours ?? 48} hours to rejoin before the next automated check can suspend the workspace.`
-                      : "All core tools are included during beta. Roblox membership enforcement is off while OAuth approval is pending."}
+                      : "Your selected Roblox group and owner identity will be connected when this workspace launches."}
                   </span>
                 </div>
               </article>
               <form action={selectFreePlan}>
                 <OnboardingSubmitButton
-                  idleLabel="Activate Beta Free"
-                  pendingLabel="Activating your plan…"
+                  idleLabel="Confirm plan & launch workspace"
+                  pendingLabel="Launching your workspace…"
                   fullWidth
                 />
               </form>
@@ -594,7 +577,8 @@ export default async function OnboardingPage({
               </p>
               {workspaceCreationAvailable ? (
                 <OnboardingWorkspaceForm
-                  communityName={profile?.selected_roblox_group_name}
+                  communityName={workspaceDraft?.name ?? profile?.selected_roblox_group_name}
+                  communitySlug={workspaceDraft?.slug}
                 />
               ) : (
                 <div className="onboarding-error" role="status">

@@ -132,7 +132,7 @@ export default async function Connections({
               ? "Connected with secure group permissions. Only groups owned by this Roblox account are available."
               : robloxEnabled
                 ? "Connect Roblox once to approve group access, ownership checks, and rank management."
-                : "Roblox approval is pending. The connection button will activate as soon as the app is approved."}
+                : "The required Roblox connection is temporarily unavailable. Try again shortly."}
           </p>
           {canManage && robloxEnabled && !robloxReady ? (
             <a

@@ -48,7 +48,7 @@ export default async function Automations({ params, searchParams }: { params: Pr
       </Panel>
     </div>
     <div className="mt-8 grid gap-5 xl:grid-cols-[.9fr_1.1fr]">
-      <Panel icon={Zap} title="Create workflow" description="Discord destinations load automatically after the bot is linked. Roblox execution remains deferred until its approved connection is available.">
+      <Panel icon={Zap} title="Create workflow" description="Discord destinations load automatically after the bot is linked. Roblox actions use the required owner-authorized group connection.">
         <form action={createAutomation} className="grid gap-4">
           <input type="hidden" name="public_id" value={workspaceId} />
           <Input label="Workflow name" name="name" required />

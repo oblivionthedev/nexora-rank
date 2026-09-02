@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Globe2, ShieldCheck, UsersRound } from "lucide-react";
-import { createOnboardingWorkspace } from "@/app/onboarding/actions";
+import { saveOnboardingWorkspaceDraft } from "@/app/onboarding/actions";
 import { OnboardingSubmitButton } from "@/components/onboarding-submit-button";
 
 function makeSlug(value: string) {
@@ -17,19 +17,21 @@ function makeSlug(value: string) {
 
 export function OnboardingWorkspaceForm({
   communityName,
+  communitySlug,
 }: {
   communityName?: string | null;
+  communitySlug?: string | null;
 }) {
   const initialName = communityName?.trim() ?? "";
   const [name, setName] = useState(initialName);
-  const [slug, setSlug] = useState(makeSlug(initialName));
+  const [slug, setSlug] = useState(communitySlug?.trim() || makeSlug(initialName));
   const [slugEdited, setSlugEdited] = useState(false);
   const previewName = name.trim() || "Your community";
   const previewSlug = slug.trim() || "your-community";
 
   return (
     <div className="workspace-builder">
-      <form action={createOnboardingWorkspace} className="setup-form">
+      <form action={saveOnboardingWorkspaceDraft} className="setup-form">
         <label>
           <span>Workspace name</span>
           <input
@@ -70,8 +72,8 @@ export function OnboardingWorkspaceForm({
           </small>
         </label>
         <OnboardingSubmitButton
-          idleLabel="Create my workspace"
-          pendingLabel="Building your workspace…"
+          idleLabel="Continue to Roblox"
+          pendingLabel="Saving your community…"
           fullWidth
         />
       </form>

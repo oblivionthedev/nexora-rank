@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import {
   checkRequiredRobloxMembership,
   createMembershipAutomationClient,
@@ -20,6 +21,26 @@ import {
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,46}[a-z0-9]$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const WORKSPACE_DRAFT_COOKIE = "nexora_workspace_draft";
+
+type WorkspaceDraft = { name: string; slug: string };
+
+function parseWorkspaceDraft(value?: string): WorkspaceDraft | null {
+  if (!value) return null;
+  try {
+    const draft = JSON.parse(decodeURIComponent(value)) as Partial<WorkspaceDraft>;
+    if (typeof draft.name !== "string" || typeof draft.slug !== "string") return null;
+    if (draft.name.trim().length < 2 || draft.name.trim().length > 64 || !SLUG_PATTERN.test(draft.slug)) return null;
+    return { name: draft.name.trim(), slug: draft.slug };
+  } catch {
+    return null;
+  }
+}
+
+export async function getOnboardingWorkspaceDraft() {
+  const cookieStore = await cookies();
+  return parseWorkspaceDraft(cookieStore.get(WORKSPACE_DRAFT_COOKIE)?.value);
+}
 
 async function authenticatedClient() {
   const supabase = await createClient();
@@ -28,16 +49,6 @@ async function authenticatedClient() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/onboarding");
   return { supabase, user };
-}
-
-export async function deferRobloxLink() {
-  const { supabase, user } = await authenticatedClient();
-  const { error } = await supabase
-    .from("profiles")
-    .update({ roblox_link_deferred_at: new Date().toISOString() })
-    .eq("id", user.id);
-  if (error) redirect("/onboarding?error=identity_update_failed");
-  redirect("/onboarding");
 }
 
 export async function saveOwnerProfile(formData: FormData) {
@@ -98,6 +109,28 @@ export async function selectFreePlan() {
     p_plan_key: "free",
   });
   if (error) redirect("/onboarding?error=plan_update_failed");
+  const draft = await getOnboardingWorkspaceDraft();
+  if (!draft) redirect("/onboarding?error=invalid_workspace");
+  const formData = new FormData();
+  formData.set("name", draft.name);
+  formData.set("slug", draft.slug);
+  await createOnboardingWorkspace(formData);
+}
+
+export async function saveOnboardingWorkspaceDraft(formData: FormData) {
+  await authenticatedClient();
+  const name = String(formData.get("name") ?? "").trim();
+  const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
+  if (name.length < 2 || name.length > 64 || !SLUG_PATTERN.test(slug))
+    redirect("/onboarding?error=invalid_workspace");
+  const cookieStore = await cookies();
+  cookieStore.set(WORKSPACE_DRAFT_COOKIE, encodeURIComponent(JSON.stringify({ name, slug })), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60,
+  });
   redirect("/onboarding");
 }
 
@@ -244,6 +277,9 @@ export async function createOnboardingWorkspace(formData: FormData) {
       timestamp: new Date().toISOString(),
     });
   }
+
+  const cookieStore = await cookies();
+  cookieStore.delete(WORKSPACE_DRAFT_COOKIE);
 
   redirect("/onboarding/complete");
 }

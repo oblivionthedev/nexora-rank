@@ -149,8 +149,8 @@ export default async function BetaPage({
             <li>
               <Check />
               <span>
-                <b>No Roblox OAuth requirement</b>Roblox authentication stays
-                optional while provider approval is pending.
+                <b>Official Roblox connection</b>Selected applicants connect
+                Roblox securely and choose a group they own during setup.
               </span>
             </li>
             <li>

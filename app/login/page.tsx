@@ -39,21 +39,21 @@ const authErrors: Record<string, string> = {
 const setupSteps = [
   {
     step: "01",
-    title: "Connect your accounts",
+    title: "Confirm your owner identity",
     explanation:
-      "Start with Discord or Roblox, then securely connect the other account.",
+      "Sign in with Discord or Roblox and complete the required identity links.",
   },
   {
     step: "02",
-    title: "Set up your owner profile",
+    title: "Name your community",
     explanation:
-      "Add your account details and activate the complete Beta Free plan.",
+      "Add owner details, choose the workspace name, and reserve its address.",
   },
   {
     step: "03",
-    title: "Launch your workspace",
+    title: "Connect Roblox and launch",
     explanation:
-      "Choose its name and receive your permanent Workspace ID and API base.",
+      "Select a group you own, confirm the Beta plan, and launch.",
   },
 ];
 
@@ -72,7 +72,7 @@ function DiscordMark() {
 }
 
 export default function LoginPage() {
-  const [busyProvider, setBusyProvider] = useState<"discord" | null>(null);
+  const [busyProvider, setBusyProvider] = useState<"discord" | "custom:roblox" | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   // Read straight from location rather than useSearchParams so this page never
@@ -87,7 +87,7 @@ export default function LoginPage() {
     }
   }, []);
 
-  async function continueWith(provider: "discord") {
+  async function continueWith(provider: "discord" | "custom:roblox") {
     setAuthMessage(null);
 
     if (!isSupabaseConfigured()) {
@@ -107,14 +107,16 @@ export default function LoginPage() {
       provider,
       options: {
         redirectTo,
-        scopes: "identify email guilds guilds.members.read",
+        scopes: provider === "discord"
+          ? "identify email guilds guilds.members.read"
+          : "openid profile group:read group:write",
       },
     });
 
     if (error) {
       setBusyProvider(null);
       setAuthMessage(
-        "Discord sign-in could not start. Please try again in a moment.",
+        `${provider === "discord" ? "Discord" : "Roblox"} sign-in could not start. Please try again in a moment.`,
       );
     }
   }
@@ -179,8 +181,8 @@ export default function LoginPage() {
           <span className="signin-eyebrow">Selected Beta access</span>
           <h2>Sign in to your invitation</h2>
           <p className="signin-action-lede">
-            Sign in with Discord first. You will connect Roblox securely inside
-            Nexora, where it cannot replace or interrupt your login session.
+            Continue with either connected identity. Workspace setup requires
+            both Discord and Roblox before launch.
           </p>
 
           <button
@@ -198,10 +200,14 @@ export default function LoginPage() {
               : "Continue with Discord"}
           </button>
 
-          <div className="roblox-pending pill" aria-label="Roblox connects after Discord sign-in">
-            <RobloxMark />
-            <b>Connect Roblox after sign-in</b>
-          </div>
+          <button
+            className="roblox-pending pill"
+            onClick={() => continueWith("custom:roblox")}
+            disabled={busyProvider !== null}
+          >
+            {busyProvider === "custom:roblox" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <RobloxMark />}
+            <b>{busyProvider === "custom:roblox" ? "Opening Roblox…" : "Continue with Roblox"}</b>
+          </button>
 
           {authMessage && (
             <div role="alert" className="signin-alert">

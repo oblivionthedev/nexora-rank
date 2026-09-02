@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-test("requires the one-time Roblox connection as soon as approved OAuth is enabled", async () => {
+test("requires Roblox and places it after community details in onboarding", async () => {
   const onboarding = await readFile(
     path.join(root, "app/onboarding/page.tsx"),
     "utf8",
@@ -16,17 +16,14 @@ test("requires the one-time Roblox connection as soon as approved OAuth is enabl
     onboarding,
     /const robloxAvailable =\s*process\.env\.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";/,
   );
+  assert.match(onboarding, /const identityReady = discordConnected && robloxConnected;/);
+  assert.match(onboarding, /const workspaceStep = 3;/);
+  assert.match(onboarding, /const robloxStep = 4;/);
+  assert.match(onboarding, /const groupStep = 5;/);
+  assert.match(onboarding, /const planStep = 6;/);
   assert.match(
     onboarding,
-    /const robloxRequired = robloxAvailable;/,
-  );
-  assert.match(
-    onboarding,
-    /const identityReady =\s*discordConnected && \(!robloxRequired \|\| robloxConnected\);/,
-  );
-  assert.match(
-    onboarding,
-    /robloxConnected\s*\? "connected"\s*:\s*robloxRequired\s*\? "required"\s*:\s*"optional"/,
+    /state=\{robloxConnected \? "connected" : "required"\}/,
   );
   assert.match(onboarding, /brand="discord"/);
   assert.match(onboarding, /brand="roblox"/);
@@ -34,6 +31,21 @@ test("requires the one-time Roblox connection as soon as approved OAuth is enabl
     onboarding,
     /robloxAvailable\s*\? \(\s*<OnboardingIdentityAction provider="custom:roblox"/,
   );
+  assert.doesNotMatch(onboarding, /Roblox is optional|Optional until Roblox/);
+});
+
+test("workspace details are saved before Roblox and the plan launches the workspace", async () => {
+  const [actions, form, login] = await Promise.all([
+    readFile(path.join(root, "app/onboarding/actions.ts"), "utf8"),
+    readFile(path.join(root, "components/onboarding-workspace-form.tsx"), "utf8"),
+    readFile(path.join(root, "app/login/page.tsx"), "utf8"),
+  ]);
+  assert.match(form, /saveOnboardingWorkspaceDraft/);
+  assert.match(form, /Continue to Roblox/);
+  assert.match(actions, /WORKSPACE_DRAFT_COOKIE/);
+  assert.match(actions, /await createOnboardingWorkspace\(formData\)/);
+  assert.match(login, /continueWith\("custom:roblox"\)/);
+  assert.match(login, /Continue with Roblox/);
 });
 
 test("implements fail-safe free workspace Roblox membership enforcement", async () => {

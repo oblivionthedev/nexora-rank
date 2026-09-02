@@ -85,13 +85,11 @@ export default async function OnboardingCompletePage() {
           <article className={robloxConnected ? "ready" : ""}>
             <Gamepad2 />
             <div>
-              <b>
-                {robloxConnected ? "Roblox connected" : "Roblox coming soon"}
-              </b>
+              <b>{robloxConnected ? "Roblox connected" : "Roblox connection required"}</b>
               <span>
                 {robloxConnected
                   ? "Account is ready for group setup."
-                  : "Your workspace is ready for testing. Roblox tools unlock after OAuth approval."}
+                  : "Return to onboarding and connect Roblox before using this workspace."}
               </span>
             </div>
           </article>
@@ -102,11 +100,6 @@ export default async function OnboardingCompletePage() {
               <Rocket /> Enter your workspace <ArrowRight />
             </Link>
           </Button>
-          {!robloxConnected ? (
-            <span className="setup-secondary-link">
-              Roblox is optional during private beta
-            </span>
-          ) : null}
         </div>
       </section>
     </main>

@@ -265,7 +265,7 @@ export default async function WorkspaceOverview({
             <Connection
               provider="roblox"
               name="Roblox"
-              detail={w.roblox_group_name || "Optional during beta"}
+              detail={w.roblox_group_name || "Required connection missing"}
               ready={Boolean(w.roblox_group_id)}
               href={`/dashboard/${w.public_id}/connections#roblox`}
             />
@@ -352,7 +352,7 @@ function Connection({
         <small>{detail}</small>
       </div>
       <em className={ready ? "ready" : "pending"}>
-        {ready ? "Connected" : provider === "roblox" ? "Optional" : "Setup"}
+        {ready ? "Connected" : provider === "roblox" ? "Required" : "Setup"}
       </em>
       <ArrowRight />
     </Link>

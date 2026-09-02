@@ -132,7 +132,7 @@ test("overview connection cards use provider marks and branded actions", async (
   assert.match(overview, /provider="roblox"/);
   assert.match(
     overview,
-    /ready \? "Connected" : provider === "roblox" \? "Optional" : "Setup"/,
+    /ready \? "Connected" : provider === "roblox" \? "Required" : "Setup"/,
   );
 });
 
