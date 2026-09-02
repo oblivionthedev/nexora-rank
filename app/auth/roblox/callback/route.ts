@@ -6,10 +6,10 @@ import {
   hasRobloxOAuthCredentials,
 } from "@/lib/roblox-oauth";
 import {
-  parseRobloxScopes,
   robloxTokenExpiry,
   type RobloxOAuthTokenSet,
 } from "@/lib/roblox-open-cloud";
+import { resolveRobloxGrantedScopes, RobloxPermissionError } from "@/lib/roblox-oauth-permissions";
 import {
   encryptRobloxToken,
   hasRobloxTokenEncryption,
@@ -104,10 +104,23 @@ export async function GET(request: NextRequest) {
     return cleanupAndRedirect(destination, url.origin, true);
   }
   const resourceSnapshot = (await resourceResponse.json()) as Json;
-  const scopes = parseRobloxScopes(tokenData.scope);
-  const requiredScopes = ["openid", "profile", "group:read", "group:write"];
-  if (!requiredScopes.every((scope) => scopes.includes(scope))) {
-    destination.searchParams.set("error", "roblox_permissions_required");
+  let scopes: string[];
+  try {
+    scopes = await resolveRobloxGrantedScopes({
+      accessToken,
+      tokenScope: tokenData.scope,
+      expectedUserId: profile.sub,
+    });
+  } catch (error) {
+    const failure = error instanceof RobloxPermissionError
+      ? error
+      : new RobloxPermissionError("roblox_permission_check_failed");
+    // Only error codes and known scope names; never log tokens or provider responses.
+    console.warn("Roblox permission verification failed", {
+      code: failure.code,
+      missingScopes: failure.missingScopes,
+    });
+    destination.searchParams.set("error", failure.code);
     return cleanupAndRedirect(destination, url.origin, true);
   }
 

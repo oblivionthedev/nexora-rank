@@ -27,6 +27,8 @@ const errors: Record<string, string> = {
     "Roblox did not return the approved group permissions.",
   roblox_permissions_required:
     "Approve all requested Roblox group permissions to manage ranks.",
+  roblox_permission_check_failed:
+    "Roblox authorization returned, but its permissions could not be verified. Please try connecting again. This does not mean you declined access.",
   roblox_connection_save_failed:
     "Roblox connected, but Nexora could not save it securely.",
   manager_required: "Only owners and admins can change connections.",

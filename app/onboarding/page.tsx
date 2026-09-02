@@ -62,6 +62,8 @@ const messages: Record<string, string> = {
     "Roblox did not return the approved group permissions.",
   roblox_permissions_required:
     "Approve all requested Roblox group permissions to continue.",
+  roblox_permission_check_failed:
+    "Roblox authorization returned, but its permissions could not be verified. Please try connecting again. This does not mean you declined access.",
   roblox_connection_save_failed:
     "Roblox connected, but Nexora could not save it securely.",
   roblox_identity_required: "Connect Roblox before creating a free workspace.",

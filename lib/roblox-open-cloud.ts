@@ -26,8 +26,13 @@ function oauthCredentials() {
   return { clientId, clientSecret };
 }
 
-export function parseRobloxScopes(scope: string | undefined) {
-  return [...new Set((scope || "").split(/\s+/).filter(Boolean))];
+export function parseRobloxScopes(scope: unknown): string[] {
+  const values = typeof scope === "string"
+    ? [scope]
+    : Array.isArray(scope) && scope.every((value) => typeof value === "string")
+      ? scope as string[]
+      : [];
+  return [...new Set(values.flatMap((value) => value.split(/\s+/).filter(Boolean)))];
 }
 
 export function robloxTokenExpiry(expiresIn: number | undefined) {
