@@ -94,8 +94,8 @@ test("keeps the Roblox login mark inside its button and uses the secure direct f
 
   assert.match(css, /\.roblox-pending svg\{width:19px;height:19px;flex:0 0 19px\}/);
   assert.match(login, /Continue with Roblox/);
-  assert.match(login, /continueWith\("custom:roblox"\)/);
-  assert.match(login, /openid profile group:read group:write/);
+  assert.match(login, /continueWithRoblox/);
+  assert.match(login, /\/auth\/roblox\/start\?next=\/onboarding/);
   assert.match(onboarding, /\/auth\/roblox\/start\?next=\/onboarding/);
   assert.match(robloxOAuth, /openid profile group:read group:write/);
   assert.doesNotMatch(login, /openid profile email/);

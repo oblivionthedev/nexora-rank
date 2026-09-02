@@ -72,7 +72,7 @@ function DiscordMark() {
 }
 
 export default function LoginPage() {
-  const [busyProvider, setBusyProvider] = useState<"discord" | "custom:roblox" | null>(null);
+  const [busyProvider, setBusyProvider] = useState<"discord" | "roblox" | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   // Read straight from location rather than useSearchParams so this page never
@@ -87,7 +87,7 @@ export default function LoginPage() {
     }
   }, []);
 
-  async function continueWith(provider: "discord" | "custom:roblox") {
+  async function continueWith(provider: "discord") {
     setAuthMessage(null);
 
     if (!isSupabaseConfigured()) {
@@ -107,16 +107,53 @@ export default function LoginPage() {
       provider,
       options: {
         redirectTo,
-        scopes: provider === "discord"
-          ? "identify email guilds guilds.members.read"
-          : "openid profile group:read group:write",
+        scopes: "identify email guilds guilds.members.read",
       },
     });
 
     if (error) {
       setBusyProvider(null);
       setAuthMessage(
-        `${provider === "discord" ? "Discord" : "Roblox"} sign-in could not start. Please try again in a moment.`,
+        "Discord sign-in could not start. Please try again in a moment.",
+      );
+    }
+  }
+
+  async function continueWithRoblox() {
+    setAuthMessage(null);
+
+    if (!isSupabaseConfigured()) {
+      setAuthMessage(
+        "Sign-in is not configured yet. Please try again shortly.",
+      );
+      return;
+    }
+
+    setBusyProvider("roblox");
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const robloxStart = "/auth/roblox/start?next=/onboarding";
+
+    if (session) {
+      window.location.assign(robloxStart);
+      return;
+    }
+
+    // Beta access is tied to Discord. Confirm that identity first, then the
+    // callback immediately continues into Nexora's direct Roblox OAuth flow.
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(robloxStart)}`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: {
+        redirectTo,
+        scopes: "identify email guilds guilds.members.read",
+      },
+    });
+
+    if (error) {
+      setBusyProvider(null);
+      setAuthMessage(
+        "Roblox setup could not start. Please try again in a moment.",
       );
     }
   }
@@ -202,12 +239,17 @@ export default function LoginPage() {
 
           <button
             className="roblox-pending pill"
-            onClick={() => continueWith("custom:roblox")}
+            onClick={continueWithRoblox}
             disabled={busyProvider !== null}
           >
-            {busyProvider === "custom:roblox" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <RobloxMark />}
-            <b>{busyProvider === "custom:roblox" ? "Opening Roblox…" : "Continue with Roblox"}</b>
+            {busyProvider === "roblox" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <RobloxMark />}
+            <b>{busyProvider === "roblox" ? "Opening Roblox…" : "Continue with Roblox"}</b>
           </button>
+
+          <p className="signin-provider-note">
+            Nexora confirms your selected Beta invitation through Discord,
+            then opens Roblox authorization automatically.
+          </p>
 
           {authMessage && (
             <div role="alert" className="signin-alert">

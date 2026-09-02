@@ -3,6 +3,8 @@ import { PageHeading } from "@/components/workspace-shell";
 import { DiscordLinkCode } from "@/components/discord-link-code";
 import { getWorkspaceControl } from "@/lib/workspace-control";
 import { listRobloxGroups } from "@/lib/roblox-membership";
+import { hasRobloxOAuthCredentials } from "@/lib/roblox-oauth";
+import { hasRobloxTokenEncryption } from "@/lib/roblox-token-crypto";
 import {
   addWorkspaceRobloxGroup,
   connectRobloxGroup,
@@ -70,7 +72,7 @@ export default async function Connections({
   );
   const canManage = ["owner", "admin"].includes(w.role);
   const robloxEnabled =
-    process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
+    hasRobloxOAuthCredentials() && hasRobloxTokenEncryption();
   const robloxMetadata = roblox?.metadata as {
     open_cloud_ready?: boolean;
   } | null;

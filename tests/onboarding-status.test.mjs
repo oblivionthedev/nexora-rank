@@ -14,7 +14,7 @@ test("requires Roblox and places it after community details in onboarding", asyn
 
   assert.match(
     onboarding,
-    /const robloxAvailable =\s*process\.env\.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";/,
+    /const robloxAvailable =\s*hasRobloxOAuthCredentials\(\) && hasRobloxTokenEncryption\(\);/,
   );
   assert.match(onboarding, /const identityReady = discordConnected && robloxConnected;/);
   assert.match(onboarding, /const workspaceStep = 3;/);
@@ -44,7 +44,7 @@ test("workspace details are saved before Roblox and the plan launches the worksp
   assert.match(form, /Continue to Roblox/);
   assert.match(actions, /WORKSPACE_DRAFT_COOKIE/);
   assert.match(actions, /await createOnboardingWorkspace\(formData\)/);
-  assert.match(login, /continueWith\("custom:roblox"\)/);
+  assert.match(login, /continueWithRoblox/);
   assert.match(login, /Continue with Roblox/);
 });
 

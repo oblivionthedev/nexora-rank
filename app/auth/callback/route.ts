@@ -21,7 +21,11 @@ export async function GET(request: NextRequest) {
   }
 
   await supabase.rpc("sync_auth_identities");
-  if (safeNext.startsWith("/dashboard") || safeNext.startsWith("/onboarding")) {
+  const entersProtectedSetup =
+    safeNext.startsWith("/dashboard") ||
+    safeNext.startsWith("/onboarding") ||
+    safeNext.startsWith("/auth/roblox/start");
+  if (entersProtectedSetup) {
     const { data: access } = await supabase.rpc("dashboard_access_state");
     const accessState = access as { allowed?: boolean; reason?: string } | null;
     if (!accessState?.allowed) {

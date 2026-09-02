@@ -22,6 +22,8 @@ import { OnboardingSubmitButton } from "@/components/onboarding-submit-button";
 import { OnboardingWorkspaceForm } from "@/components/onboarding-workspace-form";
 import { createClient } from "@/lib/supabase/server";
 import { listRobloxGroups } from "@/lib/roblox-membership";
+import { hasRobloxOAuthCredentials } from "@/lib/roblox-oauth";
+import { hasRobloxTokenEncryption } from "@/lib/roblox-token-crypto";
 import {
   getOnboardingWorkspaceDraft,
   saveOwnerProfile,
@@ -163,7 +165,7 @@ export default async function OnboardingPage({
   }
   const workspaceCreationAvailable = workspaceCreationEnabled || isStaff;
   const robloxAvailable =
-    process.env.NEXT_PUBLIC_ROBLOX_OAUTH_ENABLED === "true";
+    hasRobloxOAuthCredentials() && hasRobloxTokenEncryption();
   const identityReady = discordConnected && robloxConnected;
   if (membership) {
     if (identityReady) redirect("/dashboard");
