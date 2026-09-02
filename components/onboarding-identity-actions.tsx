@@ -14,10 +14,6 @@ export function OnboardingIdentityAction({ provider }: { provider: Provider }) {
   async function connect() {
     setBusy(true);
     setMessage(null);
-    if (isRoblox) {
-      window.location.assign("/auth/roblox/start?next=/onboarding");
-      return;
-    }
     const supabase = createClient();
     const { error } = await supabase.auth.linkIdentity({
       provider,
@@ -35,7 +31,14 @@ export function OnboardingIdentityAction({ provider }: { provider: Provider }) {
     }
   }
 
-  const Icon = isRoblox ? Gamepad2 : Bot;
+  // OAuth must work without client hydration and must not be prefetched.
+  if (isRoblox) {
+    return (
+      <a className="onboarding-provider-button" href="/auth/roblox/start?next=/onboarding">
+        <Gamepad2 className="size-4" /> Connect Roblox
+      </a>
+    );
+  }
   return (
     <div>
       <button
@@ -47,7 +50,7 @@ export function OnboardingIdentityAction({ provider }: { provider: Provider }) {
         {busy ? (
           <LoaderCircle className="size-4 animate-spin" />
         ) : (
-          <Icon className="size-4" />
+          <Bot className="size-4" />
         )}
         {busy
           ? `Opening ${isRoblox ? "Roblox" : "Discord"}…`

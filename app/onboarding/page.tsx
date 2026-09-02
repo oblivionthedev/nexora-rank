@@ -61,7 +61,7 @@ const messages: Record<string, string> = {
   roblox_resource_access_failed:
     "Roblox did not return the approved group permissions.",
   roblox_permissions_required:
-    "Approve all requested Roblox group permissions to continue.",
+    "Roblox did not grant group read/write access. Reconnect and approve Read Communities and Write Communities. If those permissions are not offered, the group-management app must have group:read and group:write enabled and approved. The verification-only app cannot be used for workspace setup.",
   roblox_permission_check_failed:
     "Roblox authorization returned, but its permissions could not be verified. Please try connecting again. This does not mean you declined access.",
   roblox_connection_save_failed:
@@ -314,18 +314,19 @@ export default async function OnboardingPage({
           ) : null}
 
           {activeStep === robloxStep ? (
-            <section className="setup-card">
+            <section className="setup-card setup-roblox-card">
               <div className="setup-icon"><Gamepad2 /></div>
               <span className="setup-kicker">Required Roblox connection</span>
-              <h2>Connect the account that owns your community.</h2>
+              <h2>Connect your Roblox account.</h2>
               <p>
-                Nexora uses official Roblox OAuth to confirm ownership and load
-                the groups you can manage. Passwords and Roblox cookies are never requested.
+                Sign in with the account that owns your group. Approve group access
+                on Roblox, then return here to choose your community.
               </p>
+              <div className="provider-stack">
               <ProviderStatus
                 brand="roblox"
                 name="Roblox"
-                description="Required for group ownership, ranking, verification, and staff operations"
+                description="Group ownership and rank management"
                 state={robloxConnected ? "connected" : "required"}
                 username={providerMap.get("roblox")?.display_name ?? providerMap.get("roblox")?.username}
               >
@@ -335,6 +336,15 @@ export default async function OnboardingPage({
                   <span className="provider-availability">Roblox connection is temporarily unavailable</span>
                 ) : null}
               </ProviderStatus>
+              </div>
+              {robloxConnected ? (
+                <a href="/onboarding" className="onboarding-provider-button setup-continue">Continue setup</a>
+              ) : (
+                <div className="setup-connection-help">
+                  <p>This connects the group-management app. The separate member-verification app is not needed for this step.</p>
+                  <p>Already approved on Roblox? <a href="/onboarding">Check connection again</a>.</p>
+                </div>
+              )}
               <div className="setup-capabilities">
                 <span><ShieldCheck /> Official OAuth</span>
                 <span><KeyRound /> No cookies</span>
