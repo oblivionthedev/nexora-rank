@@ -17,8 +17,11 @@ export async function GET(request: NextRequest) {
       ? requestedNext
       : "/onboarding?provider=roblox";
 
-  if (!hasRobloxOAuthCredentials() || !hasRobloxTokenEncryption()) {
-    return NextResponse.redirect(new URL("/login?error=roblox_not_ready", url.origin));
+  if (!hasRobloxOAuthCredentials()) {
+    return NextResponse.redirect(new URL("/login?error=roblox_credentials_missing", url.origin));
+  }
+  if (!hasRobloxTokenEncryption()) {
+    return NextResponse.redirect(new URL("/login?error=roblox_storage_not_ready", url.origin));
   }
 
   const supabase = await createClient();

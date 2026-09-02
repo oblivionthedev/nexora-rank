@@ -28,6 +28,10 @@ const authErrors: Record<string, string> = {
     "This Discord account is already linked to another Nexora Rank user.",
   roblox_not_ready:
     "Roblox sign-in is not configured yet. Please try again shortly.",
+  roblox_credentials_missing:
+    "Roblox authorization is temporarily unavailable. Nexora Staff have been notified.",
+  roblox_storage_not_ready:
+    "Secure Roblox credential storage is temporarily unavailable. Please try again shortly.",
   roblox_already_linked:
     "This Roblox account is already linked to another Nexora Rank user.",
   beta_selection_required:
