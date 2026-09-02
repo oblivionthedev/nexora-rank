@@ -29,7 +29,7 @@ const authErrors: Record<string, string> = {
   roblox_not_ready:
     "Roblox sign-in is not configured yet. Please try again shortly.",
   roblox_credentials_missing:
-    "Roblox authorization is temporarily unavailable. Nexora Staff have been notified.",
+    "Roblox authorization is temporarily unavailable. Please contact Nexora Staff.",
   roblox_storage_not_ready:
     "Secure Roblox credential storage is temporarily unavailable. Please try again shortly.",
   roblox_already_linked:
